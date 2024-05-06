@@ -84,6 +84,19 @@ namespace trylang
         std::vector<SyntaxNode*> GetChildren() override;
     };
 
+    struct UnaryExpressionSyntax : public ExpressionSyntax
+    {
+
+        std::shared_ptr<SyntaxToken> _operatorToken;
+        std::unique_ptr<ExpressionSyntax> _operand;
+
+        UnaryExpressionSyntax(const std::shared_ptr<SyntaxToken>& operatorToken, std::unique_ptr<ExpressionSyntax> operand);
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct ParenthesizedExpressionSyntax : public ExpressionSyntax
     {
 

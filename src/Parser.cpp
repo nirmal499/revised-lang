@@ -79,7 +79,19 @@ namespace trylang
 
     std::unique_ptr<ExpressionSyntax> Parser::ParseExpression(int parentPrecedance)
     {
-        auto left = this->ParsePrimaryExpression();
+        std::unique_ptr<ExpressionSyntax> left;
+
+        auto unaryOperatorPrecedance = this->GetUnaryOperatorPrecedance(this->Current()->Kind());
+        if(unaryOperatorPrecedance != 0 && unaryOperatorPrecedance >= parentPrecedance)
+        {
+            auto operatorToken = this->NextToken();
+            auto operand = this->ParseExpression();
+            left = std::make_unique<UnaryExpressionSyntax>(operatorToken, std::move(operand));
+        }
+        else
+        {
+            left = this->ParsePrimaryExpression();
+        }
 
         while(true)
         {
@@ -94,6 +106,19 @@ namespace trylang
         }
 
         return left;
+    }
+
+    int Parser::GetUnaryOperatorPrecedance(SyntaxKind kind)
+    {
+        switch (kind)
+        {
+        case SyntaxKind::PlusToken:
+        case SyntaxKind::MinusToken:
+            return 3;
+        
+        default:
+            return 0;
+        }
     }
 
     int Parser::GetBinaryOperatorPrecedance(SyntaxKind kind)

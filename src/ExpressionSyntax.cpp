@@ -54,6 +54,19 @@ namespace trylang
         return std::vector<SyntaxNode*>{ _left.get(), _operatorToken.get(), _right.get()};
     }
 
+    UnaryExpressionSyntax::UnaryExpressionSyntax(const std::shared_ptr<SyntaxToken>& operatorToken, std::unique_ptr<ExpressionSyntax> operand)
+        : _operatorToken(operatorToken), _operand(std::move(operand)) {}
+
+    SyntaxKind UnaryExpressionSyntax::Kind()
+    {
+        return SyntaxKind::UnaryExpression;
+    }
+
+    std::vector<SyntaxNode*> UnaryExpressionSyntax::GetChildren()
+    {
+        return std::vector<SyntaxNode*>{_operatorToken.get(), _operand.get()};
+    }
+
     ParenthesizedExpressionSyntax::ParenthesizedExpressionSyntax(const std::shared_ptr<SyntaxToken>& openParenthesisToken, std::unique_ptr<ExpressionSyntax> expression, const std::shared_ptr<SyntaxToken>& closeParenthesisToken)
         : _openParenthesisToken(openParenthesisToken), _expression(std::move(expression)), _closeParenthesisToken(closeParenthesisToken) {}
 

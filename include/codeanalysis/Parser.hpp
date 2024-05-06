@@ -39,6 +39,7 @@ namespace trylang
         std::unique_ptr<ExpressionSyntax> ParsePrimaryExpression();
 
         int GetBinaryOperatorPrecedance(SyntaxKind kind);
+        int GetUnaryOperatorPrecedance(SyntaxKind kind);
 
     };
 }

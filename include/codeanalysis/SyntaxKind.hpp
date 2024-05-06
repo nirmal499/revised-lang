@@ -21,6 +21,7 @@ namespace trylang
 
         LiteralExpression,
         BinaryExpression,
+        UnaryExpression,
         ParenthesizedExpression,
     };
 
@@ -38,6 +39,7 @@ namespace trylang
         {SyntaxKind::BadToken, "BadToken"},
         {SyntaxKind::LiteralExpression, "LiteralExpression"},
         {SyntaxKind::BinaryExpression, "BinaryExpression"},
+        {SyntaxKind::UnaryExpression, "UnaryExpression"},
         {SyntaxKind::ParenthesizedExpression, "ParenthesizedExpression"},
 
     };

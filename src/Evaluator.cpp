@@ -24,6 +24,24 @@ namespace trylang
             return std::get<int>(*(NEnode->_numberToken->_value));
         }
 
+        UnaryExpressionSyntax* UEnode = dynamic_cast<UnaryExpressionSyntax*>(node);
+        if(UEnode != nullptr)
+        {
+            int operand = this->EvaluateExpression(UEnode->_operand.get());
+            
+            if(UEnode->_operatorToken->_kind == SyntaxKind::MinusToken)
+            {
+                return -operand;
+            }
+
+            if(UEnode->_operatorToken->_kind == SyntaxKind::PlusToken)
+            {
+                return operand;
+            }
+
+            throw std::logic_error("Unexpected unary operator " + trylang::__syntaxStringMap[UEnode->_operatorToken->_kind]);
+        }
+
         BinaryExpressionSyntax* BEnode = dynamic_cast<BinaryExpressionSyntax*>(node);
         if(BEnode != nullptr)
         {
