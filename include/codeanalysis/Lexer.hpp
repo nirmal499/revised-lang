@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <sstream>
+#include <codeanalysis/SyntaxKind.hpp>
 
 namespace trylang
 {
@@ -23,6 +24,7 @@ namespace trylang
 
         void Next();
 
-        std::unique_ptr<SyntaxToken> NextToken();
+        std::unique_ptr<SyntaxToken> NextTokenize();
+        SyntaxKind GetKeywordKind(const std::string& text);
     };
 }

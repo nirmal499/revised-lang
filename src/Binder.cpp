@@ -28,10 +28,9 @@ namespace trylang
 
         int value = 0;
 
-        oobject_t object_value = *(syntax->_literalToken->_value);
-        if(auto* data = std::get_if<int>(&object_value))
+        if(syntax->_value.has_value())
         {
-            value = *data;
+            return std::make_unique<BoundLiteralExpression>(syntax->_value);
         }
 
         return std::make_unique<BoundLiteralExpression>(value);

@@ -28,8 +28,14 @@ namespace trylang
     }
     
     LiteralExpressionSyntax::LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken)
-        : _literalToken(literalToken) {}
+        : _literalToken(literalToken) 
+    {
+        _value = _literalToken->_value;
+    }
 
+    LiteralExpressionSyntax::LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken, object_t value)
+        : _literalToken(literalToken), _value(std::move(value))
+    {}
     
     SyntaxKind LiteralExpressionSyntax::Kind()
     {
@@ -80,7 +86,7 @@ namespace trylang
         return std::vector<SyntaxNode*>{_openParenthesisToken.get(), _expression.get(), _closeParenthesisToken.get()};
     }
 
-    SyntaxToken::SyntaxToken(SyntaxKind kind, int position, std::string&& text, object_t&& value)
+    SyntaxToken::SyntaxToken(SyntaxKind kind, int position, std::string&& text, object_t value)
             : _kind(kind), _position(position), _text(std::move(text)), _value(std::move(value))
         {}
 

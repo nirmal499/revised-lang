@@ -31,7 +31,22 @@ namespace trylang
         _position++;
     }
 
-    std::unique_ptr<SyntaxToken> Lexer::NextToken()
+    SyntaxKind Lexer::GetKeywordKind(const std::string& text)
+    {
+        if(text == "true")
+        {
+            return SyntaxKind::TrueKeyword;
+        }
+        
+        if(text == "false")
+        {
+            return SyntaxKind::FalseKeyword;
+        }
+
+        return SyntaxKind::IdentifierToken;
+    }
+
+    std::unique_ptr<SyntaxToken> Lexer::NextTokenize()
     {
 
         if(_position >= _text_size)
@@ -62,7 +77,7 @@ namespace trylang
                 _buffer << "The number '" << text << "' cannot be represented by an Int32\n";
             }
             
-            return std::make_unique<SyntaxToken>(SyntaxKind::NumberToken, start, std::move(text), std::move(value));
+            return std::make_unique<SyntaxToken>(SyntaxKind::NumberToken, start, std::move(text), value);
         }
 
         if(std::isspace(this->Current()))
@@ -77,6 +92,21 @@ namespace trylang
             int length = _position - start;
             auto text = _text.substr(start, length);
             return std::make_unique<SyntaxToken>(SyntaxKind::WhitespaceToken, start, std::move(text), std::nullopt);
+        }
+
+        if(std::isalpha(this->Current()))
+        {
+            int start = _position;
+
+            while(std::isalpha(this->Current()))
+            {
+                this->Next();
+            }
+
+            int length = _position - start;
+            auto text = _text.substr(start, length);
+            auto kind = this->GetKeywordKind(text);
+            return std::make_unique<SyntaxToken>(kind, start, std::move(text), std::nullopt);
         }
 
         if(this->Current() == '+')

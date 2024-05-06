@@ -17,7 +17,7 @@ namespace trylang
     }
 
 
-    BoundLiteralExpression::BoundLiteralExpression(object_t&& value)
+    BoundLiteralExpression::BoundLiteralExpression(object_t value)
         : _value(std::move(value))
     {}
 
@@ -29,6 +29,11 @@ namespace trylang
         if(index_in_variant == 0)
         {
             return typeid(int);
+        }
+        
+        if(index_in_variant == 1)
+        {
+            return typeid(bool);
         }
 
         /* index_in_variant == std::variant_npos */

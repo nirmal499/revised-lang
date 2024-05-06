@@ -16,7 +16,7 @@ namespace trylang
 
         Lexer lexer(text);
 
-        auto token = lexer.NextToken();
+        auto token = lexer.NextTokenize();
         while(token->_kind != SyntaxKind::EndOfFileToken)
         {
             if(token->_kind != SyntaxKind::WhitespaceToken && token->_kind != SyntaxKind::BadToken)
@@ -24,7 +24,7 @@ namespace trylang
                 _tokens.emplace_back(std::move(token)); /* unique_ptr are getting converted into shared_ptr */
             }
 
-            token = lexer.NextToken();
+            token = lexer.NextTokenize();
         }
         /* Here token->_kind is SyntaxKind::EndOfFileToken. Add that to the vector */
         _tokens.emplace_back(std::move(token));
@@ -147,6 +147,15 @@ namespace trylang
             auto closeParenthesisToken = this->MatchToken(SyntaxKind::CloseParenthesisToken);
 
             return std::make_unique<ParenthesizedExpressionSyntax>(openParenthesisToken, std::move(expression), closeParenthesisToken);
+        }
+        else if(
+            this->Current()->Kind() == SyntaxKind::TrueKeyword ||
+            this->Current()->Kind() == SyntaxKind::FalseKeyword
+        )
+        {
+            auto keywordToken = this->NextToken();
+            auto value = keywordToken->Kind() == SyntaxKind::TrueKeyword;
+            return std::make_unique<LiteralExpressionSyntax>(keywordToken, value);
         }
 
         std::shared_ptr<SyntaxToken> numberToken = this->MatchToken(SyntaxKind::NumberToken);

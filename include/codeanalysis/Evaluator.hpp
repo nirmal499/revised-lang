@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <codeanalysis/Types.hpp>
 
 namespace trylang
 {
@@ -12,8 +13,8 @@ namespace trylang
 
         explicit Evaluator(std::unique_ptr<BoundExpressionNode> root);
 
-        int Evaluate();
+        oobject_t Evaluate();
 
-        int EvaluateExpression(BoundExpressionNode* node);
+        oobject_t EvaluateExpression(BoundExpressionNode* node);
     };
 }

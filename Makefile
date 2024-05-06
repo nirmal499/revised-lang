@@ -11,3 +11,6 @@ project-build:
 
 project-run-exe:
 	./build/executable
+
+project-run-debugger:
+	gdb ./build/executable

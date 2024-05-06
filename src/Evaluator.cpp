@@ -11,24 +11,24 @@ namespace trylang
     Evaluator::Evaluator(std::unique_ptr<BoundExpressionNode> root) : _root(std::move(root))
     {}
 
-    int Evaluator::Evaluate()
+    oobject_t Evaluator::Evaluate()
     {
         return this->EvaluateExpression(_root.get());
     }
 
-    int Evaluator::EvaluateExpression(BoundExpressionNode* node)
+    oobject_t Evaluator::EvaluateExpression(BoundExpressionNode* node)
     {   
         auto* BLEnode = dynamic_cast<BoundLiteralExpression*>(node);
         if(BLEnode != nullptr)
         {
-            /* We are sure that we will have a 'int' */
-            return std::get<int>(*BLEnode->_value);
+            return *BLEnode->_value;
         }
 
         auto* BUEnode = dynamic_cast<BoundUnaryExpression*>(node);
         if(BUEnode != nullptr)
-        {
-            int operand = this->EvaluateExpression(BUEnode->_operand.get());
+        {   
+            /* If we reach here we need to have a "int" */
+            int operand = std::get<int>(this->EvaluateExpression(BUEnode->_operand.get()));
             
             if(BUEnode->_operatorKind == BoundUnaryOperatorKind::Identity)
             {
@@ -46,8 +46,9 @@ namespace trylang
         auto* BBEnode = dynamic_cast<BoundBinaryExpression*>(node);
         if(BBEnode != nullptr)
         {
-            int left = this->EvaluateExpression(BBEnode->_left.get());
-            int right = this->EvaluateExpression(BBEnode->_right.get());
+            /* If we reach here we need to have a "int" */
+            int left = std::get<int>(this->EvaluateExpression(BBEnode->_left.get()));
+            int right = std::get<int>(this->EvaluateExpression(BBEnode->_right.get()));
 
             if(BBEnode->_operatorKind == BoundBinaryOperatorKind::Addition)
             {

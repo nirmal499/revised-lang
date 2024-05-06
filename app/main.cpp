@@ -40,7 +40,7 @@ void Run1()
         trylang::Lexer lexer(line);
         while(true)
         {
-            auto token = lexer.NextToken();
+            auto token = lexer.NextTokenize();
             if(token->_kind == trylang::SyntaxKind::EndOfFileToken)
             {
                 break;
@@ -97,8 +97,9 @@ void Run2()
         else
         {
             trylang::Evaluator evaluator(std::move(boundExpression));
-            int result = evaluator.Evaluate();
-            std::cout << result << "\n";
+            trylang::oobject_t result = evaluator.Evaluate();
+            std::visit(trylang::PrintVisitor{}, result);
+            std::cout << "\n";
         }
 
         errors.clear();
