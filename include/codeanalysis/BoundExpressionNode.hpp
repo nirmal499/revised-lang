@@ -29,7 +29,7 @@ namespace trylang
     {
         object_t _value;
 
-        explicit BoundLiteralExpression(object_t value);
+        explicit BoundLiteralExpression(const object_t& value);
         
         const std::type_info& Type() override;
         BoundNodeKind Kind() override;

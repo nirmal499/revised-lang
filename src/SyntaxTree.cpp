@@ -9,9 +9,9 @@ namespace trylang
         : _errors(std::move(errors)), _root(std::move(root)), _endOfFileToken(endOfFileToken)
     {}
     
-    std::unique_ptr<SyntaxTree> SyntaxTree::Parse(const std::string& text)
+    std::unique_ptr<SyntaxTree> SyntaxTree::Parse(std::string text)
     {
-        Parser parser(text);
+        Parser parser(std::move(text));
         return parser.Parse();
     }
 }

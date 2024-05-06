@@ -10,11 +10,11 @@ namespace trylang
         return _buffer.str();
     }
     
-    Parser::Parser(const std::string& text)
+    Parser::Parser(std::string text)
     {
         _position = 0;
 
-        Lexer lexer(text);
+        Lexer lexer(std::move(text));
 
         auto token = lexer.NextTokenize();
         while(token->_kind != SyntaxKind::EndOfFileToken)

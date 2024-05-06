@@ -17,8 +17,8 @@ namespace trylang
     }
 
 
-    BoundLiteralExpression::BoundLiteralExpression(object_t value)
-        : _value(std::move(value))
+    BoundLiteralExpression::BoundLiteralExpression(const object_t& value)
+        : _value(value)
     {}
 
     const std::type_info& BoundLiteralExpression::Type()

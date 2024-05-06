@@ -16,7 +16,7 @@ namespace trylang
 
         SyntaxTree(std::string errors, std::unique_ptr<ExpressionSyntax> root, const std::shared_ptr<SyntaxToken>& endOfFileToken);
 
-        static std::unique_ptr<SyntaxTree> Parse(const std::string& text);
+        static std::unique_ptr<SyntaxTree> Parse(std::string text);
 
         SyntaxTree(const SyntaxTree&) = delete;
         SyntaxTree& operator=(const SyntaxTree&) = delete;

@@ -25,7 +25,7 @@ namespace trylang
         std::string _text;
         object_t _value;
 
-        SyntaxToken(SyntaxKind kind, int position, std::string&& text, object_t value);
+        SyntaxToken(SyntaxKind kind, int position, std::string&& text, const object_t& value);
 
         SyntaxToken(const SyntaxToken&) = delete;
         SyntaxToken& operator=(const SyntaxToken&) = delete;
@@ -56,7 +56,7 @@ namespace trylang
     
     struct ExpressionSyntax : public SyntaxNode
     {
-        virtual ~ExpressionSyntax(){}
+        ~ExpressionSyntax() override = default;
     };
 
     struct LiteralExpressionSyntax : public ExpressionSyntax
@@ -64,8 +64,8 @@ namespace trylang
         std::shared_ptr<SyntaxToken> _literalToken;
         object_t _value;
         
-        LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken);
-        LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken, object_t value);
+        explicit LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken);
+        LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken, const object_t& value);
         
         SyntaxKind Kind() override;
 

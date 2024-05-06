@@ -9,7 +9,7 @@ namespace trylang
         return _buffer.str();
     }
 
-    Lexer::Lexer(const std::string& text) : _text(text)
+    Lexer::Lexer(std::string text) : _text(std::move(text))
     {
         _position = 0;
         _text_size = _text.size();

@@ -18,7 +18,7 @@ namespace trylang
 
         std::string Errors();
 
-        Lexer(const std::string& text);
+        explicit Lexer(std::string text);
 
         char Current();
 

@@ -22,7 +22,7 @@ namespace trylang
 
         std::string Errors();
         
-        Parser(const std::string& text);
+        explicit Parser(std::string text);
 
         std::shared_ptr<SyntaxToken> Peek(int offset);
 
