@@ -2,10 +2,9 @@
 
 #include <vector>
 #include <codeanalysis/SyntaxKind.hpp>
+#include <codeanalysis/Types.hpp>
 #include <memory>
-#include <optional>
 #include <string>
-#include <variant>
 #include <iostream>
 
 namespace trylang
@@ -14,16 +13,13 @@ namespace trylang
     {
         virtual SyntaxKind Kind() = 0;
         virtual std::vector<SyntaxNode*> GetChildren() = 0;
-        virtual ~SyntaxNode(){}
+        virtual ~SyntaxNode() = default;
     };
 
     void PrettyPrint(SyntaxNode* node, std::string indent = "");
 
     struct SyntaxToken : SyntaxNode
     {
-
-        typedef std::optional<std::variant<int>> object_t;
-
         SyntaxKind _kind;
         int _position;
         std::string _text;
@@ -60,9 +56,9 @@ namespace trylang
 
     struct LiteralExpressionSyntax : public ExpressionSyntax
     {
-        std::shared_ptr<SyntaxToken> _numberToken;
+        std::shared_ptr<SyntaxToken> _literalToken;
         
-        LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& numberToken);
+        LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken);
 
         
         SyntaxKind Kind() override;

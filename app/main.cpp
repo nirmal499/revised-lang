@@ -4,6 +4,7 @@
 #include <codeanalysis/Evaluator.hpp>
 #include <codeanalysis/SyntaxTree.hpp>
 #include <codeanalysis/ExpressionSyntax.hpp>
+#include <codeanalysis/Binder.hpp>
 
 void Run1();
 void Run2();
@@ -56,6 +57,7 @@ void Run2()
 {
     std::string line;
     bool showast = false;
+    std::string errors;
 
     while(true)
     {
@@ -78,21 +80,27 @@ void Run2()
         }
 
         std::unique_ptr<trylang::SyntaxTree> syntaxTree = trylang::SyntaxTree::Parse(line);
-        
+        std::unique_ptr<trylang::Binder> binder = std::make_unique<trylang::Binder>();
+        std::unique_ptr<trylang::BoundExpressionNode> boundExpression = binder->BindExpression(syntaxTree->_root.get());
+
+        errors = syntaxTree->_errors.append(binder->Errors());
+
         if(showast)
         {
             trylang::PrettyPrint(syntaxTree->_root.get());
         }
 
-        if(!syntaxTree->_errors.empty())
+        if(!errors.empty())
         {
-            std::cout << "\n" << syntaxTree->_errors << "\n";
+            std::cout << "\n" << errors << "\n";
         }
         else
         {
-            trylang::Evaluator evaluator(std::move(syntaxTree->_root));
+            trylang::Evaluator evaluator(std::move(boundExpression));
             int result = evaluator.Evaluate();
             std::cout << result << "\n";
         }
+
+        errors.clear();
     }
 }

@@ -27,8 +27,8 @@ namespace trylang
 
     }
     
-    LiteralExpressionSyntax::LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& numberToken)
-        : _numberToken(numberToken) {}
+    LiteralExpressionSyntax::LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken)
+        : _literalToken(literalToken) {}
 
     
     SyntaxKind LiteralExpressionSyntax::Kind()
@@ -38,7 +38,7 @@ namespace trylang
 
     std::vector<SyntaxNode*> LiteralExpressionSyntax::GetChildren()
     {
-        return std::vector<SyntaxNode*>{_numberToken.get()};
+        return std::vector<SyntaxNode*>{_literalToken.get()};
     }
 
     BinaryExpressionSyntax::BinaryExpressionSyntax(std::unique_ptr<ExpressionSyntax> left, const std::shared_ptr<SyntaxToken>& operatorToken, std::unique_ptr<ExpressionSyntax> right)

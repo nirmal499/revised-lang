@@ -1,13 +1,14 @@
 #include <codeanalysis/Evaluator.hpp>
 #include <codeanalysis/ExpressionSyntax.hpp>
+#include <codeanalysis/BoundExpressionNode.hpp>
 #include <codeanalysis/SyntaxKind.hpp>
 #include <variant>
 
 namespace trylang
 {
-    std::unique_ptr<ExpressionSyntax> _root;
+    std::unique_ptr<BoundExpressionNode> _root;
 
-    Evaluator::Evaluator(std::unique_ptr<ExpressionSyntax> root) : _root(std::move(root))
+    Evaluator::Evaluator(std::unique_ptr<BoundExpressionNode> root) : _root(std::move(root))
     {}
 
     int Evaluator::Evaluate()
@@ -15,68 +16,62 @@ namespace trylang
         return this->EvaluateExpression(_root.get());
     }
 
-    int Evaluator::EvaluateExpression(ExpressionSyntax* node)
+    int Evaluator::EvaluateExpression(BoundExpressionNode* node)
     {   
-        LiteralExpressionSyntax* NEnode = dynamic_cast<LiteralExpressionSyntax*>(node);
-        if(NEnode != nullptr)
+        auto* BLEnode = dynamic_cast<BoundLiteralExpression*>(node);
+        if(BLEnode != nullptr)
         {
             /* We are sure that we will have a 'int' */
-            return std::get<int>(*(NEnode->_numberToken->_value));
+            return std::get<int>(*BLEnode->_value);
         }
 
-        UnaryExpressionSyntax* UEnode = dynamic_cast<UnaryExpressionSyntax*>(node);
-        if(UEnode != nullptr)
+        auto* BUEnode = dynamic_cast<BoundUnaryExpression*>(node);
+        if(BUEnode != nullptr)
         {
-            int operand = this->EvaluateExpression(UEnode->_operand.get());
+            int operand = this->EvaluateExpression(BUEnode->_operand.get());
             
-            if(UEnode->_operatorToken->_kind == SyntaxKind::MinusToken)
-            {
-                return -operand;
-            }
-
-            if(UEnode->_operatorToken->_kind == SyntaxKind::PlusToken)
+            if(BUEnode->_operatorKind == BoundUnaryOperatorKind::Identity)
             {
                 return operand;
             }
 
-            throw std::logic_error("Unexpected unary operator " + trylang::__syntaxStringMap[UEnode->_operatorToken->_kind]);
+            if(BUEnode->_operatorKind == BoundUnaryOperatorKind::Negation)
+            {
+                return -operand;
+            }
+
+            throw std::logic_error("Unexpected unary operator " + trylang::__boundUnaryOperatorKindStringMap[BUEnode->_operatorKind]);
         }
 
-        BinaryExpressionSyntax* BEnode = dynamic_cast<BinaryExpressionSyntax*>(node);
-        if(BEnode != nullptr)
+        auto* BBEnode = dynamic_cast<BoundBinaryExpression*>(node);
+        if(BBEnode != nullptr)
         {
-            int left = this->EvaluateExpression(BEnode->_left.get());
-            int right = this->EvaluateExpression(BEnode->_right.get());
+            int left = this->EvaluateExpression(BBEnode->_left.get());
+            int right = this->EvaluateExpression(BBEnode->_right.get());
 
-            if(BEnode->_operatorToken->_kind == SyntaxKind::PlusToken)
+            if(BBEnode->_operatorKind == BoundBinaryOperatorKind::Addition)
             {
                 return left + right;
             }
 
-            if(BEnode->_operatorToken->_kind == SyntaxKind::MinusToken)
+            if(BBEnode->_operatorKind == BoundBinaryOperatorKind::Subtraction)
             {
                 return left - right;
             }
 
-            if(BEnode->_operatorToken->_kind == SyntaxKind::SlashToken)
+            if(BBEnode->_operatorKind == BoundBinaryOperatorKind::Division)
             {
                 return left / right;
             }
 
-            if(BEnode->_operatorToken->_kind == SyntaxKind::StarToken)
+            if(BBEnode->_operatorKind == BoundBinaryOperatorKind::Multiplication)
             {
                 return left * right;
             }
 
-            throw std::logic_error("Unexpected binary operator " + trylang::__syntaxStringMap[BEnode->_operatorToken->_kind]);
+            throw std::logic_error("Unexpected binary operator " + trylang::__boundBinaryOperatorKindStringMap[BBEnode->_operatorKind]);
         }
 
-        ParenthesizedExpressionSyntax* PEnode = dynamic_cast<ParenthesizedExpressionSyntax*>(node);
-        if(PEnode != nullptr)
-        {
-            return this->EvaluateExpression(PEnode->_expression.get());
-        }
-
-        throw std::logic_error("Unexpected node " + trylang::__syntaxStringMap[node->Kind()]);
+        throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
     }
 }

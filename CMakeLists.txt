@@ -18,6 +18,9 @@ add_executable(${EXECUTABLE_NAME}
     src/Lexer.cpp
     src/Parser.cpp
     src/ExpressionSyntax.cpp
+    src/Binder.cpp
+    src/BoundExpressionNode.cpp
+
 )
 
 target_include_directories(${EXECUTABLE_NAME}

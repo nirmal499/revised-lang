@@ -4,16 +4,16 @@
 
 namespace trylang
 {
-    struct ExpressionSyntax;
+    struct BoundExpressionNode;
 
     struct Evaluator
     {
-        std::unique_ptr<ExpressionSyntax> _root;
+        std::unique_ptr<BoundExpressionNode> _root;
 
-        Evaluator(std::unique_ptr<ExpressionSyntax> root);
+        explicit Evaluator(std::unique_ptr<BoundExpressionNode> root);
 
         int Evaluate();
 
-        int EvaluateExpression(ExpressionSyntax* node);
+        int EvaluateExpression(BoundExpressionNode* node);
     };
 }
