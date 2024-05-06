@@ -58,11 +58,11 @@ namespace trylang
         virtual ~ExpressionSyntax(){}
     };
 
-    struct NumberExpressionSyntax : public ExpressionSyntax
+    struct LiteralExpressionSyntax : public ExpressionSyntax
     {
         std::shared_ptr<SyntaxToken> _numberToken;
         
-        NumberExpressionSyntax(const std::shared_ptr<SyntaxToken>& numberToken);
+        LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& numberToken);
 
         
         SyntaxKind Kind() override;

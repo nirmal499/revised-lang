@@ -30,17 +30,15 @@ namespace trylang
 
         std::shared_ptr<SyntaxToken> NextToken();
 
-        std::shared_ptr<SyntaxToken> Match(SyntaxKind kind);
+        std::shared_ptr<SyntaxToken> MatchToken(SyntaxKind kind);
 
         std::unique_ptr<SyntaxTree> Parse();
 
-        std::unique_ptr<ExpressionSyntax> ParseExpression();
-
-        std::unique_ptr<ExpressionSyntax> ParseTerm();
-
-        std::unique_ptr<ExpressionSyntax> ParseFactor();
+        std::unique_ptr<ExpressionSyntax> ParseExpression(int parentPrecedance = 0);
 
         std::unique_ptr<ExpressionSyntax> ParsePrimaryExpression();
+
+        int GetBinaryOperatorPrecedance(SyntaxKind kind);
 
     };
 }

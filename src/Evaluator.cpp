@@ -17,7 +17,7 @@ namespace trylang
 
     int Evaluator::EvaluateExpression(ExpressionSyntax* node)
     {   
-        NumberExpressionSyntax* NEnode = dynamic_cast<NumberExpressionSyntax*>(node);
+        LiteralExpressionSyntax* NEnode = dynamic_cast<LiteralExpressionSyntax*>(node);
         if(NEnode != nullptr)
         {
             /* We are sure that we will have a 'int' */

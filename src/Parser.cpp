@@ -56,7 +56,7 @@ namespace trylang
         return current;
     }
 
-    std::shared_ptr<SyntaxToken> Parser::Match(SyntaxKind kind)
+    std::shared_ptr<SyntaxToken> Parser::MatchToken(SyntaxKind kind)
     {
         if(this->Current()->_kind == kind)
         {
@@ -69,53 +69,48 @@ namespace trylang
 
     std::unique_ptr<SyntaxTree> Parser::Parse()
     {
-        std::unique_ptr<ExpressionSyntax> expression = this->ParseTerm();
+        std::unique_ptr<ExpressionSyntax> expression = this->ParseExpression();
 
         /* After Parsing we are confirming that the end token is SyntaxKind::EndOfFileToken token*/
-        std::shared_ptr<SyntaxToken> endOfFileToken = this->Match(SyntaxKind::EndOfFileToken);
+        std::shared_ptr<SyntaxToken> endOfFileToken = this->MatchToken(SyntaxKind::EndOfFileToken);
 
         return std::make_unique<SyntaxTree>(_buffer.str(), std::move(expression), endOfFileToken);
     }
 
-    std::unique_ptr<ExpressionSyntax> Parser::ParseExpression()
-    {
-        return this->ParseTerm();
-    }
-
-    std::unique_ptr<ExpressionSyntax> Parser::ParseTerm()
-    {
-        auto left = this->ParseFactor();
-
-        while(
-                this->Current()->_kind == SyntaxKind::PlusToken || 
-                this->Current()->_kind == SyntaxKind::MinusToken
-            )
-        {
-            std::shared_ptr<SyntaxToken> operatorToken = this->NextToken();
-            auto right = this->ParseFactor();
-
-            left = std::make_unique<BinaryExpressionSyntax>(std::move(left), operatorToken, std::move(right));
-        }
-
-        return left;
-    }
-
-    std::unique_ptr<ExpressionSyntax> Parser::ParseFactor()
+    std::unique_ptr<ExpressionSyntax> Parser::ParseExpression(int parentPrecedance)
     {
         auto left = this->ParsePrimaryExpression();
 
-        while( this->Current()->_kind == SyntaxKind::SlashToken ||
-                this->Current()->_kind == SyntaxKind::StarToken)
+        while(true)
         {
-            std::shared_ptr<SyntaxToken> operatorToken = this->NextToken();
-            auto right = this->ParsePrimaryExpression();
-
+            auto precedance = this->GetBinaryOperatorPrecedance(this->Current()->Kind());
+            if(precedance == 0 || precedance <= parentPrecedance)
+            {
+                break;
+            }
+            auto operatorToken = this->NextToken();
+            auto right = this->ParseExpression(precedance);
             left = std::make_unique<BinaryExpressionSyntax>(std::move(left), operatorToken, std::move(right));
         }
 
         return left;
     }
 
+    int Parser::GetBinaryOperatorPrecedance(SyntaxKind kind)
+    {
+        switch (kind)
+        {
+        case SyntaxKind::StarToken:
+        case SyntaxKind::SlashToken:
+            return 2;
+        case SyntaxKind::PlusToken:
+        case SyntaxKind::MinusToken:
+            return 1;
+        
+        default:
+            return 0;
+        }
+    }
 
     std::unique_ptr<ExpressionSyntax> Parser::ParsePrimaryExpression()
     {
@@ -124,12 +119,12 @@ namespace trylang
         {
             auto openParenthesisToken = this->NextToken();
             auto expression = this->ParseExpression();
-            auto closeParenthesisToken = this->Match(SyntaxKind::CloseParenthesisToken);
+            auto closeParenthesisToken = this->MatchToken(SyntaxKind::CloseParenthesisToken);
 
             return std::make_unique<ParenthesizedExpressionSyntax>(openParenthesisToken, std::move(expression), closeParenthesisToken);
         }
 
-        std::shared_ptr<SyntaxToken> numberToken = this->Match(SyntaxKind::NumberToken);
-        return std::make_unique<NumberExpressionSyntax>(numberToken);
+        std::shared_ptr<SyntaxToken> numberToken = this->MatchToken(SyntaxKind::NumberToken);
+        return std::make_unique<LiteralExpressionSyntax>(numberToken);
     }
 }

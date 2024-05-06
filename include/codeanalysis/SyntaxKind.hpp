@@ -6,6 +6,10 @@ namespace trylang
 {
     enum class SyntaxKind
     {
+
+        EndOfFileToken,
+        BadToken,
+        
         NumberToken,
         WhitespaceToken,
         PlusToken,
@@ -14,10 +18,8 @@ namespace trylang
         SlashToken,
         OpenParenthesisToken,
         CloseParenthesisToken,
-        EndOfFileToken,
-        BadToken,
 
-        NumberExpression,
+        LiteralExpression,
         BinaryExpression,
         ParenthesizedExpression,
     };
@@ -34,7 +36,7 @@ namespace trylang
         {SyntaxKind::CloseParenthesisToken, "CloseParenthesisToken"},
         {SyntaxKind::EndOfFileToken, "EndOfFileToken"},
         {SyntaxKind::BadToken, "BadToken"},
-        {SyntaxKind::NumberExpression, "NumberExpression"},
+        {SyntaxKind::LiteralExpression, "LiteralExpression"},
         {SyntaxKind::BinaryExpression, "BinaryExpression"},
         {SyntaxKind::ParenthesizedExpression, "ParenthesizedExpression"},
 

@@ -27,16 +27,16 @@ namespace trylang
 
     }
     
-    NumberExpressionSyntax::NumberExpressionSyntax(const std::shared_ptr<SyntaxToken>& numberToken)
+    LiteralExpressionSyntax::LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& numberToken)
         : _numberToken(numberToken) {}
 
     
-    SyntaxKind NumberExpressionSyntax::Kind()
+    SyntaxKind LiteralExpressionSyntax::Kind()
     {
-        return SyntaxKind::NumberExpression;
+        return SyntaxKind::LiteralExpression;
     }
 
-    std::vector<SyntaxNode*> NumberExpressionSyntax::GetChildren()
+    std::vector<SyntaxNode*> LiteralExpressionSyntax::GetChildren()
     {
         return std::vector<SyntaxNode*>{_numberToken.get()};
     }
