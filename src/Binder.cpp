@@ -14,6 +14,8 @@ namespace trylang
             return this->BindUnaryExpression(static_cast<UnaryExpressionSyntax*>(syntax));
         case SyntaxKind::BinaryExpression:
             return this->BindBinaryExpression(static_cast<BinaryExpressionSyntax*>(syntax));
+        case SyntaxKind::ParenthesizedExpression:
+            return this->BindExpression(static_cast<ParenthesizedExpressionSyntax*>(syntax)->_expression.get());
         default:
             throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
         }
