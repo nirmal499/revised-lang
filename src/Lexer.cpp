@@ -16,14 +16,25 @@ namespace trylang
         _buffer.str("");
     }
 
-    char Lexer::Current()
+    char Lexer::Peek(int offset)
     {
-        if(_position >= _text_size)
+        int index = _position + offset;
+        if(index >= _text_size)
         {
             return '\0';
         }
 
-        return _text.at(_position);
+        return _text.at(index);
+    }
+
+    char Lexer::Current()
+    {
+       return this->Peek(0);
+    }
+
+    char Lexer::LookAhead()
+    {
+        return this->Peek(1);
     }
 
     void Lexer::Next()
@@ -137,6 +148,26 @@ namespace trylang
         if(this->Current() == ')')
         {
             return std::make_unique<SyntaxToken>(SyntaxKind::CloseParenthesisToken, _position++, ")", std::nullopt);
+        }
+
+        if(this->Current() == '!')
+        {
+            return std::make_unique<SyntaxToken>(SyntaxKind::BangToken, _position++, "!", std::nullopt);
+        }
+
+        if(this->Current() == '&')
+        {
+            if(this->LookAhead() == '&')
+            {
+                return std::make_unique<SyntaxToken>(SyntaxKind::AmpersandAmpersandToken, _position += 2, "&&", std::nullopt);
+            }
+        }
+        else if(this->Current() == '|')
+        {
+            if(this->LookAhead() == '|')
+            {
+                return std::make_unique<SyntaxToken>(SyntaxKind::PipePipeToken, _position += 2, "||", std::nullopt);
+            }
         }
 
         _buffer << "ERROR: bad character input: '" << this->Current() << "'\n";

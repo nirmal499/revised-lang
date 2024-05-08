@@ -24,13 +24,15 @@ namespace trylang
     enum class BoundUnaryOperatorKind
     {
         Identity,
-        Negation
+        Negation,
+        LogicalNegation
     };
 
     inline std::unordered_map<BoundUnaryOperatorKind, std::string> __boundUnaryOperatorKindStringMap = 
     {
         {BoundUnaryOperatorKind::Identity, "Identity"},
         {BoundUnaryOperatorKind::Negation, "Negation"},
+        {BoundUnaryOperatorKind::LogicalNegation, "LogicalNegation"},
 
     };
 
@@ -39,7 +41,9 @@ namespace trylang
         Addition,
         Subtraction,
         Multiplication,
-        Division
+        Division,
+        LogicalOr,
+        LogicalAnd
     };
 
     inline std::unordered_map<BoundBinaryOperatorKind, std::string> __boundBinaryOperatorKindStringMap =
@@ -48,6 +52,8 @@ namespace trylang
         {BoundBinaryOperatorKind::Subtraction, "Subtraction"},
         {BoundBinaryOperatorKind::Multiplication, "Multiplication"},
         {BoundBinaryOperatorKind::Division, "Division"},
+        {BoundBinaryOperatorKind::LogicalAnd, "LogicalAnd"},
+        {BoundBinaryOperatorKind::LogicalOr, "LogicalOr"},
 
     };
 

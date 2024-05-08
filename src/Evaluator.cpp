@@ -27,19 +27,25 @@ namespace trylang
         auto* BUEnode = dynamic_cast<BoundUnaryExpression*>(node);
         if(BUEnode != nullptr)
         {   
-            /* If we reach here we need to have a "int" */
-            int operand = std::get<int>(this->EvaluateExpression(BUEnode->_operand.get()));
+            oobject_t operand = this->EvaluateExpression(BUEnode->_operand.get());
             
             if(BUEnode->_operatorKind == BoundUnaryOperatorKind::Identity)
             {
-                return operand;
+                int operand_value = std::get<int>(operand); /* If we are reaching here means operand has "int" */
+                return operand_value;
             }
 
             if(BUEnode->_operatorKind == BoundUnaryOperatorKind::Negation)
             {
-                return -operand;
+                int operand_value = std::get<int>(operand); /* If we are reaching here means operand has "int" */
+                return -operand_value;
             }
 
+            if(BUEnode->_operatorKind == BoundUnaryOperatorKind::LogicalNegation)
+            {
+                bool operand_value = std::get<bool>(operand); /* If we are reaching here means operand has "bool" */
+                return !operand_value;
+            }
             throw std::logic_error("Unexpected unary operator " + trylang::__boundUnaryOperatorKindStringMap[BUEnode->_operatorKind]);
         }
 
@@ -47,27 +53,49 @@ namespace trylang
         if(BBEnode != nullptr)
         {
             /* If we reach here we need to have a "int" */
-            int left = std::get<int>(this->EvaluateExpression(BBEnode->_left.get()));
-            int right = std::get<int>(this->EvaluateExpression(BBEnode->_right.get()));
+            oobject_t left = this->EvaluateExpression(BBEnode->_left.get());
+            oobject_t right = this->EvaluateExpression(BBEnode->_right.get());
 
             if(BBEnode->_operatorKind == BoundBinaryOperatorKind::Addition)
             {
-                return left + right;
+                int left_value = std::get<int>(left);
+                int right_value = std::get<int>(right);
+                return left_value + right_value;
             }
 
             if(BBEnode->_operatorKind == BoundBinaryOperatorKind::Subtraction)
             {
-                return left - right;
+                int left_value = std::get<int>(left);
+                int right_value = std::get<int>(right);
+                return left_value - right_value;
             }
 
             if(BBEnode->_operatorKind == BoundBinaryOperatorKind::Division)
             {
-                return left / right;
+                int left_value = std::get<int>(left);
+                int right_value = std::get<int>(right);
+                return left_value / right_value;
             }
 
             if(BBEnode->_operatorKind == BoundBinaryOperatorKind::Multiplication)
             {
-                return left * right;
+                int left_value = std::get<int>(left);
+                int right_value = std::get<int>(right);
+                return left_value * right_value;
+            }
+
+            if(BBEnode->_operatorKind == BoundBinaryOperatorKind::LogicalOr)
+            {
+                bool left_value = std::get<bool>(left);
+                bool right_value = std::get<bool>(right);
+                return (left_value || right_value);
+            }
+
+            if(BBEnode->_operatorKind == BoundBinaryOperatorKind::LogicalAnd)
+            {
+                bool left_value = std::get<bool>(left);
+                bool right_value = std::get<bool>(right);
+                return (left_value && right_value);
             }
 
             throw std::logic_error("Unexpected binary operator " + trylang::__boundBinaryOperatorKindStringMap[BBEnode->_operatorKind]);

@@ -19,6 +19,9 @@ namespace trylang
         OpenParenthesisToken,
         CloseParenthesisToken,
         IdentifierToken,
+        AmpersandAmpersandToken,
+        PipePipeToken,
+        BangToken,
 
         /* Keywords*/
         TrueKeyword,
@@ -44,6 +47,9 @@ namespace trylang
         {SyntaxKind::EndOfFileToken, "EndOfFileToken"},
         {SyntaxKind::BadToken, "BadToken"},
         {SyntaxKind::IdentifierToken, "IdentifierToken"},
+        {SyntaxKind::AmpersandAmpersandToken, "AmpersandAmpersandToken"},
+        {SyntaxKind::PipePipeToken, "PipePipeToken"},
+        {SyntaxKind::BangToken, "BangToken"},
 
         {SyntaxKind::TrueKeyword, "TrueKeyword"},
         {SyntaxKind::FalseKeyword, "FalseKeyword"},

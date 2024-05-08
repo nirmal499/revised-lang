@@ -21,6 +21,8 @@ namespace trylang
         explicit Lexer(std::string text);
 
         char Current();
+        char LookAhead();
+        char Peek(int offset);
 
         void Next();
 

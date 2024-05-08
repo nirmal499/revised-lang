@@ -66,41 +66,58 @@ namespace trylang
 
     std::optional<BoundBinaryOperatorKind> Binder::BindBinaryOperatorKind(SyntaxKind kind, const std::type_info& leftType, const std::type_info& rightType)
     {
-        if(leftType != typeid(int) || rightType != typeid(int))
+        if(leftType == typeid(int) && rightType == typeid(int))
         {
-            return std::nullopt;
+            switch (kind)
+            {
+                case SyntaxKind::PlusToken:
+                    return BoundBinaryOperatorKind::Addition;
+                case SyntaxKind::MinusToken:
+                    return BoundBinaryOperatorKind::Subtraction;
+                case SyntaxKind::SlashToken:
+                    return BoundBinaryOperatorKind::Division;
+                case SyntaxKind::StarToken:
+                    return BoundBinaryOperatorKind::Multiplication;
+            }
         }
 
-        switch (kind)
+        if(leftType == typeid(bool) && rightType == typeid(bool))
         {
-        case SyntaxKind::PlusToken:
-            return BoundBinaryOperatorKind::Addition;
-        case SyntaxKind::MinusToken:
-            return BoundBinaryOperatorKind::Subtraction;
-        case SyntaxKind::SlashToken:
-            return BoundBinaryOperatorKind::Division;
-        case SyntaxKind::StarToken:
-            return BoundBinaryOperatorKind::Multiplication;
-        default:
-            throw std::logic_error("Unexpected binary operator " + __syntaxStringMap[kind]);
+            switch (kind)
+            {
+                case SyntaxKind::AmpersandAmpersandToken:
+                    return BoundBinaryOperatorKind::LogicalAnd;
+                case SyntaxKind::PipePipeToken:
+                    return BoundBinaryOperatorKind::LogicalOr;
+            }
         }
+
+        return std::nullopt;
     }
 
     std::optional<BoundUnaryOperatorKind> Binder::BindUnaryOperatorKind(SyntaxKind kind, const std::type_info& operandType)
     {
-        if(operandType != typeid(int))
+        if(operandType == typeid(int))
         {
-            return std::nullopt;
+            switch (kind)
+            {
+                case SyntaxKind::PlusToken:
+                    return BoundUnaryOperatorKind::Identity;
+                case SyntaxKind::MinusToken:
+                    return BoundUnaryOperatorKind::Negation;
+            }
         }
 
-        switch (kind)
+        if(operandType == typeid(bool))
         {
-        case SyntaxKind::PlusToken:
-            return BoundUnaryOperatorKind::Identity;
-        case SyntaxKind::MinusToken:
-            return BoundUnaryOperatorKind::Negation;
-        default:
-            throw std::logic_error("Unexpected unary operator " + __syntaxStringMap[kind]);
+            switch (kind)
+            {
+                case SyntaxKind::BangToken:
+                    return BoundUnaryOperatorKind::LogicalNegation;
+            }
         }
+
+
+        return std::nullopt;
     }
 }
