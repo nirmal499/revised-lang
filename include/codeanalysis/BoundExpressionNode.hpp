@@ -37,10 +37,10 @@ namespace trylang
 
     struct BoundUnaryExpression : public BoundExpressionNode
     {
-        BoundUnaryOperatorKind _operatorKind;
+        BoundUnaryOperator* _op;
         std::unique_ptr<BoundExpressionNode> _operand;
 
-        BoundUnaryExpression(BoundUnaryOperatorKind operatorKind, std::unique_ptr<BoundExpressionNode> operand);
+        BoundUnaryExpression(BoundUnaryOperator* op, std::unique_ptr<BoundExpressionNode> operand);
         
         const std::type_info& Type() override;
         BoundNodeKind Kind() override;
@@ -49,10 +49,10 @@ namespace trylang
     struct BoundBinaryExpression : public BoundExpressionNode
     {
         std::unique_ptr<BoundExpressionNode> _left;
-        BoundBinaryOperatorKind _operatorKind;
+        BoundBinaryOperator* _op;
         std::unique_ptr<BoundExpressionNode> _right;
 
-        BoundBinaryExpression(std::unique_ptr<BoundExpressionNode> left, BoundBinaryOperatorKind operatorKind, std::unique_ptr<BoundExpressionNode> right);
+        BoundBinaryExpression(std::unique_ptr<BoundExpressionNode> left, BoundBinaryOperator* op, std::unique_ptr<BoundExpressionNode> right);
         
         const std::type_info& Type() override;
         BoundNodeKind Kind() override;

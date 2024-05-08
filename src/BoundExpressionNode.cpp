@@ -2,8 +2,8 @@
 
 namespace trylang
 {
-    BoundUnaryExpression::BoundUnaryExpression(BoundUnaryOperatorKind operatorKind, std::unique_ptr<BoundExpressionNode> operand)
-        : _operatorKind(operatorKind), _operand(std::move(operand))
+    BoundUnaryExpression::BoundUnaryExpression(BoundUnaryOperator* op, std::unique_ptr<BoundExpressionNode> operand)
+        : _op(op), _operand(std::move(operand))
     {}
     
     const std::type_info& BoundUnaryExpression::Type()
@@ -45,8 +45,8 @@ namespace trylang
         return BoundNodeKind::LiteralExpression;
     }
 
-    BoundBinaryExpression::BoundBinaryExpression(std::unique_ptr<BoundExpressionNode> left, BoundBinaryOperatorKind operatorKind, std::unique_ptr<BoundExpressionNode> right)
-        : _left(std::move(left)), _operatorKind(operatorKind), _right(std::move(right))
+    BoundBinaryExpression::BoundBinaryExpression(std::unique_ptr<BoundExpressionNode> left, BoundBinaryOperator* op, std::unique_ptr<BoundExpressionNode> right)
+        : _left(std::move(left)), _op(op), _right(std::move(right))
     {}
 
     const std::type_info& BoundBinaryExpression::Type()

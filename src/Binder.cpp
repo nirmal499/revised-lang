@@ -1,5 +1,6 @@
 #include <codeanalysis/Binder.hpp>
 #include <codeanalysis/ExpressionSyntax.hpp>
+#include <codeanalysis/BoundNodeKind.hpp>
 
 namespace trylang
 {
@@ -39,85 +40,29 @@ namespace trylang
     std::unique_ptr<BoundExpressionNode> Binder::BindUnaryExpression(UnaryExpressionSyntax* syntax)
     {
         auto boundOperand = this->BindExpression(syntax->_operand.get());
-        auto boundOperatorKind = this->BindUnaryOperatorKind(syntax->_operatorToken->Kind(), boundOperand->Type());
-        if(!boundOperatorKind.has_value())
+        auto boundOperatorKind = BoundUnaryOperator::Bind(syntax->_operatorToken->Kind(),boundOperand->Type());
+
+        if(boundOperatorKind == nullptr)
         {
             buffer << "Unary operator '" << syntax->_operatorToken->_text << "' is not defined for type " << boundOperand->Type().name() << "\n";
             return boundOperand;
         }
 
-        return std::make_unique<BoundUnaryExpression>(*boundOperatorKind, std::move(boundOperand));
+        return std::make_unique<BoundUnaryExpression>(boundOperatorKind, std::move(boundOperand));
     }
 
     std::unique_ptr<BoundExpressionNode> Binder::BindBinaryExpression(BinaryExpressionSyntax* syntax)
     {
         auto boundLeft = this->BindExpression(syntax->_left.get());
         auto boundRight = this->BindExpression(syntax->_right.get());
-        auto boundOperatorKind = this->BindBinaryOperatorKind(syntax->_operatorToken->Kind(), boundLeft->Type(), boundRight->Type());
+        auto boundOperatorKind = BoundBinaryOperator::Bind(syntax->_operatorToken->Kind(), boundLeft->Type(), boundRight->Type());
         
-        if(!boundOperatorKind.has_value())
+        if(boundOperatorKind == nullptr)
         {
             buffer << "Binary operator '" << syntax->_operatorToken->_text << "' is not defined for types " << boundLeft->Type().name() << " and " << boundRight->Type().name() << "\n";
             return boundLeft;
         }
 
-        return std::make_unique<BoundBinaryExpression>(std::move(boundLeft), *boundOperatorKind, std::move(boundRight));
-    }
-
-    std::optional<BoundBinaryOperatorKind> Binder::BindBinaryOperatorKind(SyntaxKind kind, const std::type_info& leftType, const std::type_info& rightType)
-    {
-        if(leftType == typeid(int) && rightType == typeid(int))
-        {
-            switch (kind)
-            {
-                case SyntaxKind::PlusToken:
-                    return BoundBinaryOperatorKind::Addition;
-                case SyntaxKind::MinusToken:
-                    return BoundBinaryOperatorKind::Subtraction;
-                case SyntaxKind::SlashToken:
-                    return BoundBinaryOperatorKind::Division;
-                case SyntaxKind::StarToken:
-                    return BoundBinaryOperatorKind::Multiplication;
-            }
-        }
-
-        if(leftType == typeid(bool) && rightType == typeid(bool))
-        {
-            switch (kind)
-            {
-                case SyntaxKind::AmpersandAmpersandToken:
-                    return BoundBinaryOperatorKind::LogicalAnd;
-                case SyntaxKind::PipePipeToken:
-                    return BoundBinaryOperatorKind::LogicalOr;
-            }
-        }
-
-        return std::nullopt;
-    }
-
-    std::optional<BoundUnaryOperatorKind> Binder::BindUnaryOperatorKind(SyntaxKind kind, const std::type_info& operandType)
-    {
-        if(operandType == typeid(int))
-        {
-            switch (kind)
-            {
-                case SyntaxKind::PlusToken:
-                    return BoundUnaryOperatorKind::Identity;
-                case SyntaxKind::MinusToken:
-                    return BoundUnaryOperatorKind::Negation;
-            }
-        }
-
-        if(operandType == typeid(bool))
-        {
-            switch (kind)
-            {
-                case SyntaxKind::BangToken:
-                    return BoundUnaryOperatorKind::LogicalNegation;
-            }
-        }
-
-
-        return std::nullopt;
+        return std::make_unique<BoundBinaryExpression>(std::move(boundLeft), boundOperatorKind, std::move(boundRight));
     }
 }
