@@ -8,7 +8,7 @@ namespace trylang
     
     const std::type_info& BoundUnaryExpression::Type()
     {
-        return _operand->Type();
+        return _op->_resultType;
     }
 
     BoundNodeKind BoundUnaryExpression::Kind()
@@ -51,7 +51,7 @@ namespace trylang
 
     const std::type_info& BoundBinaryExpression::Type()
     {
-        return _left->Type();
+        return _op->_resultType;
     }
     
     BoundNodeKind BoundBinaryExpression::Kind()

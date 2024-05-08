@@ -98,6 +98,48 @@ namespace trylang
                 return (left_value && right_value);
             }
 
+            if(BBEnode->_op->_kind == BoundBinaryOperatorKind::LogicalEquality)
+            {
+                auto* data_left_int = std::get_if<int>(&left);
+                auto* data_right_int = std::get_if<int>(&right);
+
+                auto* data_left_bool = std::get_if<bool>(&left);
+                auto* data_right_bool = std::get_if<bool>(&right);
+
+                if(data_left_int != nullptr && data_right_int != nullptr)
+                {
+                    /* left and right are "int" */
+                    return ((*data_left_int) == (*data_right_int));
+                }
+
+                if(data_left_bool != nullptr && data_right_bool != nullptr)
+                {
+                    /* left and right are "bool" */
+                    return ((*data_left_bool) == (*data_right_bool));
+                }
+            }
+
+            if(BBEnode->_op->_kind == BoundBinaryOperatorKind::LogicalNotEquality)
+            {
+                auto* data_left_int = std::get_if<int>(&left);
+                auto* data_right_int = std::get_if<int>(&right);
+
+                auto* data_left_bool = std::get_if<bool>(&left);
+                auto* data_right_bool = std::get_if<bool>(&right);
+
+                if(data_left_int != nullptr && data_right_int != nullptr)
+                {
+                    /* left and right are "int" */
+                    return ((*data_left_int) != (*data_right_int));
+                }
+
+                if(data_left_bool != nullptr && data_right_bool != nullptr)
+                {
+                    /* left and right are "bool" */
+                    return ((*data_left_bool) != (*data_right_bool));
+                }
+            }
+
             throw std::logic_error("Unexpected binary operator " + trylang::__boundBinaryOperatorKindStringMap[BBEnode->_op->_kind]);
         }
 

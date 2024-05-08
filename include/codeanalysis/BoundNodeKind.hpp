@@ -48,7 +48,9 @@ namespace trylang
         Multiplication,
         Division,
         LogicalOr,
-        LogicalAnd
+        LogicalAnd,
+        LogicalEquality,
+        LogicalNotEquality,
     };
 
     inline std::unordered_map<BoundBinaryOperatorKind, std::string> __boundBinaryOperatorKindStringMap =
@@ -59,6 +61,8 @@ namespace trylang
         {BoundBinaryOperatorKind::Division, "Division"},
         {BoundBinaryOperatorKind::LogicalAnd, "LogicalAnd"},
         {BoundBinaryOperatorKind::LogicalOr, "LogicalOr"},
+        {BoundBinaryOperatorKind::LogicalEquality, "LogicalEquality"},
+        {BoundBinaryOperatorKind::LogicalNotEquality, "LogicalNotEquality"},
 
     };
 
@@ -116,13 +120,21 @@ namespace trylang
         static BoundBinaryOperator* Bind(SyntaxKind syntaxKind, const std::type_info& leftOperandType, const std::type_info& rightOperandType);
     };
 
-    inline std::array<std::unique_ptr<BoundBinaryOperator>, 6> _boundBinaryOperatorArray = {
+    inline std::array<std::unique_ptr<BoundBinaryOperator>, 10> _boundBinaryOperatorArray = {
         std::make_unique<BoundBinaryOperator>(SyntaxKind::PlusToken, BoundBinaryOperatorKind::Addition, typeid(int),typeid(int), typeid(int)),
         std::make_unique<BoundBinaryOperator>(SyntaxKind::MinusToken, BoundBinaryOperatorKind::Subtraction, typeid(int),typeid(int), typeid(int)),
         std::make_unique<BoundBinaryOperator>(SyntaxKind::SlashToken, BoundBinaryOperatorKind::Division, typeid(int),typeid(int), typeid(int)),
         std::make_unique<BoundBinaryOperator>(SyntaxKind::StarToken, BoundBinaryOperatorKind::Multiplication, typeid(int),typeid(int), typeid(int)),
+
+        std::make_unique<BoundBinaryOperator>(SyntaxKind::EqualsEqualsToken, BoundBinaryOperatorKind::LogicalEquality, typeid(int),typeid(int), typeid(bool)),
+        std::make_unique<BoundBinaryOperator>(SyntaxKind::BangsEqualsToken, BoundBinaryOperatorKind::LogicalNotEquality, typeid(int),typeid(int), typeid(bool)),
+
         std::make_unique<BoundBinaryOperator>(SyntaxKind::AmpersandAmpersandToken, BoundBinaryOperatorKind::LogicalAnd, typeid(bool),typeid(bool), typeid(bool)),
-        std::make_unique<BoundBinaryOperator>(SyntaxKind::PipePipeToken, BoundBinaryOperatorKind::LogicalOr, typeid(bool),typeid(bool), typeid(bool))
+        std::make_unique<BoundBinaryOperator>(SyntaxKind::PipePipeToken, BoundBinaryOperatorKind::LogicalOr, typeid(bool),typeid(bool), typeid(bool)),
+
+        std::make_unique<BoundBinaryOperator>(SyntaxKind::EqualsEqualsToken, BoundBinaryOperatorKind::LogicalEquality, typeid(bool),typeid(bool), typeid(bool)),
+        std::make_unique<BoundBinaryOperator>(SyntaxKind::BangsEqualsToken, BoundBinaryOperatorKind::LogicalNotEquality, typeid(bool),typeid(bool), typeid(bool)),
+
     };
 
     inline BoundBinaryOperator* BoundBinaryOperator::Bind(SyntaxKind syntaxKind, const std::type_info& leftOperandType, const std::type_info& rightOperandType)

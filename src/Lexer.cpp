@@ -150,11 +150,6 @@ namespace trylang
             return std::make_unique<SyntaxToken>(SyntaxKind::CloseParenthesisToken, _position++, ")", std::nullopt);
         }
 
-        if(this->Current() == '!')
-        {
-            return std::make_unique<SyntaxToken>(SyntaxKind::BangToken, _position++, "!", std::nullopt);
-        }
-
         if(this->Current() == '&')
         {
             if(this->LookAhead() == '&')
@@ -167,6 +162,24 @@ namespace trylang
             if(this->LookAhead() == '|')
             {
                 return std::make_unique<SyntaxToken>(SyntaxKind::PipePipeToken, _position += 2, "||", std::nullopt);
+            }
+        }
+        else if(this->Current() == '=')
+        {
+            if(this->LookAhead() == '=')
+            {
+                return std::make_unique<SyntaxToken>(SyntaxKind::EqualsEqualsToken, _position += 2, "==", std::nullopt);
+            }
+        }
+        else if(this->Current() == '!')
+        {
+            if(this->LookAhead() == '=')
+            {
+                return std::make_unique<SyntaxToken>(SyntaxKind::BangsEqualsToken, _position += 2, "!=", std::nullopt);
+            }
+            else
+            {
+                return std::make_unique<SyntaxToken>(SyntaxKind::BangToken, _position++, "!", std::nullopt);
             }
         }
 

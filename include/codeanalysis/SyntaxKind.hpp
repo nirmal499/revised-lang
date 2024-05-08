@@ -22,6 +22,8 @@ namespace trylang
         AmpersandAmpersandToken,
         PipePipeToken,
         BangToken,
+        EqualsEqualsToken,
+        BangsEqualsToken,
 
         /* Keywords*/
         TrueKeyword,
@@ -50,6 +52,9 @@ namespace trylang
         {SyntaxKind::AmpersandAmpersandToken, "AmpersandAmpersandToken"},
         {SyntaxKind::PipePipeToken, "PipePipeToken"},
         {SyntaxKind::BangToken, "BangToken"},
+        {SyntaxKind::EqualsEqualsToken, "EqualsEqualsToken"},
+        {SyntaxKind::BangsEqualsToken, "BangsEqualsToken"},
+
 
         {SyntaxKind::TrueKeyword, "TrueKeyword"},
         {SyntaxKind::FalseKeyword, "FalseKeyword"},
