@@ -5,6 +5,7 @@
 #include <optional>
 #include <codeanalysis/BoundExpressionNode.hpp>
 #include <codeanalysis/SyntaxKind.hpp>
+#include <codeanalysis/VariableSymbol.hpp>
 
 namespace trylang
 {
@@ -20,9 +21,9 @@ namespace trylang
 
     struct Binder
     {
-        std::unordered_map<std::string, oobject_t>& _variables;
+        variable_map_t& _variable_map;
 
-        explicit Binder(std::unordered_map<std::string, oobject_t>& variables);
+        explicit Binder(variable_map_t& variables);
 
         std::stringstream _buffer;
 

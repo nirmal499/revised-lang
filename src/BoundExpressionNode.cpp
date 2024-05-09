@@ -45,8 +45,8 @@ namespace trylang
         return BoundNodeKind::BinaryExpression;
     }
 
-    BoundVariableExpression::BoundVariableExpression(std::string name, const std::type_info &type)
-        : _name(std::move(name)), _type(type)
+    BoundVariableExpression::BoundVariableExpression(VariableSymbol variable)
+        : _variable(std::move(variable))
     {}
 
     BoundNodeKind BoundVariableExpression::Kind()
@@ -56,11 +56,11 @@ namespace trylang
 
     const std::type_info& BoundVariableExpression::Type()
     {
-        return _type;
+        return _variable._type;
     }
 
-    BoundAssignmentExpression::BoundAssignmentExpression(std::string name, std::unique_ptr<BoundExpressionNode> expression)
-        : _name(std::move(name)), _expression(std::move(expression))
+    BoundAssignmentExpression::BoundAssignmentExpression(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression)
+        : _variable(std::move(variable)), _expression(std::move(expression))
     {}
 
     const std::type_info &BoundAssignmentExpression::Type()

@@ -1,11 +1,12 @@
 #include <codeanalysis/Binder.hpp>
 #include <codeanalysis/ExpressionSyntax.hpp>
 #include <codeanalysis/BoundNodeKind.hpp>
+#include <algorithm>
 
 namespace trylang
 {
-    Binder::Binder(std::unordered_map<std::string, oobject_t>& variables)
-        : _variables(variables)
+    Binder::Binder(variable_map_t& variables)
+        : _variable_map(variables)
     {}
 
     std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax* syntax)
@@ -37,15 +38,17 @@ namespace trylang
     std::unique_ptr<BoundExpressionNode> Binder::BindNameExpression(NameExpressionSyntax *syntax)
     {
         const auto& varname = syntax->_identifierToken->_text;
-        auto it = _variables.find(varname);
-        if(it == _variables.end())
+        auto it = std::find_if(_variable_map.begin(), _variable_map.end(), [varname](const auto& pair){
+            return pair.first._name == varname;
+        });
+
+        if(it == _variable_map.end())
         {
             _buffer << "Undefined Name " << varname << "\n";
             return std::make_unique<BoundLiteralExpression>(0);
         }
 
-        const std::type_info& type_information = trylang::assign_type_info(it->second);
-        return std::make_unique<BoundVariableExpression>(varname, type_information);
+        return std::make_unique<BoundVariableExpression>(it->first);
     }
 
     std::unique_ptr<BoundExpressionNode> Binder::BindAssignmentExpression(AssignmentExpressionSyntax *syntax)
@@ -53,7 +56,15 @@ namespace trylang
         const auto& varname = syntax->_identifierToken->_text;
         auto boundExpression = this->BindExpression(syntax->_expression.get());
 
-        return std::make_unique<BoundAssignmentExpression>(varname, std::move(boundExpression));
+        VariableSymbol variable(varname, boundExpression->Type());
+        /*
+         * We are using std::nullopt to initialize becoz in Binder we do not know the computed value since it will be done in the evaluator
+         * In Binder we know only the type_info of the computed value. So std::nullopt will be replaced with the computed value in the evaluator
+         * No need to worry about it.
+         * */
+        _variable_map[variable] = std::nullopt;
+
+        return std::make_unique<BoundAssignmentExpression>(std::move(variable), std::move(boundExpression));
     }
 
     std::unique_ptr<BoundExpressionNode> Binder::BindParenthesizedExpression(ParenthesizedExpressionSyntax* syntax)

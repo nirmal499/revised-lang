@@ -2,6 +2,8 @@
 
 #include <optional>
 #include <variant>
+#include <codeanalysis/VariableSymbol.hpp>
+#include <unordered_map>
 
 namespace trylang
 {
@@ -11,4 +13,6 @@ namespace trylang
     */
     typedef std::variant<int, bool> oobject_t;
     typedef std::optional<oobject_t> object_t;
+
+    typedef std::unordered_map<trylang::VariableSymbol, trylang::object_t, trylang::VariableSymbolHash> variable_map_t;
 }

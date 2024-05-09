@@ -9,6 +9,7 @@
 #include <variant>
 #include <iostream>
 #include <typeinfo>
+#include <codeanalysis/VariableSymbol.hpp>
 
 namespace trylang
 {
@@ -27,10 +28,9 @@ namespace trylang
 
     struct BoundVariableExpression : public BoundExpressionNode
     {
-        std::string _name;
-        const std::type_info& _type;
+        VariableSymbol _variable;
 
-        BoundVariableExpression(std::string name, const std::type_info& type);
+        BoundVariableExpression(VariableSymbol variable);
 
         const std::type_info& Type() override;
         BoundNodeKind Kind() override;
@@ -38,9 +38,9 @@ namespace trylang
 
     struct BoundAssignmentExpression : public BoundExpressionNode
     {
-        std::string _name;
+        VariableSymbol _variable;
         std::unique_ptr<BoundExpressionNode> _expression;
-        BoundAssignmentExpression(std::string name, std::unique_ptr<BoundExpressionNode> expression);
+        BoundAssignmentExpression(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression);
 
         const std::type_info& Type() override;
         BoundNodeKind Kind() override;

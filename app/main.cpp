@@ -5,11 +5,12 @@
 #include <codeanalysis/SyntaxTree.hpp>
 #include <codeanalysis/ExpressionSyntax.hpp>
 #include <codeanalysis/Binder.hpp>
+#include <codeanalysis/VariableSymbol.hpp>
 
 void Run1();
 void Run2();
 
-std::unordered_map<std::string, trylang::oobject_t> g_variables;
+trylang::variable_map_t g_variable_map;
 
 int main()
 {
@@ -82,7 +83,7 @@ void Run2()
         }
 
         std::unique_ptr<trylang::SyntaxTree> syntaxTree = trylang::SyntaxTree::Parse(line);
-        std::unique_ptr<trylang::Binder> binder = std::make_unique<trylang::Binder>(g_variables);
+        std::unique_ptr<trylang::Binder> binder = std::make_unique<trylang::Binder>(g_variable_map);
         std::unique_ptr<trylang::BoundExpressionNode> boundExpression = binder->BindExpression(syntaxTree->_root.get());
 
         errors = syntaxTree->_errors.append(binder->Errors());
@@ -98,7 +99,7 @@ void Run2()
         }
         else
         {
-            trylang::Evaluator evaluator(std::move(boundExpression), g_variables);
+            trylang::Evaluator evaluator(std::move(boundExpression), g_variable_map);
             trylang::oobject_t result = evaluator.Evaluate();
             std::visit(trylang::PrintVisitor{}, result);
             std::cout << "\n";
