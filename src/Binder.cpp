@@ -4,26 +4,61 @@
 
 namespace trylang
 {
+    Binder::Binder(std::unordered_map<std::string, oobject_t>& variables)
+        : _variables(variables)
+    {}
+
     std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax* syntax)
     {
         switch (syntax->Kind())
         {
-        case SyntaxKind::LiteralExpression:
-            return this->BindLiteralExpression(static_cast<LiteralExpressionSyntax*>(syntax));
-        case SyntaxKind::UnaryExpression:
-            return this->BindUnaryExpression(static_cast<UnaryExpressionSyntax*>(syntax));
-        case SyntaxKind::BinaryExpression:
-            return this->BindBinaryExpression(static_cast<BinaryExpressionSyntax*>(syntax));
-        case SyntaxKind::ParenthesizedExpression:
-            return this->BindExpression(static_cast<ParenthesizedExpressionSyntax*>(syntax)->_expression.get());
-        default:
-            throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
+            case SyntaxKind::LiteralExpression:
+                return this->BindLiteralExpression(static_cast<LiteralExpressionSyntax*>(syntax));
+            case SyntaxKind::UnaryExpression:
+                return this->BindUnaryExpression(static_cast<UnaryExpressionSyntax*>(syntax));
+            case SyntaxKind::BinaryExpression:
+                return this->BindBinaryExpression(static_cast<BinaryExpressionSyntax*>(syntax));
+            case SyntaxKind::ParenthesizedExpression:
+                return this->BindParenthesizedExpression(static_cast<ParenthesizedExpressionSyntax*>(syntax));
+            case SyntaxKind::NameExpression:
+                return this->BindNameExpression(static_cast<NameExpressionSyntax*>(syntax));
+            case SyntaxKind::AssignmentExpression:
+                return this->BindAssignmentExpression(static_cast<AssignmentExpressionSyntax*>(syntax));
+            default:
+                throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
         }
     }
 
     std::string Binder::Errors()
     {
-        return buffer.str();
+        return _buffer.str();
+    }
+
+    std::unique_ptr<BoundExpressionNode> Binder::BindNameExpression(NameExpressionSyntax *syntax)
+    {
+        const auto& varname = syntax->_identifierToken->_text;
+        auto it = _variables.find(varname);
+        if(it == _variables.end())
+        {
+            _buffer << "Undefined Name " << varname << "\n";
+            return std::make_unique<BoundLiteralExpression>(0);
+        }
+
+        const std::type_info& type_information = trylang::assign_type_info(it->second);
+        return std::make_unique<BoundVariableExpression>(varname, type_information);
+    }
+
+    std::unique_ptr<BoundExpressionNode> Binder::BindAssignmentExpression(AssignmentExpressionSyntax *syntax)
+    {
+        const auto& varname = syntax->_identifierToken->_text;
+        auto boundExpression = this->BindExpression(syntax->_expression.get());
+
+        return std::make_unique<BoundAssignmentExpression>(varname, std::move(boundExpression));
+    }
+
+    std::unique_ptr<BoundExpressionNode> Binder::BindParenthesizedExpression(ParenthesizedExpressionSyntax* syntax)
+    {
+        return this->BindExpression(syntax->_expression.get());
     }
 
     std::unique_ptr<BoundExpressionNode> Binder::BindLiteralExpression(LiteralExpressionSyntax* syntax)
@@ -46,7 +81,7 @@ namespace trylang
 
         if(boundOperatorKind == nullptr)
         {
-            buffer << "Unary operator '" << syntax->_operatorToken->_text << "' is not defined for type " << boundOperand->Type().name() << "\n";
+            _buffer << "Unary operator '" << syntax->_operatorToken->_text << "' is not defined for type " << boundOperand->Type().name() << "\n";
             return boundOperand;
         }
 
@@ -61,7 +96,7 @@ namespace trylang
         
         if(boundOperatorKind == nullptr)
         {
-            buffer << "Binary operator '" << syntax->_operatorToken->_text << "' is not defined for types " << boundLeft->Type().name() << " and " << boundRight->Type().name() << "\n";
+            _buffer << "Binary operator '" << syntax->_operatorToken->_text << "' is not defined for types " << boundLeft->Type().name() << " and " << boundRight->Type().name() << "\n";
             return boundLeft;
         }
 

@@ -77,7 +77,27 @@ namespace trylang
         return std::make_unique<SyntaxTree>(_buffer.str(), std::move(expression), endOfFileToken);
     }
 
-    std::unique_ptr<ExpressionSyntax> Parser::ParseExpression(int parentPrecedance)
+    std::unique_ptr<ExpressionSyntax> Parser::ParseExpression()
+    {
+        return this->ParseAssignmentExpression();
+    }
+
+    /* This will take care of `a = b = 5` */
+    std::unique_ptr<ExpressionSyntax> Parser::ParseAssignmentExpression()
+    {
+        if(this->Peek(0)->Kind() == SyntaxKind::IdentifierToken && this->Peek(1)->Kind() == SyntaxKind::EqualsToken)
+        {
+            auto identifierToken = this->NextToken();
+            auto operatorToken = this->NextToken();
+            auto right = this->ParseAssignmentExpression();
+
+            return std::make_unique<AssignmentExpressionSyntax>(identifierToken, operatorToken, std::move(right));
+        }
+
+        return this->ParseBinaryExpression();
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParseBinaryExpression(int parentPrecedance)
     {
         std::unique_ptr<ExpressionSyntax> left;
 
@@ -85,7 +105,7 @@ namespace trylang
         if(unaryOperatorPrecedance != 0 && unaryOperatorPrecedance >= parentPrecedance)
         {
             auto operatorToken = this->NextToken();
-            auto operand = this->ParseExpression();
+            auto operand = this->ParseBinaryExpression();
             left = std::make_unique<UnaryExpressionSyntax>(operatorToken, std::move(operand));
         }
         else
@@ -101,7 +121,7 @@ namespace trylang
                 break;
             }
             auto operatorToken = this->NextToken();
-            auto right = this->ParseExpression(precedance);
+            auto right = this->ParseBinaryExpression(precedance);
             left = std::make_unique<BinaryExpressionSyntax>(std::move(left), operatorToken, std::move(right));
         }
 
@@ -165,6 +185,11 @@ namespace trylang
             auto keywordToken = this->NextToken();
             auto value = keywordToken->Kind() == SyntaxKind::TrueKeyword;
             return std::make_unique<LiteralExpressionSyntax>(keywordToken, value);
+        }
+        else if(this->Current()->Kind() == SyntaxKind::IdentifierToken)
+        {
+            auto identifierToken = this->NextToken();
+            return std::make_unique<NameExpressionSyntax>(identifierToken);
         }
 
         std::shared_ptr<SyntaxToken> numberToken = this->MatchToken(SyntaxKind::NumberToken);

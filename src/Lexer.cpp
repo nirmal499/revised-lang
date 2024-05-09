@@ -170,6 +170,10 @@ namespace trylang
             {
                 return std::make_unique<SyntaxToken>(SyntaxKind::EqualsEqualsToken, _position += 2, "==", std::nullopt);
             }
+            else
+            {
+                return std::make_unique<SyntaxToken>(SyntaxKind::EqualsToken, _position++, "=", std::nullopt);
+            }
         }
         else if(this->Current() == '!')
         {

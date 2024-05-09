@@ -59,6 +59,31 @@ namespace trylang
         ~ExpressionSyntax() override = default;
     };
 
+    struct NameExpressionSyntax : public ExpressionSyntax
+    {
+        std::shared_ptr<SyntaxToken> _identifierToken;
+        
+        explicit NameExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifierToken);
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
+    struct AssignmentExpressionSyntax : public ExpressionSyntax
+    {
+
+        std::shared_ptr<SyntaxToken> _identifierToken;
+        std::shared_ptr<SyntaxToken> _equalsToken;
+        std::unique_ptr<ExpressionSyntax> _expression;
+
+        AssignmentExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifierToken, const std::shared_ptr<SyntaxToken>& equalsToken, std::unique_ptr<ExpressionSyntax> expression);
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct LiteralExpressionSyntax : public ExpressionSyntax
     {
         std::shared_ptr<SyntaxToken> _literalToken;

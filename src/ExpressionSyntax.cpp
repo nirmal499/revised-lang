@@ -26,6 +26,34 @@ namespace trylang
         }
 
     }
+
+    NameExpressionSyntax::NameExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifierToken)
+            : _identifierToken(identifierToken)
+    {}
+
+    SyntaxKind NameExpressionSyntax::Kind()
+    {
+        return SyntaxKind::NameExpression;
+    }
+
+    std::vector<SyntaxNode*> NameExpressionSyntax::GetChildren()
+    {
+        return std::vector<SyntaxNode*>{_identifierToken.get()};
+    }
+
+    AssignmentExpressionSyntax::AssignmentExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifierToken, const std::shared_ptr<SyntaxToken>& equalsToken, std::unique_ptr<ExpressionSyntax> expression)
+            : _identifierToken(identifierToken), _equalsToken(equalsToken), _expression(std::move(expression))
+    {}
+
+    SyntaxKind AssignmentExpressionSyntax::Kind()
+    {
+        return SyntaxKind::AssignmentExpression;
+    }
+
+    std::vector<SyntaxNode*> AssignmentExpressionSyntax::GetChildren()
+    {
+        return std::vector<SyntaxNode*>{_identifierToken.get(), _equalsToken.get(), _expression.get()};
+    }
     
     LiteralExpressionSyntax::LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken)
         : _literalToken(literalToken) 

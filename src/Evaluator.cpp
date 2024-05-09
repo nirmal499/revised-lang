@@ -6,9 +6,8 @@
 
 namespace trylang
 {
-    std::unique_ptr<BoundExpressionNode> _root;
-
-    Evaluator::Evaluator(std::unique_ptr<BoundExpressionNode> root) : _root(std::move(root))
+    Evaluator::Evaluator(std::unique_ptr<BoundExpressionNode> root, std::unordered_map<std::string, oobject_t>& variables)
+        : _root(std::move(root)), _variables(variables)
     {}
 
     oobject_t Evaluator::Evaluate()
@@ -22,6 +21,21 @@ namespace trylang
         if(BLEnode != nullptr)
         {
             return *BLEnode->_value;
+        }
+
+        auto* BVEnode = dynamic_cast<BoundVariableExpression*>(node);
+        if(BVEnode != nullptr)
+        {
+            /* In the binder we ensured that "BVEnode->_name" exists */
+            return _variables.at(BVEnode->_name);
+        }
+
+        auto* BAEnode = dynamic_cast<BoundAssignmentExpression*>(node);
+        if(BAEnode != nullptr)
+        {
+            auto value = this->EvaluateExpression(BAEnode->_expression.get());
+            _variables[BAEnode->_name] = value;
+            return value;
         }
 
         auto* BUEnode = dynamic_cast<BoundUnaryExpression*>(node);

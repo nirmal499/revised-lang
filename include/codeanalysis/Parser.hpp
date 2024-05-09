@@ -33,8 +33,9 @@ namespace trylang
         std::shared_ptr<SyntaxToken> MatchToken(SyntaxKind kind);
 
         std::unique_ptr<SyntaxTree> Parse();
-
-        std::unique_ptr<ExpressionSyntax> ParseExpression(int parentPrecedance = 0);
+        std::unique_ptr<ExpressionSyntax> ParseExpression();
+        std::unique_ptr<ExpressionSyntax> ParseAssignmentExpression();
+        std::unique_ptr<ExpressionSyntax> ParseBinaryExpression(int parentPrecedance = 0);
 
         std::unique_ptr<ExpressionSyntax> ParsePrimaryExpression();
 

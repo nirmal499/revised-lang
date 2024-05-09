@@ -6,6 +6,8 @@
 #include <memory>
 #include <cstring>
 #include <array>
+#include <codeanalysis/Types.hpp>
+#include <stdexcept>
 
 namespace trylang
 {
@@ -15,6 +17,8 @@ namespace trylang
         BinaryExpression,
         UnaryExpression,
         ParenthesizedExpression,
+        VariableExpression,
+        AssignmentExpression,
     };
 
     inline std::unordered_map<BoundNodeKind, std::string> __boundNodeStringMap = 
@@ -23,7 +27,8 @@ namespace trylang
         {BoundNodeKind::BinaryExpression, "BinaryExpression"},
         {BoundNodeKind::UnaryExpression, "UnaryExpression"},
         {BoundNodeKind::ParenthesizedExpression, "ParenthesizedExpression"},
-
+        {BoundNodeKind::VariableExpression, "VariableExpression"},
+        {BoundNodeKind::AssignmentExpression, "AssignmentExpression"},
     };
 
     enum class BoundUnaryOperatorKind
@@ -149,4 +154,23 @@ namespace trylang
 
         return nullptr;
     }
+
+    inline auto assign_type_info = [](const object_t& data) -> const std::type_info&
+    {
+        auto index_in_variant = data->index();
+        if(index_in_variant == 0)
+        {
+            return typeid(int);
+        }
+
+        if(index_in_variant == 1)
+        {
+            return typeid(bool);
+        }
+
+        /* index_in_variant == std::variant_npos */
+        throw std::logic_error("Unexpected type_info");
+
+        return typeid(int); /* Unreachable */
+    };
 }

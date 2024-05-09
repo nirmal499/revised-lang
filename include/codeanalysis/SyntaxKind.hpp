@@ -24,6 +24,7 @@ namespace trylang
         BangToken,
         EqualsEqualsToken,
         BangsEqualsToken,
+        EqualsToken,
 
         /* Keywords*/
         TrueKeyword,
@@ -34,6 +35,8 @@ namespace trylang
         BinaryExpression,
         UnaryExpression,
         ParenthesizedExpression,
+        NameExpression,
+        AssignmentExpression,
     };
 
     inline std::unordered_map<SyntaxKind, std::string> __syntaxStringMap = 
@@ -54,7 +57,7 @@ namespace trylang
         {SyntaxKind::BangToken, "BangToken"},
         {SyntaxKind::EqualsEqualsToken, "EqualsEqualsToken"},
         {SyntaxKind::BangsEqualsToken, "BangsEqualsToken"},
-
+        {SyntaxKind::EqualsToken, "EqualsToken"},
 
         {SyntaxKind::TrueKeyword, "TrueKeyword"},
         {SyntaxKind::FalseKeyword, "FalseKeyword"},
@@ -63,6 +66,8 @@ namespace trylang
         {SyntaxKind::BinaryExpression, "BinaryExpression"},
         {SyntaxKind::UnaryExpression, "UnaryExpression"},
         {SyntaxKind::ParenthesizedExpression, "ParenthesizedExpression"},
+        {SyntaxKind::NameExpression, "NameExpression"},
+        {SyntaxKind::AssignmentExpression, "AssignmentExpression"},
 
     };
 

@@ -25,6 +25,27 @@ namespace trylang
         ~BoundExpressionNode() override = default;
     };
 
+    struct BoundVariableExpression : public BoundExpressionNode
+    {
+        std::string _name;
+        const std::type_info& _type;
+
+        BoundVariableExpression(std::string name, const std::type_info& type);
+
+        const std::type_info& Type() override;
+        BoundNodeKind Kind() override;
+    };
+
+    struct BoundAssignmentExpression : public BoundExpressionNode
+    {
+        std::string _name;
+        std::unique_ptr<BoundExpressionNode> _expression;
+        BoundAssignmentExpression(std::string name, std::unique_ptr<BoundExpressionNode> expression);
+
+        const std::type_info& Type() override;
+        BoundNodeKind Kind() override;
+    };
+
     struct BoundLiteralExpression : public BoundExpressionNode
     {
         object_t _value;

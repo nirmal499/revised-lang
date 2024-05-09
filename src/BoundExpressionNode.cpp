@@ -23,21 +23,7 @@ namespace trylang
 
     const std::type_info& BoundLiteralExpression::Type()
     {   
-        /* oobject {aka variant is <int>}*/
-        auto index_in_variant = (*_value).index();
-
-        if(index_in_variant == 0)
-        {
-            return typeid(int);
-        }
-        
-        if(index_in_variant == 1)
-        {
-            return typeid(bool);
-        }
-
-        /* index_in_variant == std::variant_npos */
-        throw std::logic_error("Unexpected type_info");
+        return trylang::assign_type_info(*_value);
     }
 
     BoundNodeKind BoundLiteralExpression::Kind()
@@ -58,5 +44,34 @@ namespace trylang
     {
         return BoundNodeKind::BinaryExpression;
     }
+
+    BoundVariableExpression::BoundVariableExpression(std::string name, const std::type_info &type)
+        : _name(std::move(name)), _type(type)
+    {}
+
+    BoundNodeKind BoundVariableExpression::Kind()
+    {
+        return BoundNodeKind::VariableExpression;
+    }
+
+    const std::type_info& BoundVariableExpression::Type()
+    {
+        return _type;
+    }
+
+    BoundAssignmentExpression::BoundAssignmentExpression(std::string name, std::unique_ptr<BoundExpressionNode> expression)
+        : _name(std::move(name)), _expression(std::move(expression))
+    {}
+
+    const std::type_info &BoundAssignmentExpression::Type()
+    {
+        return _expression->Type();
+    }
+
+    BoundNodeKind BoundAssignmentExpression::Kind()
+    {
+        return BoundNodeKind::AssignmentExpression;
+    }
+
 
 }
