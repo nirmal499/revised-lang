@@ -64,14 +64,34 @@ void Run2()
 
     while(true)
     {
-        std::cout << " >> ";
+        std::cout << ">> ";
         std::getline(std::cin, line);
+
+        std::string text = line;
+
         if(line.empty())
         {
             continue;
         }
+        else if(line.at(0) == '@')
+        {
+            std::stringstream g_buffer;
+            g_buffer << line.substr(1);
 
-        if(line == "#showast")
+            std::cout << "| ";
+            std::getline(std::cin, line);
+            while(line.at(line.size() - 1) != '@')
+            {
+                g_buffer << line;
+                std::cout << "| ";
+                std::getline(std::cin, line);
+            }
+
+            g_buffer << line.substr(0, line.size() - 1);
+
+            text = g_buffer.str();
+        }
+        else if(line == "#showast")
         {
             showast = !showast;
             std::cout << (showast ? "Showing AST\n": "Not Showing AST\n");
@@ -82,7 +102,7 @@ void Run2()
             break;
         }
 
-        std::unique_ptr<trylang::SyntaxTree> syntaxTree = trylang::SyntaxTree::Parse(line);
+        std::unique_ptr<trylang::SyntaxTree> syntaxTree = trylang::SyntaxTree::Parse(std::move(text));
         std::unique_ptr<trylang::Binder> binder = std::make_unique<trylang::Binder>(g_variable_map);
         std::unique_ptr<trylang::BoundExpressionNode> boundExpression = binder->BindExpression(syntaxTree->_root.get());
 
