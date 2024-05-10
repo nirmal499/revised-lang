@@ -86,35 +86,41 @@ namespace trylang
         BlockStatementSyntax(
                     const std::shared_ptr<SyntaxToken>& openBraceToken,
                     std::vector<std::unique_ptr<StatementSyntax>> statements ,
-                    const std::shared_ptr<SyntaxToken>& closeBraceToken) : _openBraceToken(openBraceToken), _statements(std::move(statements)), _closeBraceToken(closeBraceToken)
-        {}
+                    const std::shared_ptr<SyntaxToken>& closeBraceToken);
 
-        SyntaxKind Kind() override
-        {
-            return SyntaxKind::BlockStatement;
-        }
+        SyntaxKind Kind() override;
 
-        std::vector<SyntaxNode*> GetChildren() override
-        {
-            return {nullptr};
-        }
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
+    struct VariableDeclarationSyntax : public StatementSyntax
+    {
+        std::shared_ptr<SyntaxToken> _keyword;
+        std::shared_ptr<SyntaxToken> _identifier;
+        std::shared_ptr<SyntaxToken> _equalsToken;
+        std::unique_ptr<ExpressionSyntax> _expression;
+
+
+        VariableDeclarationSyntax(
+                    const std::shared_ptr<SyntaxToken>& keyword,
+                    const std::shared_ptr<SyntaxToken>& identifier,
+                    const std::shared_ptr<SyntaxToken>& equalsToken,
+                    std::unique_ptr<ExpressionSyntax> expression
+                    );
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
     };
 
     struct ExpressionStatementSyntax : public StatementSyntax
     {
         std::unique_ptr<ExpressionSyntax> _expression;
-        explicit ExpressionStatementSyntax(std::unique_ptr<ExpressionSyntax> expression) : _expression(std::move(expression))
-        {}
+        explicit ExpressionStatementSyntax(std::unique_ptr<ExpressionSyntax> expression);
 
-        SyntaxKind Kind() override
-        {
-            return SyntaxKind::ExpressionStatement;
-        }
+        SyntaxKind Kind() override;
 
-        std::vector<SyntaxNode*> GetChildren() override
-        {
-            return {nullptr};
-        }
+        std::vector<SyntaxNode*> GetChildren() override;
     };
 
     struct NameExpressionSyntax : public ExpressionSyntax

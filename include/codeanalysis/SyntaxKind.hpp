@@ -33,6 +33,8 @@ namespace trylang
         /* Keywords*/
         TrueKeyword,
         FalseKeyword,
+        LetKeyword,
+        VarKeyword,
 
         /* Expressions */
         LiteralExpression,
@@ -45,6 +47,7 @@ namespace trylang
         /* Statements */
         BlockStatement,
         ExpressionStatement,
+        VariableDeclarationStatement,
     };
 
     inline std::unordered_map<SyntaxKind, std::string> __syntaxStringMap = 
@@ -73,6 +76,8 @@ namespace trylang
 
         {SyntaxKind::TrueKeyword, "TrueKeyword"},
         {SyntaxKind::FalseKeyword, "FalseKeyword"},
+        {SyntaxKind::LetKeyword, "LetKeyword"},
+        {SyntaxKind::VarKeyword, "VarKeyword"},
 
         {SyntaxKind::LiteralExpression, "LiteralExpression"},
         {SyntaxKind::BinaryExpression, "BinaryExpression"},
@@ -84,6 +89,7 @@ namespace trylang
 
         {SyntaxKind::BlockStatement, "BlockStatement"},
         {SyntaxKind::ExpressionStatement, "ExpressionStatement"},
+        {SyntaxKind::VariableDeclarationStatement, "VariableDeclarationStatement"},
     };
 
     inline std::ostream& operator<<(std::ostream& out, SyntaxKind kind)

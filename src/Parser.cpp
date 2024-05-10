@@ -84,8 +84,23 @@ namespace trylang
         {
             return this->ParseBlockStatement();
         }
+        else if(this->Current()->Kind() == SyntaxKind::VarKeyword || this->Current()->Kind() == SyntaxKind::LetKeyword)
+        {
+            return this->ParseVariableDeclaration();
+        }
 
         return this->ParseExpressionStatement();
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseVariableDeclaration()
+    {
+        auto expected = this->Current()->Kind() == SyntaxKind::VarKeyword ? SyntaxKind::VarKeyword : SyntaxKind::LetKeyword;
+        auto keyword = this->MatchToken(expected);
+        auto identifier = this->MatchToken(SyntaxKind::IdentifierToken);
+        auto equalsToken = this->MatchToken(SyntaxKind::EqualsToken);
+        auto initializer = this->ParseExpression();
+
+        return std::make_unique<VariableDeclarationSyntax>(keyword, identifier, equalsToken, std::move(initializer));
     }
 
     std::unique_ptr<StatementSyntax> Parser::ParseBlockStatement()

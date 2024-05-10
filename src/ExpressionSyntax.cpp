@@ -42,6 +42,53 @@ namespace trylang
         return {nullptr};
     }
 
+    BlockStatementSyntax::BlockStatementSyntax(
+            const std::shared_ptr<SyntaxToken>& openBraceToken,
+            std::vector<std::unique_ptr<StatementSyntax>> statements ,
+            const std::shared_ptr<SyntaxToken>& closeBraceToken) : _openBraceToken(openBraceToken), _statements(std::move(statements)), _closeBraceToken(closeBraceToken)
+    {}
+
+    SyntaxKind BlockStatementSyntax::Kind()
+    {
+        return SyntaxKind::BlockStatement;
+    }
+
+    std::vector<SyntaxNode*> BlockStatementSyntax::GetChildren()
+    {
+        return {nullptr};
+    }
+
+    VariableDeclarationSyntax::VariableDeclarationSyntax(
+            const std::shared_ptr<SyntaxToken>& keyword,
+            const std::shared_ptr<SyntaxToken>& identifier,
+            const std::shared_ptr<SyntaxToken>& equalsToken,
+            std::unique_ptr<ExpressionSyntax> expression
+        ) : _keyword(keyword), _identifier(identifier), _equalsToken(equalsToken), _expression(std::move(expression))
+    {}
+
+    SyntaxKind VariableDeclarationSyntax::Kind()
+    {
+        return SyntaxKind::VariableDeclarationStatement;
+    }
+
+    std::vector<SyntaxNode*> VariableDeclarationSyntax::GetChildren()
+    {
+        return {nullptr};
+    }
+
+    ExpressionStatementSyntax::ExpressionStatementSyntax(std::unique_ptr<ExpressionSyntax> expression) : _expression(std::move(expression))
+    {}
+
+    SyntaxKind ExpressionStatementSyntax::Kind()
+    {
+        return SyntaxKind::ExpressionStatement;
+    }
+
+    std::vector<SyntaxNode*> ExpressionStatementSyntax::GetChildren()
+    {
+        return {nullptr};
+    }
+
     NameExpressionSyntax::NameExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifierToken)
             : _identifierToken(identifierToken)
     {}

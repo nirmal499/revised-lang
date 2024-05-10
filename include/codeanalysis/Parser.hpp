@@ -34,6 +34,7 @@ namespace trylang
         std::unique_ptr<StatementSyntax> ParseStatement();
         std::unique_ptr<StatementSyntax> ParseBlockStatement();
         std::unique_ptr<StatementSyntax> ParseExpressionStatement();
+        std::unique_ptr<StatementSyntax> ParseVariableDeclaration();
 
         std::unique_ptr<ExpressionSyntax> ParseExpression();
         std::unique_ptr<ExpressionSyntax> ParseAssignmentExpression();

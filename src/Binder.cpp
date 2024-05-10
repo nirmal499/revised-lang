@@ -29,20 +29,42 @@ namespace trylang
                 return this->BindBlockStatement(static_cast<BlockStatementSyntax*>(syntax));
             case SyntaxKind::ExpressionStatement:
                 return this->BindExpressionStatement(static_cast<ExpressionStatementSyntax*>(syntax));
+            case SyntaxKind::VariableDeclarationStatement:
+                return this->BindVariableDeclaration(static_cast<VariableDeclarationSyntax*>(syntax));
             default:
                 throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
         }
+    }
+
+    std::unique_ptr<BoundStatementNode> Binder::BindVariableDeclaration(VariableDeclarationSyntax *syntax)
+    {
+        const auto& varname = syntax->_identifier->_text;
+        auto isReadOnly = syntax->_keyword->Kind() == SyntaxKind::LetKeyword;
+        auto expression = this->BindExpression(syntax->_expression.get());
+
+        VariableSymbol variable(varname, isReadOnly, expression->Type());
+
+        if(!_scope->TryDeclare(variable))
+        {
+            _buffer << "Variable '" << varname << "' already declared\n";
+        }
+
+        return std::make_unique<BoundVariableDeclaration>(std::move(variable), std::move(expression));
     }
 
     std::unique_ptr<BoundStatementNode> Binder::BindBlockStatement(BlockStatementSyntax *syntax)
     {
         std::vector<std::unique_ptr<BoundStatementNode>> statements;
 
+        _scope = std::make_shared<BoundScope>(_scope);
+
         for(const auto& statementSyntax: syntax->_statements)
         {
             auto statement = this->BindStatement(statementSyntax.get());
             statements.emplace_back(std::move(statement));
         }
+
+        _scope = _scope->_parent;
 
         return std::make_unique<BoundBlockStatement>(std::move(statements));
     }
@@ -102,14 +124,16 @@ namespace trylang
         if(!_scope->TryLookUp(varname, variable))
         {
             /* We did not have varname variable declared */
-
-            variable._name = varname;
-            variable._type = boundExpression->Type();
-            (void)_scope->TryDeclare(variable);
-
+            _buffer << "Undefined Name " << varname << "\n";
+            return std::make_unique<BoundLiteralExpression>(0);
         }
 
         /* varname variable is declared already */
+        if(variable._isReadOnly)
+        {
+            _buffer << "Variable '" << varname << "' is read-only and cannot be reassigned\n";
+        }
+
         if(std::strcmp(variable._type, boundExpression->Type()) != 0)
         {
             _buffer << "Cannot convert from " << boundExpression->Type() << " to " << variable._type << "\n";

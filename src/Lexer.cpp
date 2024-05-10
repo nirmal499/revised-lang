@@ -54,6 +54,16 @@ namespace trylang
             return SyntaxKind::FalseKeyword;
         }
 
+        if(text == "var")
+        {
+            return SyntaxKind::VarKeyword;
+        }
+
+        if(text == "let")
+        {
+            return SyntaxKind::LetKeyword;
+        }
+
         return SyntaxKind::IdentifierToken;
     }
 

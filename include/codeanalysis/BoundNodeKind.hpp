@@ -22,6 +22,7 @@ namespace trylang
 
         BlockStatement,
         ExpressionStatement,
+        BoundVariableDeclarationStatement,
     };
 
     inline std::unordered_map<BoundNodeKind, std::string> __boundNodeStringMap = 
@@ -35,6 +36,7 @@ namespace trylang
 
         {BoundNodeKind::BlockStatement, "BlockStatement"},
         {BoundNodeKind::ExpressionStatement, "ExpressionStatement"},
+        {BoundNodeKind::BoundVariableDeclarationStatement, "BoundVariableDeclarationStatement"},
 
     };
 

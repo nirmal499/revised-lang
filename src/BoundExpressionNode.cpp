@@ -34,6 +34,16 @@ namespace trylang
         return BoundNodeKind::ExpressionStatement;
     }
 
+    BoundVariableDeclaration::BoundVariableDeclaration(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression)
+    : _variable(std::move(variable)), _expression(std::move(expression))
+    {}
+
+
+    BoundNodeKind BoundVariableDeclaration::Kind()
+    {
+        return BoundNodeKind::BoundVariableDeclarationStatement;
+    }
+
     BoundLiteralExpression::BoundLiteralExpression(const object_t& value)
         : _value(value)
     {}

@@ -38,7 +38,21 @@ namespace trylang
             return;
         }
 
+        auto* BVDSnode = dynamic_cast<BoundVariableDeclaration*>(node);
+        if(BVDSnode != nullptr)
+        {
+            this->EvaluateVariableDeclaration(BVDSnode);
+            return;
+        }
+
         throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
+    }
+
+    void Evaluator::EvaluateVariableDeclaration(BoundVariableDeclaration *node)
+    {
+        auto value = this->EvaluateExpression(node->_expression.get());
+        _variable_map[node->_variable] = value;
+        _lastValue = value;
     }
 
     void Evaluator::EvaluateBlockStatement(BoundBlockStatement *node)

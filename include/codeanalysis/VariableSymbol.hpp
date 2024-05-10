@@ -9,11 +9,12 @@ namespace trylang
     {
         std::string _name{};
         const char* _type = nullptr;
+        bool _isReadOnly = false; /* Variable is declared by let keyword instead of var */
 
         VariableSymbol() = default;
 
-        VariableSymbol(std::string name, const char* type)
-                : _name(std::move(name)), _type(type)
+        VariableSymbol(std::string name, bool isReadOnly, const char* type)
+                : _name(std::move(name)), _type(type), _isReadOnly(isReadOnly)
         {}
 
         /* No need for this, since we are not be using VariableSymbol as key in an unordered_map */

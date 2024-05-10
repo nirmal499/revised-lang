@@ -49,11 +49,21 @@ namespace trylang
         BoundNodeKind Kind() override;
     };
 
+    struct BoundVariableDeclaration : public BoundStatementNode
+    {
+        VariableSymbol _variable;
+        std::unique_ptr<BoundExpressionNode> _expression;
+
+        BoundVariableDeclaration(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression);
+
+        BoundNodeKind Kind() override;
+    };
+
     struct BoundVariableExpression : public BoundExpressionNode
     {
         VariableSymbol _variable;
 
-        BoundVariableExpression(VariableSymbol variable);
+        explicit BoundVariableExpression(VariableSymbol variable);
 
         const char* Type() override;
         BoundNodeKind Kind() override;
