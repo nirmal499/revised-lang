@@ -27,6 +27,21 @@ namespace trylang
 
     }
 
+    CompilationUnitSyntax::CompilationUnitSyntax(std::unique_ptr<ExpressionSyntax> rootExpression, const std::shared_ptr<SyntaxToken>& endOfFileToken)
+        : _rootExpression(std::move(rootExpression)), _endOfFileToken(endOfFileToken)
+    {}
+
+
+    SyntaxKind CompilationUnitSyntax::Kind()
+    {
+        return SyntaxKind::CompilationUnit;
+    }
+
+    std::vector<SyntaxNode*> CompilationUnitSyntax::GetChildren()
+    {
+        return {nullptr};
+    }
+
     NameExpressionSyntax::NameExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifierToken)
             : _identifierToken(identifierToken)
     {}

@@ -67,14 +67,14 @@ namespace trylang
         return std::make_shared<SyntaxToken>(kind, this->Current()->_position, "", std::nullopt);
     }
 
-    std::unique_ptr<SyntaxTree> Parser::Parse()
+    std::unique_ptr<CompilationUnitSyntax> Parser::ParseCompilationUnit()
     {
         std::unique_ptr<ExpressionSyntax> expression = this->ParseExpression();
 
         /* After Parsing we are confirming that the end token is SyntaxKind::EndOfFileToken token*/
         std::shared_ptr<SyntaxToken> endOfFileToken = this->MatchToken(SyntaxKind::EndOfFileToken);
 
-        return std::make_unique<SyntaxTree>(_buffer.str(), std::move(expression), endOfFileToken);
+        return std::make_unique<CompilationUnitSyntax>(std::move(expression), endOfFileToken);
     }
 
     std::unique_ptr<ExpressionSyntax> Parser::ParseExpression()

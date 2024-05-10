@@ -10,6 +10,7 @@ namespace trylang
     struct SyntaxToken;
     struct ExpressionSyntax;
     struct SyntaxTree;
+    struct CompilationUnitSyntax;
 
     struct Parser
     {
@@ -32,7 +33,7 @@ namespace trylang
 
         std::shared_ptr<SyntaxToken> MatchToken(SyntaxKind kind);
 
-        std::unique_ptr<SyntaxTree> Parse();
+        std::unique_ptr<CompilationUnitSyntax> ParseCompilationUnit();
         std::unique_ptr<ExpressionSyntax> ParseExpression();
         std::unique_ptr<ExpressionSyntax> ParseAssignmentExpression();
         std::unique_ptr<ExpressionSyntax> ParseBinaryExpression(int parentPrecedance = 0);

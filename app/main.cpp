@@ -104,7 +104,7 @@ void Run2()
 
         std::unique_ptr<trylang::SyntaxTree> syntaxTree = trylang::SyntaxTree::Parse(std::move(text));
         std::unique_ptr<trylang::Binder> binder = std::make_unique<trylang::Binder>(g_variable_map);
-        std::unique_ptr<trylang::BoundExpressionNode> boundExpression = binder->BindExpression(syntaxTree->_root.get());
+        std::unique_ptr<trylang::BoundExpressionNode> boundExpression = binder->BindExpression(syntaxTree->_root->_rootExpression.get());
 
         errors = syntaxTree->_errors.append(binder->Errors());
 
@@ -116,6 +116,7 @@ void Run2()
         if(!errors.empty())
         {
             std::cout << "\n" << errors << "\n";
+            g_variable_map.clear();
         }
         else
         {

@@ -26,6 +26,8 @@ namespace trylang
         BangsEqualsToken,
         EqualsToken,
 
+        CompilationUnit,
+
         /* Keywords*/
         TrueKeyword,
         FalseKeyword,
@@ -58,6 +60,8 @@ namespace trylang
         {SyntaxKind::EqualsEqualsToken, "EqualsEqualsToken"},
         {SyntaxKind::BangsEqualsToken, "BangsEqualsToken"},
         {SyntaxKind::EqualsToken, "EqualsToken"},
+
+        {SyntaxKind::CompilationUnit, "CompilationUnit"},
 
         {SyntaxKind::TrueKeyword, "TrueKeyword"},
         {SyntaxKind::FalseKeyword, "FalseKeyword"},

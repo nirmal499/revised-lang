@@ -7,14 +7,15 @@ namespace trylang
 {
     struct SyntaxToken;
     struct ExpressionSyntax;
+    struct CompilationUnitSyntax;
     
     struct SyntaxTree
     {
         std::string _errors;
-        std::unique_ptr<ExpressionSyntax> _root;
-        std::shared_ptr<SyntaxToken> _endOfFileToken;
+        std::unique_ptr<CompilationUnitSyntax> _root;
+        std::string _text;
 
-        SyntaxTree(std::string errors, std::unique_ptr<ExpressionSyntax> root, const std::shared_ptr<SyntaxToken>& endOfFileToken);
+        explicit SyntaxTree(std::string text);
 
         static std::unique_ptr<SyntaxTree> Parse(std::string text);
 

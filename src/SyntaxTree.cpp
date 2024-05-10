@@ -4,14 +4,18 @@
 
 namespace trylang
 {
-    
-    SyntaxTree::SyntaxTree(std::string errors, std::unique_ptr<ExpressionSyntax> root, const std::shared_ptr<SyntaxToken>& endOfFileToken)
-        : _errors(std::move(errors)), _root(std::move(root)), _endOfFileToken(endOfFileToken)
-    {}
+    SyntaxTree::SyntaxTree(std::string text)
+    {
+        Parser parser(text);
+
+        _text = std::move(text);
+        _root = parser.ParseCompilationUnit();
+        _errors += parser.Errors();
+    }
     
     std::unique_ptr<SyntaxTree> SyntaxTree::Parse(std::string text)
     {
-        Parser parser(std::move(text));
-        return parser.Parse();
+        /* It calls the ctor of SyntaxTree */
+        return std::make_unique<SyntaxTree>(std::move(text));
     }
 }
