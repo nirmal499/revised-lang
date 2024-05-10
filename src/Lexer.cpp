@@ -150,6 +150,16 @@ namespace trylang
             return std::make_unique<SyntaxToken>(SyntaxKind::CloseParenthesisToken, _position++, ")", std::nullopt);
         }
 
+        if(this->Current() == '{')
+        {
+            return std::make_unique<SyntaxToken>(SyntaxKind::OpenBraceToken, _position++, "(", std::nullopt);
+        }
+
+        if(this->Current() == '}')
+        {
+            return std::make_unique<SyntaxToken>(SyntaxKind::CloseBraceToken, _position++, ")", std::nullopt);
+        }
+
         if(this->Current() == '&')
         {
             if(this->LookAhead() == '&')

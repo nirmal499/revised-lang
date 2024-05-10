@@ -21,9 +21,32 @@ namespace trylang
     
     struct BoundExpressionNode : public BoundNode
     {   
-        /* const char* since typeid() returns that only */
+        /* const char* since typeid().name() returns that only */
         virtual const char* Type() = 0;
         ~BoundExpressionNode() override = default;
+    };
+
+    struct BoundStatementNode : public BoundNode
+    {
+        ~BoundStatementNode() override = default;
+    };
+
+    struct BoundBlockStatement : public BoundStatementNode
+    {
+        std::vector<std::unique_ptr<BoundStatementNode>> _statements;
+
+        explicit BoundBlockStatement(std::vector<std::unique_ptr<BoundStatementNode>> statements);
+
+        BoundNodeKind Kind() override;
+    };
+
+    struct BoundExpressionStatement : public BoundStatementNode
+    {
+        std::unique_ptr<BoundExpressionNode> _expression;
+
+        explicit BoundExpressionStatement(std::unique_ptr<BoundExpressionNode> expression);
+
+        BoundNodeKind Kind() override;
     };
 
     struct BoundVariableExpression : public BoundExpressionNode

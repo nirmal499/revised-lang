@@ -14,11 +14,43 @@ namespace trylang
     std::shared_ptr<BoundGlobalScope> Binder::BindGlobalScope(CompilationUnitSyntax* syntax)
     {
         Binder binder(nullptr);
-        auto rootExpression = binder.BindExpression(syntax->_rootExpression.get());
+        auto statement = binder.BindStatement(syntax->_statement.get());
         auto variables = binder._scope->GetDeclaredVariable();
         auto errors = binder.Errors();
 
-        return std::make_shared<BoundGlobalScope>(nullptr, std::move(errors), std::move(variables), std::move(rootExpression));
+        return std::make_shared<BoundGlobalScope>(nullptr, std::move(errors), std::move(variables), std::move(statement));
+    }
+
+    std::unique_ptr<BoundStatementNode> Binder::BindStatement(StatementSyntax* syntax)
+    {
+        switch (syntax->Kind())
+        {
+            case SyntaxKind::BlockStatement:
+                return this->BindBlockStatement(static_cast<BlockStatementSyntax*>(syntax));
+            case SyntaxKind::ExpressionStatement:
+                return this->BindExpressionStatement(static_cast<ExpressionStatementSyntax*>(syntax));
+            default:
+                throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
+        }
+    }
+
+    std::unique_ptr<BoundStatementNode> Binder::BindBlockStatement(BlockStatementSyntax *syntax)
+    {
+        std::vector<std::unique_ptr<BoundStatementNode>> statements;
+
+        for(const auto& statementSyntax: syntax->_statements)
+        {
+            auto statement = this->BindStatement(statementSyntax.get());
+            statements.emplace_back(std::move(statement));
+        }
+
+        return std::make_unique<BoundBlockStatement>(std::move(statements));
+    }
+
+    std::unique_ptr<BoundStatementNode> Binder::BindExpressionStatement(ExpressionStatementSyntax *syntax)
+    {
+        auto expression = this->BindExpression(syntax->_expression.get());
+        return std::make_unique<BoundExpressionStatement>(std::move(expression));
     }
 
     std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax* syntax)
@@ -80,7 +112,7 @@ namespace trylang
         /* varname variable is declared already */
         if(std::strcmp(variable._type, boundExpression->Type()) != 0)
         {
-            _buffer << "Cannot convert from " << variable._type << " to " << boundExpression->Type() << "\n";
+            _buffer << "Cannot convert from " << boundExpression->Type() << " to " << variable._type << "\n";
             return boundExpression;
         }
 

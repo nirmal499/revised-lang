@@ -16,6 +16,23 @@ namespace trylang
         return BoundNodeKind::UnaryExpression;
     }
 
+    BoundBlockStatement::BoundBlockStatement(std::vector<std::unique_ptr<BoundStatementNode>> statements)
+        : _statements(std::move(statements))
+    {}
+
+    BoundNodeKind BoundBlockStatement::Kind()
+    {
+        return BoundNodeKind::BlockStatement;
+    }
+
+    BoundExpressionStatement::BoundExpressionStatement(std::unique_ptr<BoundExpressionNode> expression)
+        : _expression(std::move(expression))
+    {}
+
+    BoundNodeKind BoundExpressionStatement::Kind()
+    {
+        return BoundNodeKind::ExpressionStatement;
+    }
 
     BoundLiteralExpression::BoundLiteralExpression(const object_t& value)
         : _value(value)

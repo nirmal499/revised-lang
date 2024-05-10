@@ -53,22 +53,68 @@ namespace trylang
             std::cout << std::boolalpha << boolValue;
         }
     };
-    
+
+    /* Abstract Class */
     struct ExpressionSyntax : public SyntaxNode
     {
         ~ExpressionSyntax() override = default;
     };
 
+    /* Abstract Class */
+    struct StatementSyntax : public SyntaxNode
+    {
+        ~StatementSyntax() override = default;
+    };
+
     struct CompilationUnitSyntax : public SyntaxNode
     {
-        std::unique_ptr<ExpressionSyntax> _rootExpression;
+        std::unique_ptr<StatementSyntax> _statement;
         std::shared_ptr<SyntaxToken> _endOfFileToken;
 
-        CompilationUnitSyntax(std::unique_ptr<ExpressionSyntax> rootExpression, const std::shared_ptr<SyntaxToken>& endOfFileToken);
+        CompilationUnitSyntax(std::unique_ptr<StatementSyntax> statement, const std::shared_ptr<SyntaxToken>& endOfFileToken);
 
         SyntaxKind Kind() override;
-
         std::vector<SyntaxNode*> GetChildren() override;
+    };
+
+    struct BlockStatementSyntax: public StatementSyntax
+    {
+        std::shared_ptr<SyntaxToken> _openBraceToken;
+        std::vector<std::unique_ptr<StatementSyntax>> _statements;
+        std::shared_ptr<SyntaxToken> _closeBraceToken;
+
+        BlockStatementSyntax(
+                    const std::shared_ptr<SyntaxToken>& openBraceToken,
+                    std::vector<std::unique_ptr<StatementSyntax>> statements ,
+                    const std::shared_ptr<SyntaxToken>& closeBraceToken) : _openBraceToken(openBraceToken), _statements(std::move(statements)), _closeBraceToken(closeBraceToken)
+        {}
+
+        SyntaxKind Kind() override
+        {
+            return SyntaxKind::BlockStatement;
+        }
+
+        std::vector<SyntaxNode*> GetChildren() override
+        {
+            return {nullptr};
+        }
+    };
+
+    struct ExpressionStatementSyntax : public StatementSyntax
+    {
+        std::unique_ptr<ExpressionSyntax> _expression;
+        explicit ExpressionStatementSyntax(std::unique_ptr<ExpressionSyntax> expression) : _expression(std::move(expression))
+        {}
+
+        SyntaxKind Kind() override
+        {
+            return SyntaxKind::ExpressionStatement;
+        }
+
+        std::vector<SyntaxNode*> GetChildren() override
+        {
+            return {nullptr};
+        }
     };
 
     struct NameExpressionSyntax : public ExpressionSyntax

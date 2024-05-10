@@ -6,13 +6,52 @@
 
 namespace trylang
 {
-    Evaluator::Evaluator(std::unique_ptr<BoundExpressionNode> root, variable_map_t& variables)
+    Evaluator::Evaluator(std::unique_ptr<BoundStatementNode> root, variable_map_t& variables)
         : _root(std::move(root)), _variable_map(variables)
     {}
 
     oobject_t Evaluator::Evaluate()
     {
-        return this->EvaluateExpression(_root.get());
+        this->EvaluateStatement(_root.get());
+
+        if(_lastValue.index() == std::variant_npos)
+        {
+            throw std::logic_error("Internal Error: No Value Found in _lastValue");
+        }
+
+        return _lastValue;
+    }
+
+    void Evaluator::EvaluateStatement(BoundStatementNode* node)
+    {
+        auto* BBSnode = dynamic_cast<BoundBlockStatement*>(node);
+        if(BBSnode != nullptr)
+        {
+            this->EvaluateBlockStatement(BBSnode);
+            return;
+        }
+
+        auto* BESnode = dynamic_cast<BoundExpressionStatement*>(node);
+        if(BESnode != nullptr)
+        {
+            this->EvaluateExpressionStatement(BESnode);
+            return;
+        }
+
+        throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
+    }
+
+    void Evaluator::EvaluateBlockStatement(BoundBlockStatement *node)
+    {
+        for(const auto& statement: node->_statements)
+        {
+            this->EvaluateStatement(statement.get());
+        }
+    }
+
+    void Evaluator::EvaluateExpressionStatement(BoundExpressionStatement *node)
+    {
+        _lastValue = this->EvaluateExpression(node->_expression.get());
     }
 
     oobject_t Evaluator::EvaluateExpression(BoundExpressionNode* node)

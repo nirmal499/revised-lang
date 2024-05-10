@@ -65,14 +65,14 @@ namespace trylang
         std::shared_ptr<BoundGlobalScope> _previous;
         std::string _errors;
         std::vector<std::string> _variables;
-        std::unique_ptr<BoundExpressionNode> _expression;
+        std::unique_ptr<BoundStatementNode> _statement;
 
         BoundGlobalScope(
                 const std::shared_ptr<BoundGlobalScope>& previous,
                 std::string errors,
                 std::vector<std::string> variables,
-                std::unique_ptr<BoundExpressionNode> expression)
-                : _previous(previous), _errors(std::move(errors)), _variables(std::move(variables)), _expression(std::move(expression))
+                std::unique_ptr<BoundStatementNode> statement)
+                : _previous(previous), _errors(std::move(errors)), _variables(std::move(variables)), _statement(std::move(statement))
         {}
     };
 }

@@ -27,8 +27,8 @@ namespace trylang
 
     }
 
-    CompilationUnitSyntax::CompilationUnitSyntax(std::unique_ptr<ExpressionSyntax> rootExpression, const std::shared_ptr<SyntaxToken>& endOfFileToken)
-        : _rootExpression(std::move(rootExpression)), _endOfFileToken(endOfFileToken)
+    CompilationUnitSyntax::CompilationUnitSyntax(std::unique_ptr<StatementSyntax> statement, const std::shared_ptr<SyntaxToken>& endOfFileToken)
+        : _statement(std::move(statement)), _endOfFileToken(endOfFileToken)
     {}
 
 

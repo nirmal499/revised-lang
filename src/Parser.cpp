@@ -67,14 +67,48 @@ namespace trylang
         return std::make_shared<SyntaxToken>(kind, this->Current()->_position, "", std::nullopt);
     }
 
+
     std::unique_ptr<CompilationUnitSyntax> Parser::ParseCompilationUnit()
     {
-        std::unique_ptr<ExpressionSyntax> expression = this->ParseExpression();
+        auto statement = this->ParseStatement();
 
         /* After Parsing we are confirming that the end token is SyntaxKind::EndOfFileToken token*/
         std::shared_ptr<SyntaxToken> endOfFileToken = this->MatchToken(SyntaxKind::EndOfFileToken);
 
-        return std::make_unique<CompilationUnitSyntax>(std::move(expression), endOfFileToken);
+        return std::make_unique<CompilationUnitSyntax>(std::move(statement), endOfFileToken);
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseStatement()
+    {
+        if(this->Current()->Kind() == SyntaxKind::OpenBraceToken)
+        {
+            return this->ParseBlockStatement();
+        }
+
+        return this->ParseExpressionStatement();
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseBlockStatement()
+    {
+        std::vector<std::unique_ptr<StatementSyntax>> statements;
+
+        auto openBraceToken = this->MatchToken(SyntaxKind::OpenBraceToken);
+
+        while(this->Current()->Kind() != SyntaxKind::EndOfFileToken && this->Current()->Kind() != SyntaxKind::CloseBraceToken)
+        {
+            auto statement = this->ParseStatement();
+            statements.emplace_back(std::move(statement));
+        }
+
+        auto closeBraceToken = this->MatchToken(SyntaxKind::CloseBraceToken);
+
+        return std::make_unique<BlockStatementSyntax>(openBraceToken, std::move(statements), closeBraceToken);
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseExpressionStatement()
+    {
+        auto expression = this->ParseExpression();
+        return std::make_unique<ExpressionStatementSyntax>(std::move(expression));
     }
 
     std::unique_ptr<ExpressionSyntax> Parser::ParseExpression()

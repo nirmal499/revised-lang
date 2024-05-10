@@ -79,16 +79,25 @@ void Run2()
             std::stringstream g_buffer;
             g_buffer << line.substr(1);
 
-            std::cout << "| ";
-            std::getline(std::cin, line);
-            while(line.at(line.size() - 1) != '@')
+            while(true)
             {
-                g_buffer << line;
                 std::cout << "| ";
                 std::getline(std::cin, line);
+
+                if(line.empty())
+                {
+                    continue;
+                }
+
+                if(line.at(line.size() - 1) == '@')
+                {
+                    g_buffer << line.substr(0, line.size() - 1);
+                    break;
+                }
+
+                g_buffer << line << " ";
             }
 
-            g_buffer << line.substr(0, line.size() - 1);
 
             text = g_buffer.str();
         }
@@ -120,7 +129,7 @@ void Run2()
         }
         else
         {
-            trylang::Evaluator evaluator(std::move(globalScope->_expression), g_variable_map);
+            trylang::Evaluator evaluator(std::move(globalScope->_statement), g_variable_map);
             trylang::oobject_t result = evaluator.Evaluate();
             std::visit(trylang::PrintVisitor{}, result);
             std::cout << "\n";

@@ -19,6 +19,9 @@ namespace trylang
         ParenthesizedExpression,
         VariableExpression,
         AssignmentExpression,
+
+        BlockStatement,
+        ExpressionStatement,
     };
 
     inline std::unordered_map<BoundNodeKind, std::string> __boundNodeStringMap = 
@@ -29,6 +32,10 @@ namespace trylang
         {BoundNodeKind::ParenthesizedExpression, "ParenthesizedExpression"},
         {BoundNodeKind::VariableExpression, "VariableExpression"},
         {BoundNodeKind::AssignmentExpression, "AssignmentExpression"},
+
+        {BoundNodeKind::BlockStatement, "BlockStatement"},
+        {BoundNodeKind::ExpressionStatement, "ExpressionStatement"},
+
     };
 
     enum class BoundUnaryOperatorKind

@@ -10,6 +10,8 @@
 namespace trylang
 {
     struct ExpressionSyntax;
+    struct StatementSyntax;
+
     struct LiteralExpressionSyntax;
     struct UnaryExpressionSyntax;
     struct BinaryExpressionSyntax;
@@ -17,7 +19,11 @@ namespace trylang
     struct NameExpressionSyntax;
     struct AssignmentExpressionSyntax;
 
+    struct BlockStatementSyntax;
+    struct ExpressionStatementSyntax;
+
     struct BoundExpressionNode;
+    struct BoundStatementNode;
 
     struct CompilationUnitSyntax;
 
@@ -36,6 +42,10 @@ namespace trylang
         std::string Errors();
 
         std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax);
+        std::unique_ptr<BoundStatementNode> BindStatement(StatementSyntax* syntax);
+
+        std::unique_ptr<BoundStatementNode> BindBlockStatement(BlockStatementSyntax *syntax);
+        std::unique_ptr<BoundStatementNode> BindExpressionStatement(ExpressionStatementSyntax *syntax);
 
         std::unique_ptr<BoundExpressionNode> BindParenthesizedExpression(ParenthesizedExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindNameExpression(NameExpressionSyntax* syntax);

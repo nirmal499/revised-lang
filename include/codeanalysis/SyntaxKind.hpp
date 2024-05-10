@@ -25,6 +25,8 @@ namespace trylang
         EqualsEqualsToken,
         BangsEqualsToken,
         EqualsToken,
+        OpenBraceToken,
+        CloseBraceToken,
 
         CompilationUnit,
 
@@ -39,6 +41,10 @@ namespace trylang
         ParenthesizedExpression,
         NameExpression,
         AssignmentExpression,
+
+        /* Statements */
+        BlockStatement,
+        ExpressionStatement,
     };
 
     inline std::unordered_map<SyntaxKind, std::string> __syntaxStringMap = 
@@ -60,6 +66,8 @@ namespace trylang
         {SyntaxKind::EqualsEqualsToken, "EqualsEqualsToken"},
         {SyntaxKind::BangsEqualsToken, "BangsEqualsToken"},
         {SyntaxKind::EqualsToken, "EqualsToken"},
+        {SyntaxKind::OpenBraceToken, "OpenBraceToken"},
+        {SyntaxKind::CloseBraceToken, "CloseBraceToken"},
 
         {SyntaxKind::CompilationUnit, "CompilationUnit"},
 
@@ -73,6 +81,9 @@ namespace trylang
         {SyntaxKind::NameExpression, "NameExpression"},
         {SyntaxKind::AssignmentExpression, "AssignmentExpression"},
 
+
+        {SyntaxKind::BlockStatement, "BlockStatement"},
+        {SyntaxKind::ExpressionStatement, "ExpressionStatement"},
     };
 
     inline std::ostream& operator<<(std::ostream& out, SyntaxKind kind)
