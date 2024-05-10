@@ -68,7 +68,7 @@ namespace trylang
 
         SyntaxKind Kind() override;
 
-        std::vector<SyntaxNode*> GetChildren();
+        std::vector<SyntaxNode*> GetChildren() override;
     };
 
     struct NameExpressionSyntax : public ExpressionSyntax

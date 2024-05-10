@@ -19,11 +19,17 @@ namespace trylang
 
     struct BoundExpressionNode;
 
+    struct CompilationUnitSyntax;
+
+    struct BoundScope;
+    struct BoundGlobalScope;
+
     struct Binder
     {
-        variable_map_t& _variable_map;
+        std::shared_ptr<BoundScope> _scope = nullptr;
 
-        explicit Binder(variable_map_t& variables);
+        explicit Binder(const std::shared_ptr<BoundScope>& parent);
+        static std::shared_ptr<BoundGlobalScope> BindGlobalScope(CompilationUnitSyntax* syntax);
 
         std::stringstream _buffer;
 

@@ -1,13 +1,25 @@
 #include <codeanalysis/Binder.hpp>
 #include <codeanalysis/ExpressionSyntax.hpp>
 #include <codeanalysis/BoundNodeKind.hpp>
+#include <codeanalysis/BoundScope.hpp>
 #include <algorithm>
 
 namespace trylang
 {
-    Binder::Binder(variable_map_t& variables)
-        : _variable_map(variables)
-    {}
+    Binder::Binder(const std::shared_ptr<BoundScope>& parent)
+    {
+        _scope = std::make_shared<BoundScope>(parent);
+    }
+
+    std::shared_ptr<BoundGlobalScope> Binder::BindGlobalScope(CompilationUnitSyntax* syntax)
+    {
+        Binder binder(nullptr);
+        auto rootExpression = binder.BindExpression(syntax->_rootExpression.get());
+        auto variables = binder._scope->GetDeclaredVariable();
+        auto errors = binder.Errors();
+
+        return std::make_shared<BoundGlobalScope>(nullptr, std::move(errors), std::move(variables), std::move(rootExpression));
+    }
 
     std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax* syntax)
     {
@@ -38,17 +50,15 @@ namespace trylang
     std::unique_ptr<BoundExpressionNode> Binder::BindNameExpression(NameExpressionSyntax *syntax)
     {
         const auto& varname = syntax->_identifierToken->_text;
-        auto it = std::find_if(_variable_map.begin(), _variable_map.end(), [varname](const auto& pair){
-            return pair.first._name == varname;
-        });
 
-        if(it == _variable_map.end())
+        VariableSymbol variable;
+        if(!_scope->TryLookUp(varname, variable))
         {
             _buffer << "Undefined Name " << varname << "\n";
             return std::make_unique<BoundLiteralExpression>(0);
         }
 
-        return std::make_unique<BoundVariableExpression>(it->first);
+        return std::make_unique<BoundVariableExpression>(std::move(variable));
     }
 
     std::unique_ptr<BoundExpressionNode> Binder::BindAssignmentExpression(AssignmentExpressionSyntax *syntax)
@@ -56,13 +66,23 @@ namespace trylang
         const auto& varname = syntax->_identifierToken->_text;
         auto boundExpression = this->BindExpression(syntax->_expression.get());
 
-        VariableSymbol variable(varname, boundExpression->Type());
-        /*
-         * We are using std::nullopt to initialize becoz in Binder we do not know the computed value since it will be done in the evaluator
-         * In Binder we know only the type_info of the computed value. So std::nullopt will be replaced with the computed value in the evaluator
-         * No need to worry about it.
-         * */
-        _variable_map[variable] = std::nullopt;
+        VariableSymbol variable;
+        if(!_scope->TryLookUp(varname, variable))
+        {
+            /* We did not have varname variable declared */
+
+            variable._name = varname;
+            variable._type = boundExpression->Type();
+            (void)_scope->TryDeclare(variable);
+
+        }
+
+        /* varname variable is declared already */
+        if(std::strcmp(variable._type, boundExpression->Type()) != 0)
+        {
+            _buffer << "Cannot convert from " << variable._type << " to " << boundExpression->Type() << "\n";
+            return boundExpression;
+        }
 
         return std::make_unique<BoundAssignmentExpression>(std::move(variable), std::move(boundExpression));
     }
@@ -92,7 +112,7 @@ namespace trylang
 
         if(boundOperatorKind == nullptr)
         {
-            _buffer << "Unary operator '" << syntax->_operatorToken->_text << "' is not defined for type " << boundOperand->Type().name() << "\n";
+            _buffer << "Unary operator '" << syntax->_operatorToken->_text << "' is not defined for type " << boundOperand->Type() << "\n";
             return boundOperand;
         }
 
@@ -107,7 +127,7 @@ namespace trylang
         
         if(boundOperatorKind == nullptr)
         {
-            _buffer << "Binary operator '" << syntax->_operatorToken->_text << "' is not defined for types " << boundLeft->Type().name() << " and " << boundRight->Type().name() << "\n";
+            _buffer << "Binary operator '" << syntax->_operatorToken->_text << "' is not defined for types " << boundLeft->Type() << " and " << boundRight->Type() << "\n";
             return boundLeft;
         }
 

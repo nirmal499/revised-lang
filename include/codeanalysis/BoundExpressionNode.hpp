@@ -21,8 +21,8 @@ namespace trylang
     
     struct BoundExpressionNode : public BoundNode
     {   
-        /* const std::type_info& since typeid() returns that only */
-        virtual const std::type_info& Type() = 0;
+        /* const char* since typeid() returns that only */
+        virtual const char* Type() = 0;
         ~BoundExpressionNode() override = default;
     };
 
@@ -32,7 +32,7 @@ namespace trylang
 
         BoundVariableExpression(VariableSymbol variable);
 
-        const std::type_info& Type() override;
+        const char* Type() override;
         BoundNodeKind Kind() override;
     };
 
@@ -42,7 +42,7 @@ namespace trylang
         std::unique_ptr<BoundExpressionNode> _expression;
         BoundAssignmentExpression(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression);
 
-        const std::type_info& Type() override;
+        const char* Type() override;
         BoundNodeKind Kind() override;
     };
 
@@ -52,7 +52,7 @@ namespace trylang
 
         explicit BoundLiteralExpression(const object_t& value);
         
-        const std::type_info& Type() override;
+        const char* Type() override;
         BoundNodeKind Kind() override;
     };
 
@@ -63,7 +63,7 @@ namespace trylang
 
         BoundUnaryExpression(BoundUnaryOperator* op, std::unique_ptr<BoundExpressionNode> operand);
         
-        const std::type_info& Type() override;
+        const char* Type() override;
         BoundNodeKind Kind() override;
     };
 
@@ -75,7 +75,7 @@ namespace trylang
 
         BoundBinaryExpression(std::unique_ptr<BoundExpressionNode> left, BoundBinaryOperator* op, std::unique_ptr<BoundExpressionNode> right);
         
-        const std::type_info& Type() override;
+        const char* Type() override;
         BoundNodeKind Kind() override;
     };
 }

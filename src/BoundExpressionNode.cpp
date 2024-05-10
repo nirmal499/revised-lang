@@ -6,7 +6,7 @@ namespace trylang
         : _op(op), _operand(std::move(operand))
     {}
     
-    const std::type_info& BoundUnaryExpression::Type()
+    const char* BoundUnaryExpression::Type()
     {
         return _op->_resultType;
     }
@@ -21,7 +21,7 @@ namespace trylang
         : _value(value)
     {}
 
-    const std::type_info& BoundLiteralExpression::Type()
+    const char* BoundLiteralExpression::Type()
     {   
         return trylang::assign_type_info(*_value);
     }
@@ -35,7 +35,7 @@ namespace trylang
         : _left(std::move(left)), _op(op), _right(std::move(right))
     {}
 
-    const std::type_info& BoundBinaryExpression::Type()
+    const char* BoundBinaryExpression::Type()
     {
         return _op->_resultType;
     }
@@ -54,7 +54,7 @@ namespace trylang
         return BoundNodeKind::VariableExpression;
     }
 
-    const std::type_info& BoundVariableExpression::Type()
+    const char* BoundVariableExpression::Type()
     {
         return _variable._type;
     }
@@ -63,7 +63,7 @@ namespace trylang
         : _variable(std::move(variable)), _expression(std::move(expression))
     {}
 
-    const std::type_info &BoundAssignmentExpression::Type()
+    const char* BoundAssignmentExpression::Type()
     {
         return _expression->Type();
     }

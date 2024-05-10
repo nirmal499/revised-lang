@@ -6,6 +6,7 @@
 #include <codeanalysis/ExpressionSyntax.hpp>
 #include <codeanalysis/Binder.hpp>
 #include <codeanalysis/VariableSymbol.hpp>
+#include <codeanalysis/BoundScope.hpp>
 
 void Run1();
 void Run2();
@@ -103,10 +104,10 @@ void Run2()
         }
 
         std::unique_ptr<trylang::SyntaxTree> syntaxTree = trylang::SyntaxTree::Parse(std::move(text));
-        std::unique_ptr<trylang::Binder> binder = std::make_unique<trylang::Binder>(g_variable_map);
-        std::unique_ptr<trylang::BoundExpressionNode> boundExpression = binder->BindExpression(syntaxTree->_root->_rootExpression.get());
+        std::shared_ptr<trylang::BoundGlobalScope> globalScope = trylang::Binder::BindGlobalScope(syntaxTree->_root.get());
 
-        errors = syntaxTree->_errors.append(binder->Errors());
+        errors.append(syntaxTree->_errors);
+        errors.append(globalScope->_errors);
 
         if(showast)
         {
@@ -116,16 +117,16 @@ void Run2()
         if(!errors.empty())
         {
             std::cout << "\n" << errors << "\n";
-            g_variable_map.clear();
         }
         else
         {
-            trylang::Evaluator evaluator(std::move(boundExpression), g_variable_map);
+            trylang::Evaluator evaluator(std::move(globalScope->_expression), g_variable_map);
             trylang::oobject_t result = evaluator.Evaluate();
             std::visit(trylang::PrintVisitor{}, result);
             std::cout << "\n";
         }
 
         errors.clear();
+
     }
 }

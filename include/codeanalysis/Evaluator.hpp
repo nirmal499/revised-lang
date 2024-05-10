@@ -11,6 +11,7 @@ namespace trylang
 
     struct Evaluator
     {
+
         variable_map_t& _variable_map;
         std::unique_ptr<BoundExpressionNode> _root;
 
