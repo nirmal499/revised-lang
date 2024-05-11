@@ -27,6 +27,10 @@ namespace trylang
         EqualsToken,
         OpenBraceToken,
         CloseBraceToken,
+        LessThanToken,
+        LessThanEqualsToken,
+        GreaterThanToken,
+        GreaterThanEqualsToken,
 
         CompilationUnit,
 
@@ -71,6 +75,10 @@ namespace trylang
         {SyntaxKind::EqualsToken, "EqualsToken"},
         {SyntaxKind::OpenBraceToken, "OpenBraceToken"},
         {SyntaxKind::CloseBraceToken, "CloseBraceToken"},
+        {SyntaxKind::LessThanToken, "LessThanToken"},
+        {SyntaxKind::GreaterThanToken, "GreaterThanToken"},
+        {SyntaxKind::LessThanEqualsToken, "LessThanEqualsToken"},
+        {SyntaxKind::GreaterThanEqualsToken, "GreaterThanEqualsToken"},
 
         {SyntaxKind::CompilationUnit, "CompilationUnit"},
 

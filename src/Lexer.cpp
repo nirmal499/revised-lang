@@ -195,6 +195,28 @@ namespace trylang
                 return std::make_unique<SyntaxToken>(SyntaxKind::EqualsToken, _position++, "=", std::nullopt);
             }
         }
+        else if(this->Current() == '<')
+        {
+            if(this->LookAhead() != '=')
+            {
+                return std::make_unique<SyntaxToken>(SyntaxKind::LessThanToken, _position++, "<", std::nullopt);
+            }
+            else
+            {
+                return std::make_unique<SyntaxToken>(SyntaxKind::LessThanEqualsToken, _position += 2, "<=", std::nullopt);
+            }
+        }
+        else if(this->Current() == '>')
+        {
+            if(this->LookAhead() != '=')
+            {
+                return std::make_unique<SyntaxToken>(SyntaxKind::GreaterThanToken, _position++, ">", std::nullopt);
+            }
+            else
+            {
+                return std::make_unique<SyntaxToken>(SyntaxKind::GreaterThanEqualsToken, _position += 2, ">=", std::nullopt);
+            }
+        }
         else if(this->Current() == '!')
         {
             if(this->LookAhead() == '=')

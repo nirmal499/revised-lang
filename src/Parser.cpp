@@ -63,8 +63,10 @@ namespace trylang
             return this->NextToken();
         }
 
-        _buffer << "ERROR: Unexpected token <" << this->Current()->_kind <<">, expected <" << kind << ">\n";
-        return std::make_shared<SyntaxToken>(kind, this->Current()->_position, "", std::nullopt);
+        _buffer << "ERROR: Unexpected token <" << trylang::__syntaxStringMap[this->Current()->_kind] <<">, expected <" << trylang::__syntaxStringMap[kind] << ">\n";
+        // return std::make_shared<SyntaxToken>(kind, this->Current()->_position, "", std::nullopt);
+
+        throw std::logic_error("ERROR: Unexpected token <" + trylang::__syntaxStringMap[this->Current()->_kind] + ">, expected <" + trylang::__syntaxStringMap[kind] + ">");
     }
 
 
@@ -204,6 +206,10 @@ namespace trylang
 
         case SyntaxKind::EqualsEqualsToken:
         case SyntaxKind::BangsEqualsToken:
+        case SyntaxKind::LessThanToken:
+        case SyntaxKind::LessThanEqualsToken:
+        case SyntaxKind::GreaterThanToken:
+        case SyntaxKind::GreaterThanEqualsToken:
             return 3;
 
         case SyntaxKind::AmpersandAmpersandToken:

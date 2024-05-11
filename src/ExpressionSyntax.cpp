@@ -39,7 +39,7 @@ namespace trylang
 
     std::vector<SyntaxNode*> CompilationUnitSyntax::GetChildren()
     {
-        return {nullptr};
+        return {_statement.get()};
     }
 
     BlockStatementSyntax::BlockStatementSyntax(
@@ -55,7 +55,16 @@ namespace trylang
 
     std::vector<SyntaxNode*> BlockStatementSyntax::GetChildren()
     {
-        return {nullptr};
+        std::vector<SyntaxNode*> children;
+
+        children.push_back(_openBraceToken.get());
+        for(const auto& stmt: _statements)
+        {
+            children.push_back(stmt.get());
+        }
+        children.push_back(_closeBraceToken.get());
+
+        return children; // RVO
     }
 
     VariableDeclarationSyntax::VariableDeclarationSyntax(
@@ -73,7 +82,7 @@ namespace trylang
 
     std::vector<SyntaxNode*> VariableDeclarationSyntax::GetChildren()
     {
-        return {nullptr};
+        return {_keyword.get(), _identifier.get(), _equalsToken.get(), _expression.get()};
     }
 
     ExpressionStatementSyntax::ExpressionStatementSyntax(std::unique_ptr<ExpressionSyntax> expression) : _expression(std::move(expression))
@@ -86,7 +95,7 @@ namespace trylang
 
     std::vector<SyntaxNode*> ExpressionStatementSyntax::GetChildren()
     {
-        return {nullptr};
+        return {_expression.get()};
     }
 
     NameExpressionSyntax::NameExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifierToken)

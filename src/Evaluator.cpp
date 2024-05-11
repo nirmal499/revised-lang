@@ -120,7 +120,7 @@ namespace trylang
         auto* BBEnode = dynamic_cast<BoundBinaryExpression*>(node);
         if(BBEnode != nullptr)
         {
-            /* If we reach here we need to have a "int" */
+            /* If we reach here we need to have a "int" or "bool" */
             oobject_t left = this->EvaluateExpression(BBEnode->_left.get());
             oobject_t right = this->EvaluateExpression(BBEnode->_right.get());
 
@@ -206,6 +206,34 @@ namespace trylang
                     /* left and right are "bool" */
                     return ((*data_left_bool) != (*data_right_bool));
                 }
+            }
+
+            if(BBEnode->_op->_kind == BoundBinaryOperatorKind::Less)
+            {
+                int left_value = std::get<int>(left);
+                int right_value = std::get<int>(right);
+                return left_value < right_value;
+            }
+
+            if(BBEnode->_op->_kind == BoundBinaryOperatorKind::LessEquals)
+            {
+                int left_value = std::get<int>(left);
+                int right_value = std::get<int>(right);
+                return left_value <= right_value;
+            }
+
+            if(BBEnode->_op->_kind == BoundBinaryOperatorKind::Greater)
+            {
+                int left_value = std::get<int>(left);
+                int right_value = std::get<int>(right);
+                return left_value > right_value;
+            }
+
+            if(BBEnode->_op->_kind == BoundBinaryOperatorKind::GreaterEquals)
+            {
+                int left_value = std::get<int>(left);
+                int right_value = std::get<int>(right);
+                return left_value >= right_value;
             }
 
             throw std::logic_error("Unexpected binary operator " + trylang::__boundBinaryOperatorKindStringMap[BBEnode->_op->_kind]);
