@@ -41,6 +41,7 @@ namespace trylang
         VarKeyword,
         IfKeyword,
         ElseKeyword,
+        WhileKeyword,
 
         /* Expressions */
         LiteralExpression,
@@ -56,6 +57,7 @@ namespace trylang
         VariableDeclarationStatement,
         IfStatement,
         ElseStatement,
+        WhileStatement,
     };
 
     inline std::unordered_map<SyntaxKind, std::string> __syntaxStringMap = 
@@ -92,6 +94,7 @@ namespace trylang
         {SyntaxKind::VarKeyword, "VarKeyword"},
         {SyntaxKind::IfKeyword, "IfKeyword"},
         {SyntaxKind::ElseKeyword, "ElseKeyword"},
+        {SyntaxKind::WhileKeyword, "WhileKeyword"},
 
         {SyntaxKind::LiteralExpression, "LiteralExpression"},
         {SyntaxKind::BinaryExpression, "BinaryExpression"},
@@ -106,6 +109,7 @@ namespace trylang
         {SyntaxKind::VariableDeclarationStatement, "VariableDeclarationStatement"},
         {SyntaxKind::IfStatement, "IfStatement"},
         {SyntaxKind::ElseStatement, "ElseStatement"},
+        {SyntaxKind::WhileKeyword, "WhileKeyword"},
     };
 
     inline std::ostream& operator<<(std::ostream& out, SyntaxKind kind)

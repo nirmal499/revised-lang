@@ -14,6 +14,7 @@ namespace trylang
     struct BoundExpressionStatement;
     struct BoundVariableDeclaration;
     struct BoundIfStatement;
+    struct BoundWhileStatement;
 
     struct Evaluator
     {
@@ -33,5 +34,6 @@ namespace trylang
         void EvaluateExpressionStatement(BoundExpressionStatement* node);
         void EvaluateVariableDeclaration(BoundVariableDeclaration *node);
         void EvaluateIfStatement(BoundIfStatement *node);
+        void EvaluateWhileStatement(BoundWhileStatement *node);
     };
 }

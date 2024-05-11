@@ -24,6 +24,7 @@ namespace trylang
     struct ExpressionStatementSyntax;
     struct VariableDeclarationSyntax;
     struct IfStatementSyntax;
+    struct WhileStatementSyntax;
 
     struct BoundExpressionNode;
     struct BoundStatementNode;
@@ -53,6 +54,7 @@ namespace trylang
         std::unique_ptr<BoundStatementNode> BindBlockStatement(BlockStatementSyntax *syntax);
         std::unique_ptr<BoundStatementNode> BindExpressionStatement(ExpressionStatementSyntax *syntax);
         std::unique_ptr<BoundStatementNode> BindIfStatement(IfStatementSyntax *syntax);
+        std::unique_ptr<BoundStatementNode> BindWhileStatement(WhileStatementSyntax *syntax);
 
         std::unique_ptr<BoundExpressionNode> BindParenthesizedExpression(ParenthesizedExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindNameExpression(NameExpressionSyntax* syntax);

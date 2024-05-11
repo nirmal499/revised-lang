@@ -258,4 +258,21 @@ namespace trylang
 
         return children; // RVO
     }
+
+    WhileStatementSyntax::WhileStatementSyntax(const std::shared_ptr<SyntaxToken> &whileKeyword,
+                                               std::unique_ptr<ExpressionSyntax> condition,
+                                               std::unique_ptr<StatementSyntax> body) : _whileKeyword(whileKeyword), _condition(std::move(condition)), _body(std::move(body))
+    {
+
+    }
+
+    SyntaxKind WhileStatementSyntax::Kind()
+    {
+        return SyntaxKind::WhileStatement;
+    }
+
+    std::vector<SyntaxNode *> WhileStatementSyntax::GetChildren()
+    {
+        return {_whileKeyword.get(), _condition.get(), _body.get()};
+    }
 }

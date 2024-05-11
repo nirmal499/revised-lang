@@ -24,6 +24,7 @@ namespace trylang
         ExpressionStatement,
         VariableDeclarationStatement,
         IfStatement,
+        WhileStatement,
     };
 
     inline std::unordered_map<BoundNodeKind, std::string> __boundNodeStringMap = 
@@ -39,6 +40,7 @@ namespace trylang
         {BoundNodeKind::ExpressionStatement, "ExpressionStatement"},
         {BoundNodeKind::VariableDeclarationStatement, "VariableDeclarationStatement"},
         {BoundNodeKind::IfStatement, "IfStatement"},
+        {BoundNodeKind::WhileStatement, "WhileStatement"},
 
     };
 

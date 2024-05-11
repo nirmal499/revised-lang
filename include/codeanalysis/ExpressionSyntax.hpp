@@ -155,6 +155,23 @@ namespace trylang
         std::vector<SyntaxNode*> GetChildren() override;
     };
 
+    struct WhileStatementSyntax : public StatementSyntax
+    {
+        std::shared_ptr<SyntaxToken> _whileKeyword;
+        std::unique_ptr<ExpressionSyntax> _condition;
+        std::unique_ptr<StatementSyntax> _body;
+
+        WhileStatementSyntax(
+                const std::shared_ptr<SyntaxToken>& whileKeyword,
+                std::unique_ptr<ExpressionSyntax> condition,
+                std::unique_ptr<StatementSyntax> body
+        );
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct NameExpressionSyntax : public ExpressionSyntax
     {
         std::shared_ptr<SyntaxToken> _identifierToken;

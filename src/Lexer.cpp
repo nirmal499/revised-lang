@@ -74,6 +74,11 @@ namespace trylang
             return SyntaxKind::ElseKeyword;
         }
 
+        if(text == "while")
+        {
+            return  SyntaxKind::WhileKeyword;
+        }
+
         return SyntaxKind::IdentifierToken;
     }
 

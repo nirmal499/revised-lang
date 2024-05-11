@@ -33,6 +33,8 @@ namespace trylang
                 return this->BindVariableDeclaration(static_cast<VariableDeclarationSyntax*>(syntax));
             case SyntaxKind::IfStatement:
                 return this->BindIfStatement(static_cast<IfStatementSyntax*>(syntax));
+            case SyntaxKind::WhileStatement:
+                return this->BindWhileStatement(static_cast<WhileStatementSyntax*>(syntax));
             default:
                 throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
         }
@@ -212,5 +214,13 @@ namespace trylang
         auto elseStatement = syntax->_elseClause == nullptr ? nullptr : this->BindStatement(elseClause->_elseStatement.get());
 
         return std::make_unique<BoundIfStatement>(std::move(condition), std::move(statement), std::move(elseStatement));
+    }
+
+    std::unique_ptr<BoundStatementNode> Binder::BindWhileStatement(WhileStatementSyntax *syntax)
+    {
+        auto condition = this->BindExpression(syntax->_condition.get());
+        auto body = this->BindStatement(syntax->_body.get());
+
+        return std::make_unique<BoundWhileStatement>(std::move(condition), std::move(body));
     }
 }

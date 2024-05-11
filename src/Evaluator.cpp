@@ -52,6 +52,13 @@ namespace trylang
             return;
         }
 
+        auto* BWhileSnode = dynamic_cast<BoundWhileStatement*>(node);
+        if(BWhileSnode != nullptr)
+        {
+            this->EvaluateWhileStatement(BWhileSnode);
+            return;
+        }
+
         throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
     }
 
@@ -263,5 +270,18 @@ namespace trylang
         }
 
         throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
+    }
+
+    void Evaluator::EvaluateWhileStatement(BoundWhileStatement *node)
+    {
+        auto condition = this->EvaluateExpression(node->_condition.get());
+        bool condition_result = std::get<bool>(condition);
+        while(condition_result)
+        {
+            this->EvaluateStatement(node->_body.get());
+
+            condition = this->EvaluateExpression((node->_condition.get()));
+            condition_result = std::get<bool>(condition);
+        }
     }
 }

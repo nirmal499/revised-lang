@@ -112,4 +112,15 @@ namespace trylang
     {
         return BoundNodeKind::IfStatement;
     }
+
+    BoundWhileStatement::BoundWhileStatement(std::unique_ptr<BoundExpressionNode> condition,
+                                             std::unique_ptr<BoundStatementNode> body) : _condition(std::move(condition)), _body(std::move(body))
+    {
+
+    }
+
+    BoundNodeKind BoundWhileStatement::Kind()
+    {
+        return BoundNodeKind::WhileStatement;
+    }
 }

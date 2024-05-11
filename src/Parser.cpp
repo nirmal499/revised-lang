@@ -94,6 +94,10 @@ namespace trylang
         {
             return this->ParseIfStatement();
         }
+        else if(this->Current()->Kind() == SyntaxKind::WhileKeyword)
+        {
+            return this->ParseWhileStatement();
+        }
 
         return this->ParseExpressionStatement();
     }
@@ -277,5 +281,15 @@ namespace trylang
 
         std::shared_ptr<SyntaxToken> numberToken = this->MatchToken(SyntaxKind::NumberToken);
         return std::make_unique<LiteralExpressionSyntax>(numberToken);
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseWhileStatement()
+    {
+        auto keyword = this->MatchToken(SyntaxKind::WhileKeyword);
+        auto condition = this->ParseExpression();
+        auto body = this->ParseStatement();
+
+        return std::make_unique<WhileStatementSyntax>(keyword, std::move(condition), std::move(body));
+
     }
 }

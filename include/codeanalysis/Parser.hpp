@@ -37,6 +37,7 @@ namespace trylang
         std::unique_ptr<StatementSyntax> ParseVariableDeclaration();
         std::unique_ptr<StatementSyntax> ParseIfStatement();
         std::unique_ptr<StatementSyntax> ParseElseClause();
+        std::unique_ptr<StatementSyntax> ParseWhileStatement();
 
 
         std::unique_ptr<ExpressionSyntax> ParseExpression();
