@@ -123,6 +123,38 @@ namespace trylang
         std::vector<SyntaxNode*> GetChildren() override;
     };
 
+    struct ElseClauseSyntax: public StatementSyntax
+    {
+        std::shared_ptr<SyntaxToken> _elseKeyword;
+        std::unique_ptr<StatementSyntax> _elseStatement;
+
+        ElseClauseSyntax(const std::shared_ptr<SyntaxToken>& elseKeyword, std::unique_ptr<StatementSyntax> elseStatement);
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+
+    };
+
+    struct IfStatementSyntax : public StatementSyntax
+    {
+        std::shared_ptr<SyntaxToken> _ifKeyword;
+        std::unique_ptr<ExpressionSyntax> _condition;
+        std::unique_ptr<StatementSyntax> _thenStatement;
+        std::unique_ptr<StatementSyntax> _elseClause = nullptr;
+
+        IfStatementSyntax(
+                const std::shared_ptr<SyntaxToken>& ifKeyword,
+                std::unique_ptr<ExpressionSyntax> condition,
+                std::unique_ptr<StatementSyntax> thenStatement,
+                std::unique_ptr<StatementSyntax> elseClause
+                );
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct NameExpressionSyntax : public ExpressionSyntax
     {
         std::shared_ptr<SyntaxToken> _identifierToken;

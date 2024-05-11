@@ -41,7 +41,7 @@ namespace trylang
 
     BoundNodeKind BoundVariableDeclaration::Kind()
     {
-        return BoundNodeKind::BoundVariableDeclarationStatement;
+        return BoundNodeKind::VariableDeclarationStatement;
     }
 
     BoundLiteralExpression::BoundLiteralExpression(const object_t& value)
@@ -101,4 +101,15 @@ namespace trylang
     }
 
 
+    BoundIfStatement::BoundIfStatement(std::unique_ptr<BoundExpressionNode> condition,
+                                       std::unique_ptr<BoundStatementNode> statement,
+                                       std::unique_ptr<BoundStatementNode> elseStatement) : _condition(std::move(condition)), _statement(std::move(statement)), _elseStatement(std::move(elseStatement))
+    {
+
+    }
+
+    BoundNodeKind BoundIfStatement::Kind()
+    {
+        return BoundNodeKind::IfStatement;
+    }
 }

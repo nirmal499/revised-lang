@@ -90,9 +90,37 @@ namespace trylang
         {
             return this->ParseVariableDeclaration();
         }
+        else if(this->Current()->Kind() == SyntaxKind::IfKeyword)
+        {
+            return this->ParseIfStatement();
+        }
 
         return this->ParseExpressionStatement();
     }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseIfStatement()
+    {
+        auto keyword = this->MatchToken(SyntaxKind::IfKeyword);
+        auto condition = this->ParseExpression();
+        auto statement = this->ParseStatement();
+        auto elseClause = this->ParseElseClause();
+
+        return std::make_unique<IfStatementSyntax>(keyword, std::move(condition), std::move(statement), std::move(elseClause));
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseElseClause()
+    {
+        if(this->Current()->Kind() != SyntaxKind::ElseKeyword)
+        {
+            return nullptr;
+        }
+
+        auto keyword = this->NextToken();
+        auto statement = this->ParseStatement();
+
+        return std::make_unique<ElseClauseSyntax>(keyword, std::move(statement));
+    }
+
 
     std::unique_ptr<StatementSyntax> Parser::ParseVariableDeclaration()
     {

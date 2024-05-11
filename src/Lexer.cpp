@@ -64,6 +64,16 @@ namespace trylang
             return SyntaxKind::LetKeyword;
         }
 
+        if(text == "if")
+        {
+            return SyntaxKind::IfKeyword;
+        }
+
+        if(text == "else")
+        {
+            return SyntaxKind::ElseKeyword;
+        }
+
         return SyntaxKind::IdentifierToken;
     }
 

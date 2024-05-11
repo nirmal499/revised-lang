@@ -31,6 +31,8 @@ namespace trylang
                 return this->BindExpressionStatement(static_cast<ExpressionStatementSyntax*>(syntax));
             case SyntaxKind::VariableDeclarationStatement:
                 return this->BindVariableDeclaration(static_cast<VariableDeclarationSyntax*>(syntax));
+            case SyntaxKind::IfStatement:
+                return this->BindIfStatement(static_cast<IfStatementSyntax*>(syntax));
             default:
                 throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
         }
@@ -73,6 +75,17 @@ namespace trylang
     {
         auto expression = this->BindExpression(syntax->_expression.get());
         return std::make_unique<BoundExpressionStatement>(std::move(expression));
+    }
+
+    std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax* syntax, const char* targetType)
+    {
+        auto result = this->BindExpression(syntax);
+        if(std::strcmp(result->Type(), targetType) != 0)
+        {
+            _buffer << "Cannot convert from " << result->Type() << " to " << targetType << "\n";
+        }
+
+        return result;
     }
 
     std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax* syntax)
@@ -188,5 +201,16 @@ namespace trylang
         }
 
         return std::make_unique<BoundBinaryExpression>(std::move(boundLeft), boundOperatorKind, std::move(boundRight));
+    }
+
+    std::unique_ptr<BoundStatementNode> Binder::BindIfStatement(trylang::IfStatementSyntax *syntax)
+    {
+        auto condition = this->BindExpression(syntax->_condition.get(), typeid(bool).name());
+        auto statement = this->BindStatement(syntax->_thenStatement.get());
+
+        auto elseClause = static_cast<ElseClauseSyntax*>(syntax->_elseClause.get());
+        auto elseStatement = syntax->_elseClause == nullptr ? nullptr : this->BindStatement(elseClause->_elseStatement.get());
+
+        return std::make_unique<BoundIfStatement>(std::move(condition), std::move(statement), std::move(elseStatement));
     }
 }

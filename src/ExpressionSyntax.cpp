@@ -214,4 +214,48 @@ namespace trylang
 
         return out;
     }
+
+    ElseClauseSyntax::ElseClauseSyntax(const std::shared_ptr<SyntaxToken> &elseKeyword, std::unique_ptr<StatementSyntax> elseStatement)
+        : _elseKeyword(elseKeyword), _elseStatement(std::move(elseStatement))
+    {
+
+    }
+
+    SyntaxKind ElseClauseSyntax::Kind()
+    {
+        return SyntaxKind::ElseStatement;
+    }
+
+    std::vector<SyntaxNode *> ElseClauseSyntax::GetChildren()
+    {
+        return std::vector<SyntaxNode *>{_elseKeyword.get(), _elseStatement.get()};
+    }
+
+    IfStatementSyntax::IfStatementSyntax(const std::shared_ptr<SyntaxToken> &ifKeyword,
+                                         std::unique_ptr<ExpressionSyntax> condition,
+                                         std::unique_ptr<StatementSyntax> thenStatement,
+                                         std::unique_ptr<StatementSyntax> elseClause) : _ifKeyword(ifKeyword), _condition(std::move(condition)), _thenStatement(std::move(thenStatement)), _elseClause(std::move(elseClause))
+    {
+
+    }
+
+    SyntaxKind IfStatementSyntax::Kind()
+    {
+        return SyntaxKind::IfStatement;
+    }
+
+    std::vector<SyntaxNode *> IfStatementSyntax::GetChildren()
+    {
+        std::vector<SyntaxNode*> children;
+
+        children.push_back(_ifKeyword.get());
+        children.push_back(_condition.get());
+        children.push_back(_thenStatement.get());
+        if(_elseClause != nullptr)
+        {
+            children.push_back(_elseClause.get());
+        }
+
+        return children; // RVO
+    }
 }

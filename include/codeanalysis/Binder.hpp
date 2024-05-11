@@ -6,6 +6,7 @@
 #include <codeanalysis/BoundExpressionNode.hpp>
 #include <codeanalysis/SyntaxKind.hpp>
 #include <codeanalysis/VariableSymbol.hpp>
+#include "ExpressionSyntax.hpp"
 
 namespace trylang
 {
@@ -22,6 +23,7 @@ namespace trylang
     struct BlockStatementSyntax;
     struct ExpressionStatementSyntax;
     struct VariableDeclarationSyntax;
+    struct IfStatementSyntax;
 
     struct BoundExpressionNode;
     struct BoundStatementNode;
@@ -43,11 +45,14 @@ namespace trylang
         std::string Errors();
 
         std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax);
+        std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax, const char* targetType);
+
         std::unique_ptr<BoundStatementNode> BindStatement(StatementSyntax* syntax);
         std::unique_ptr<BoundStatementNode> BindVariableDeclaration(VariableDeclarationSyntax* syntax);
 
         std::unique_ptr<BoundStatementNode> BindBlockStatement(BlockStatementSyntax *syntax);
         std::unique_ptr<BoundStatementNode> BindExpressionStatement(ExpressionStatementSyntax *syntax);
+        std::unique_ptr<BoundStatementNode> BindIfStatement(IfStatementSyntax *syntax);
 
         std::unique_ptr<BoundExpressionNode> BindParenthesizedExpression(ParenthesizedExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindNameExpression(NameExpressionSyntax* syntax);
@@ -55,5 +60,6 @@ namespace trylang
         std::unique_ptr<BoundExpressionNode> BindLiteralExpression(LiteralExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindUnaryExpression(UnaryExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindBinaryExpression(BinaryExpressionSyntax* syntax);
+
     };
 }

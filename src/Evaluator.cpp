@@ -45,8 +45,31 @@ namespace trylang
             return;
         }
 
+        auto* BIfSnode = dynamic_cast<BoundIfStatement*>(node);
+        if(BIfSnode != nullptr)
+        {
+            this->EvaluateIfStatement(BIfSnode);
+            return;
+        }
+
         throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
     }
+
+    void Evaluator::EvaluateIfStatement(BoundIfStatement *node)
+    {
+        auto condition = this->EvaluateExpression(node->_condition.get());
+        bool condition_result = std::get<bool>(condition);
+
+        if(condition_result)
+        {
+            this->EvaluateStatement(node->_statement.get());
+        }
+        else if(node->_elseStatement != nullptr)
+        {
+            this->EvaluateStatement(node->_elseStatement.get());
+        }
+    }
+
 
     void Evaluator::EvaluateVariableDeclaration(BoundVariableDeclaration *node)
     {
