@@ -172,6 +172,31 @@ namespace trylang
         std::vector<SyntaxNode*> GetChildren() override;
     };
 
+    struct ForStatementSyntax : public StatementSyntax
+    {
+        std::shared_ptr<SyntaxToken> _keyword;
+        std::shared_ptr<SyntaxToken> _identifier;
+        std::shared_ptr<SyntaxToken> _equalsToken;
+        std::unique_ptr<ExpressionSyntax>_lowerBound;
+        std::shared_ptr<SyntaxToken> _toKeyword;
+        std::unique_ptr<ExpressionSyntax> _upperBound;
+        std::unique_ptr<StatementSyntax> _body;
+
+        ForStatementSyntax(
+                const std::shared_ptr<SyntaxToken>& keyword,
+                const std::shared_ptr<SyntaxToken>& identifierToken,
+                const std::shared_ptr<SyntaxToken>& equalsToken,
+                std::unique_ptr<ExpressionSyntax> lowerBound,
+                const std::shared_ptr<SyntaxToken>& toKeyword,
+                std::unique_ptr<ExpressionSyntax> upperBound,
+                std::unique_ptr<StatementSyntax> body
+        );
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct NameExpressionSyntax : public ExpressionSyntax
     {
         std::shared_ptr<SyntaxToken> _identifierToken;

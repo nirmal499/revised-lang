@@ -35,6 +35,8 @@ namespace trylang
                 return this->BindIfStatement(static_cast<IfStatementSyntax*>(syntax));
             case SyntaxKind::WhileStatement:
                 return this->BindWhileStatement(static_cast<WhileStatementSyntax*>(syntax));
+            case SyntaxKind::ForStatement:
+                return this->BindForStatement(static_cast<ForStatementSyntax*>(syntax));
             default:
                 throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
         }
@@ -218,9 +220,27 @@ namespace trylang
 
     std::unique_ptr<BoundStatementNode> Binder::BindWhileStatement(WhileStatementSyntax *syntax)
     {
-        auto condition = this->BindExpression(syntax->_condition.get());
+        auto condition = this->BindExpression(syntax->_condition.get(), typeid(bool).name());
         auto body = this->BindStatement(syntax->_body.get());
 
         return std::make_unique<BoundWhileStatement>(std::move(condition), std::move(body));
+    }
+
+    std::unique_ptr<BoundStatementNode> Binder::BindForStatement(ForStatementSyntax *syntax)
+    {
+        const auto& varname = syntax->_identifier->_text;
+        VariableSymbol variable(varname, /* isReadOnly */ true, typeid(int).name());
+        if(!_scope->TryDeclare(variable))
+        {
+            _buffer << "Variable '" << varname << "' Already Declared\n";
+        }
+        
+        auto lowerBound = this->BindExpression(syntax->_lowerBound.get(), typeid(int).name());
+        auto upperBound = this->BindExpression(syntax->_upperBound.get(), typeid(int).name());
+
+        auto body = this->BindStatement(syntax->_body.get());
+
+        return std::make_unique<BoundForStatement>(std::move(variable), std::move(lowerBound), std::move(upperBound), std::move(body));
+
     }
 }

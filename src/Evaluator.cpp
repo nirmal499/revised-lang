@@ -59,6 +59,13 @@ namespace trylang
             return;
         }
 
+        auto* BForSnode = dynamic_cast<BoundForStatement*>(node);
+        if(BForSnode != nullptr)
+        {
+            this->EvaluateWhileStatement(BForSnode);
+            return;
+        }
+
         throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
     }
 
@@ -282,6 +289,21 @@ namespace trylang
 
             condition = this->EvaluateExpression((node->_condition.get()));
             condition_result = std::get<bool>(condition);
+        }
+    }
+
+    void Evaluator::EvaluateWhileStatement(BoundForStatement *node)
+    {
+        auto lowerBound = this->EvaluateExpression(node->_lowerBound.get());
+        auto upperBound = this->EvaluateExpression(node->_upperBound.get());
+
+        int lowerBound_result = std::get<int>(lowerBound);
+        int upperBound_result = std::get<int>(upperBound);
+
+        for(int i = lowerBound_result; i <= upperBound_result; i++)
+        {
+            _variable_map[node->_variable] = i; /* It is IMP because the "this->EvaluateStatement(node->_body.get()); will be using the changed 'i' */
+            this->EvaluateStatement(node->_body.get());
         }
     }
 }

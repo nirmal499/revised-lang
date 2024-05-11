@@ -98,6 +98,10 @@ namespace trylang
         {
             return this->ParseWhileStatement();
         }
+        else if(this->Current()->Kind() == SyntaxKind::ForKeyword)
+        {
+            return this->ParseForStatement();
+        }
 
         return this->ParseExpressionStatement();
     }
@@ -291,5 +295,21 @@ namespace trylang
 
         return std::make_unique<WhileStatementSyntax>(keyword, std::move(condition), std::move(body));
 
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseForStatement()
+    {
+        auto keyword = this->MatchToken(SyntaxKind::ForKeyword);
+        auto identifier = this->MatchToken(SyntaxKind::IdentifierToken);
+        auto equalsToken = this->MatchToken(SyntaxKind::EqualsToken);
+
+        auto lowerBound = this->ParseExpression();
+
+        auto toKeyword = this->MatchToken(SyntaxKind::ToKeyword);
+
+        auto upperBound = this->ParseExpression();
+        auto body = this->ParseStatement();
+
+        return std::make_unique<ForStatementSyntax>(keyword, identifier, equalsToken, std::move(lowerBound), toKeyword,std::move(upperBound), std::move(body));
     }
 }

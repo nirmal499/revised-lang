@@ -79,6 +79,16 @@ namespace trylang
             return  SyntaxKind::WhileKeyword;
         }
 
+        if(text == "for")
+        {
+            return  SyntaxKind::ForKeyword;
+        }
+
+        if(text == "to")
+        {
+            return  SyntaxKind::ToKeyword;
+        }
+
         return SyntaxKind::IdentifierToken;
     }
 

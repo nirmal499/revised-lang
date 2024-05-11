@@ -275,4 +275,25 @@ namespace trylang
     {
         return {_whileKeyword.get(), _condition.get(), _body.get()};
     }
+
+    ForStatementSyntax::ForStatementSyntax(const std::shared_ptr<SyntaxToken> &keyword,
+                                           const std::shared_ptr<SyntaxToken> &identifierToken,
+                                           const std::shared_ptr<SyntaxToken> &equalsToken,
+                                           std::unique_ptr<ExpressionSyntax> lowerBound,
+                                           const std::shared_ptr<SyntaxToken> &toKeyword,
+                                           std::unique_ptr<ExpressionSyntax> upperBound,
+                                           std::unique_ptr<StatementSyntax> body) : _keyword(keyword), _identifier(identifierToken), _equalsToken(equalsToken), _lowerBound(std::move(lowerBound)), _toKeyword(toKeyword) ,_upperBound(std::move(upperBound)), _body(std::move(body))
+    {
+
+    }
+
+    SyntaxKind ForStatementSyntax::Kind()
+    {
+        return SyntaxKind::ForStatement;
+    }
+
+    std::vector<SyntaxNode *> ForStatementSyntax::GetChildren()
+    {
+        return {_keyword.get(), _identifier.get(), _equalsToken.get(), _lowerBound.get(), _upperBound.get()};
+    }
 }

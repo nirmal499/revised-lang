@@ -70,6 +70,18 @@ namespace trylang
         BoundNodeKind Kind() override;
     };
 
+    struct BoundForStatement : public BoundStatementNode
+    {
+        VariableSymbol _variable;
+        std::unique_ptr<BoundExpressionNode>_lowerBound;
+        std::unique_ptr<BoundExpressionNode> _upperBound;
+        std::unique_ptr<BoundStatementNode> _body;
+
+        BoundForStatement(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> lowerBound, std::unique_ptr<BoundExpressionNode> upperBound, std::unique_ptr<BoundStatementNode> body);
+
+        BoundNodeKind Kind() override;
+    };
+
     struct BoundVariableDeclaration : public BoundStatementNode
     {
         VariableSymbol _variable;

@@ -123,4 +123,16 @@ namespace trylang
     {
         return BoundNodeKind::WhileStatement;
     }
+
+    BoundForStatement::BoundForStatement(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> lowerBound,
+                                         std::unique_ptr<BoundExpressionNode> upperBound,
+                                         std::unique_ptr<BoundStatementNode> body) : _variable(std::move(variable)), _lowerBound(std::move(lowerBound)), _upperBound(std::move(upperBound)), _body(std::move(body))
+    {
+
+    }
+
+    BoundNodeKind BoundForStatement::Kind()
+    {
+        return BoundNodeKind::ForStatement;
+    }
 }
