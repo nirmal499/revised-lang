@@ -2,6 +2,7 @@
 #include <codeanalysis/ExpressionSyntax.hpp>
 #include <codeanalysis/BoundNodeKind.hpp>
 #include <codeanalysis/BoundScope.hpp>
+#include <codeanalysis/BoundExpressionNode.hpp>
 #include <algorithm>
 
 namespace trylang

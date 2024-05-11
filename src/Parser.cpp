@@ -63,7 +63,7 @@ namespace trylang
             return this->NextToken();
         }
 
-        _buffer << "ERROR: Unexpected token <" << trylang::__syntaxStringMap[this->Current()->_kind] <<">, expected <" << trylang::__syntaxStringMap[kind] << ">\n";
+        _buffer << "ERROR: Unexpected token <" << this->Current()->Kind() <<">, expected <" << kind << ">\n"; /* cout is overloaded SyntaxKind */
         // return std::make_shared<SyntaxToken>(kind, this->Current()->_position, "", std::nullopt);
 
         throw std::logic_error("ERROR: Unexpected token <" + trylang::__syntaxStringMap[this->Current()->_kind] + ">, expected <" + trylang::__syntaxStringMap[kind] + ">");

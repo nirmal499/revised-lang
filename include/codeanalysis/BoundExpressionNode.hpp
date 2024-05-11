@@ -16,7 +16,51 @@ namespace trylang
     struct BoundNode
     {
         virtual BoundNodeKind Kind() = 0;
+        virtual std::vector<BoundNode*> GetChildren() = 0;
         virtual ~BoundNode() = default;
+    };
+
+    void PrettyPrintBoundNodes(BoundNode* node, std::string indent = "");
+
+    struct BoundUnaryOperator : public BoundNode
+    {
+        SyntaxKind _syntaxKind;
+        BoundNodeKind _kind;
+        const char* _operandType;
+        const char* _resultType;
+
+        BoundUnaryOperator(SyntaxKind syntaxKind, BoundNodeKind kind, const char* operandType, const char* resultType)
+                : _syntaxKind(syntaxKind), _kind(kind), _operandType(operandType), _resultType(resultType)
+        {}
+
+        static std::shared_ptr<BoundUnaryOperator> Bind(SyntaxKind syntaxKind, const char* operandType);
+
+        /*****************************************************************************************************************************************************/
+        BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
+        /*****************************************************************************************************************************************************/
+
+    };
+
+    struct BoundBinaryOperator : public BoundNode
+    {
+        SyntaxKind _syntaxKind;
+        BoundNodeKind _kind;
+        const char* _leftOperandType;
+        const char* _rightOperandType;
+        const char* _resultType;
+
+        BoundBinaryOperator(SyntaxKind syntaxKind, BoundNodeKind kind, const char* leftOperandType, const char* rightOperandType, const char* resultType)
+                : _syntaxKind(syntaxKind), _kind(kind), _leftOperandType(leftOperandType), _rightOperandType(rightOperandType), _resultType(resultType)
+        {}
+
+        static std::shared_ptr<BoundBinaryOperator> Bind(SyntaxKind syntaxKind, const char* leftOperandType, const char* rightOperandType);
+
+        /*****************************************************************************************************************************************************/
+        BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
+        /*****************************************************************************************************************************************************/
+
     };
     
     struct BoundExpressionNode : public BoundNode
@@ -38,6 +82,7 @@ namespace trylang
         explicit BoundBlockStatement(std::vector<std::unique_ptr<BoundStatementNode>> statements);
 
         BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
     };
 
     struct BoundExpressionStatement : public BoundStatementNode
@@ -47,6 +92,7 @@ namespace trylang
         explicit BoundExpressionStatement(std::unique_ptr<BoundExpressionNode> expression);
 
         BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
     };
 
     struct BoundIfStatement : public BoundStatementNode
@@ -58,6 +104,7 @@ namespace trylang
         BoundIfStatement(std::unique_ptr<BoundExpressionNode> condition, std::unique_ptr<BoundStatementNode> statement, std::unique_ptr<BoundStatementNode> elseStatement);
 
         BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
     };
 
     struct BoundWhileStatement : public BoundStatementNode
@@ -68,6 +115,7 @@ namespace trylang
         BoundWhileStatement(std::unique_ptr<BoundExpressionNode> condition, std::unique_ptr<BoundStatementNode> body);
 
         BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
     };
 
     struct BoundForStatement : public BoundStatementNode
@@ -80,6 +128,7 @@ namespace trylang
         BoundForStatement(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> lowerBound, std::unique_ptr<BoundExpressionNode> upperBound, std::unique_ptr<BoundStatementNode> body);
 
         BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
     };
 
     struct BoundVariableDeclaration : public BoundStatementNode
@@ -90,6 +139,7 @@ namespace trylang
         BoundVariableDeclaration(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression);
 
         BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
     };
 
     struct BoundVariableExpression : public BoundExpressionNode
@@ -100,6 +150,7 @@ namespace trylang
 
         const char* Type() override;
         BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
     };
 
     struct BoundAssignmentExpression : public BoundExpressionNode
@@ -110,6 +161,7 @@ namespace trylang
 
         const char* Type() override;
         BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
     };
 
     struct BoundLiteralExpression : public BoundExpressionNode
@@ -120,28 +172,31 @@ namespace trylang
         
         const char* Type() override;
         BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
     };
 
     struct BoundUnaryExpression : public BoundExpressionNode
     {
-        BoundUnaryOperator* _op;
+        std::shared_ptr<BoundUnaryOperator> _op;
         std::unique_ptr<BoundExpressionNode> _operand;
 
-        BoundUnaryExpression(BoundUnaryOperator* op, std::unique_ptr<BoundExpressionNode> operand);
+        BoundUnaryExpression(const std::shared_ptr<BoundUnaryOperator>& op, std::unique_ptr<BoundExpressionNode> operand);
         
         const char* Type() override;
         BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
     };
 
     struct BoundBinaryExpression : public BoundExpressionNode
     {
         std::unique_ptr<BoundExpressionNode> _left;
-        BoundBinaryOperator* _op;
+        std::shared_ptr<BoundBinaryOperator> _op;
         std::unique_ptr<BoundExpressionNode> _right;
 
-        BoundBinaryExpression(std::unique_ptr<BoundExpressionNode> left, BoundBinaryOperator* op, std::unique_ptr<BoundExpressionNode> right);
+        BoundBinaryExpression(std::unique_ptr<BoundExpressionNode> left, const std::shared_ptr<BoundBinaryOperator>& op, std::unique_ptr<BoundExpressionNode> right);
         
         const char* Type() override;
         BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
     };
 }

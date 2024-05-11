@@ -3,10 +3,8 @@
 #include <memory>
 #include <sstream>
 #include <optional>
-#include <codeanalysis/BoundExpressionNode.hpp>
 #include <codeanalysis/SyntaxKind.hpp>
 #include <codeanalysis/VariableSymbol.hpp>
-#include "ExpressionSyntax.hpp"
 
 namespace trylang
 {

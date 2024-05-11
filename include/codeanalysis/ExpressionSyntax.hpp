@@ -16,7 +16,7 @@ namespace trylang
         virtual ~SyntaxNode() = default;
     };
 
-    void PrettyPrint(SyntaxNode* node, std::string indent = "");
+    void PrettyPrintSyntaxNodes(SyntaxNode* node, std::string indent = "");
 
     struct SyntaxToken : SyntaxNode
     {

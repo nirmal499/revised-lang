@@ -2,10 +2,10 @@
 
 namespace trylang
 {
-    void PrettyPrint(SyntaxNode* node, std::string indent)
+    void PrettyPrintSyntaxNodes(SyntaxNode* node, std::string indent)
     {
         std::cout << indent;
-        std::cout << node->Kind();
+        std::cout << node->Kind(); /* cout is overloaded for node->Kind() */
 
         SyntaxToken* data = dynamic_cast<SyntaxToken*>(node);
         if(data != nullptr && data->_value.has_value())
@@ -21,7 +21,7 @@ namespace trylang
         {
             if(child != nullptr)
             {
-                PrettyPrint(child, indent);
+                PrettyPrintSyntaxNodes(child, indent);
             }
         }
 
@@ -55,7 +55,7 @@ namespace trylang
 
     std::vector<SyntaxNode*> BlockStatementSyntax::GetChildren()
     {
-        std::vector<SyntaxNode*> children;
+        std::vector<SyntaxNode*> children(_statements.size() + 2);
 
         children.push_back(_openBraceToken.get());
         for(const auto& stmt: _statements)
@@ -246,7 +246,7 @@ namespace trylang
 
     std::vector<SyntaxNode *> IfStatementSyntax::GetChildren()
     {
-        std::vector<SyntaxNode*> children;
+        std::vector<SyntaxNode*> children(4);
 
         children.push_back(_ifKeyword.get());
         children.push_back(_condition.get());

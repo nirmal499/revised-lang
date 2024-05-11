@@ -1,8 +1,102 @@
 #include <codeanalysis/BoundExpressionNode.hpp>
+#include <codeanalysis/BoundNodeKind.hpp>
 
 namespace trylang
 {
-    BoundUnaryExpression::BoundUnaryExpression(BoundUnaryOperator* op, std::unique_ptr<BoundExpressionNode> operand)
+
+    void PrettyPrintBoundNodes(BoundNode* node, std::string indent)
+    {
+        std::cout << indent;
+        std::cout << node->Kind(); /* cout is overloaded for node->Kind() */
+
+        std::cout << "\n";
+
+        indent += "     ";
+
+        for(auto const& child: node->GetChildren())
+        {
+            if(child != nullptr)
+            {
+                PrettyPrintBoundNodes(child, indent);
+            }
+        }
+
+    }
+    std::array<std::shared_ptr<BoundUnaryOperator>, 3> _boundUnaryOperatorArray = {
+            std::make_shared<BoundUnaryOperator>(SyntaxKind::BangToken, BoundNodeKind::LogicalNegation, typeid(bool).name(),typeid(bool).name()),
+            std::make_shared<BoundUnaryOperator>(SyntaxKind::PlusToken, BoundNodeKind::Identity, typeid(int).name(),typeid(int).name()),
+            std::make_shared<BoundUnaryOperator>(SyntaxKind::MinusToken, BoundNodeKind::Negation, typeid(int).name(),typeid(int).name())
+    };
+
+    std::array<std::shared_ptr<BoundBinaryOperator>, 14> _boundBinaryOperatorArray = {
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::PlusToken, BoundNodeKind::Addition, typeid(int).name(),typeid(int).name(), typeid(int).name()),
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::MinusToken, BoundNodeKind::Subtraction, typeid(int).name(),typeid(int).name(), typeid(int).name()),
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::SlashToken, BoundNodeKind::Division, typeid(int).name(),typeid(int).name(), typeid(int).name()),
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::StarToken, BoundNodeKind::Multiplication, typeid(int).name(),typeid(int).name(), typeid(int).name()),
+
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::EqualsEqualsToken, BoundNodeKind::LogicalEquality, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::BangsEqualsToken, BoundNodeKind::LogicalNotEquality, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
+
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::LessThanToken, BoundNodeKind::Less, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::LessThanEqualsToken, BoundNodeKind::LessEquals, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::GreaterThanToken, BoundNodeKind::Greater, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::GreaterThanEqualsToken, BoundNodeKind::GreaterEquals, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
+
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::AmpersandAmpersandToken, BoundNodeKind::LogicalAnd, typeid(bool).name(),typeid(bool).name(), typeid(bool).name()),
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::PipePipeToken, BoundNodeKind::LogicalOr, typeid(bool).name(),typeid(bool).name(), typeid(bool).name()),
+
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::EqualsEqualsToken, BoundNodeKind::LogicalEquality, typeid(bool).name(),typeid(bool).name(), typeid(bool).name()),
+            std::make_shared<BoundBinaryOperator>(SyntaxKind::BangsEqualsToken, BoundNodeKind::LogicalNotEquality, typeid(bool).name(),typeid(bool).name(), typeid(bool).name()),
+
+    };
+
+    std::shared_ptr<BoundUnaryOperator> BoundUnaryOperator::Bind(SyntaxKind syntaxKind, const char* operandType)
+    {
+        for(auto const& op: trylang::_boundUnaryOperatorArray)
+        {
+            if(op->_syntaxKind == syntaxKind && std::strcmp(op->_operandType, operandType) == 0)
+            {
+                return op;
+            }
+        }
+
+        return nullptr;
+    }
+
+    std::shared_ptr<BoundBinaryOperator> BoundBinaryOperator::Bind(SyntaxKind syntaxKind, const char* leftOperandType, const char* rightOperandType)
+    {
+        for(auto const& op:_boundBinaryOperatorArray)
+        {
+            if(op->_syntaxKind == syntaxKind && std::strcmp(op->_leftOperandType, leftOperandType) == 0 && std::strcmp(op->_rightOperandType, rightOperandType) == 0)
+            {
+                return op;
+            }
+        }
+
+        return nullptr;
+    }
+
+    BoundNodeKind BoundBinaryOperator::Kind()
+    {
+        return _kind;
+    }
+
+    std::vector<BoundNode *> BoundBinaryOperator::GetChildren()
+    {
+        return {nullptr};
+    }
+
+    BoundNodeKind BoundUnaryOperator::Kind()
+    {
+        return _kind;
+    }
+
+    std::vector<BoundNode *> BoundUnaryOperator::GetChildren()
+    {
+        return {nullptr};
+    }
+
+    BoundUnaryExpression::BoundUnaryExpression(const std::shared_ptr<BoundUnaryOperator>& op, std::unique_ptr<BoundExpressionNode> operand)
         : _op(op), _operand(std::move(operand))
     {}
     
@@ -16,6 +110,11 @@ namespace trylang
         return BoundNodeKind::UnaryExpression;
     }
 
+    std::vector<BoundNode *> BoundUnaryExpression::GetChildren()
+    {
+        return {_op.get(), _operand.get()};
+    }
+
     BoundBlockStatement::BoundBlockStatement(std::vector<std::unique_ptr<BoundStatementNode>> statements)
         : _statements(std::move(statements))
     {}
@@ -23,6 +122,18 @@ namespace trylang
     BoundNodeKind BoundBlockStatement::Kind()
     {
         return BoundNodeKind::BlockStatement;
+    }
+
+    std::vector<BoundNode *> BoundBlockStatement::GetChildren()
+    {
+        std::vector<BoundNode*> children(_statements.size());
+
+        for(const auto& stmt: _statements)
+        {
+            children.push_back(stmt.get());
+        }
+
+        return children; // RVO
     }
 
     BoundExpressionStatement::BoundExpressionStatement(std::unique_ptr<BoundExpressionNode> expression)
@@ -34,6 +145,11 @@ namespace trylang
         return BoundNodeKind::ExpressionStatement;
     }
 
+    std::vector<BoundNode *> BoundExpressionStatement::GetChildren()
+    {
+        return {_expression.get()};
+    }
+
     BoundVariableDeclaration::BoundVariableDeclaration(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression)
     : _variable(std::move(variable)), _expression(std::move(expression))
     {}
@@ -42,6 +158,11 @@ namespace trylang
     BoundNodeKind BoundVariableDeclaration::Kind()
     {
         return BoundNodeKind::VariableDeclarationStatement;
+    }
+
+    std::vector<BoundNode *> BoundVariableDeclaration::GetChildren()
+    {
+        return {_expression.get()};
     }
 
     BoundLiteralExpression::BoundLiteralExpression(const object_t& value)
@@ -58,7 +179,12 @@ namespace trylang
         return BoundNodeKind::LiteralExpression;
     }
 
-    BoundBinaryExpression::BoundBinaryExpression(std::unique_ptr<BoundExpressionNode> left, BoundBinaryOperator* op, std::unique_ptr<BoundExpressionNode> right)
+    std::vector<BoundNode *> BoundLiteralExpression::GetChildren()
+    {
+        return {nullptr};
+    }
+
+    BoundBinaryExpression::BoundBinaryExpression(std::unique_ptr<BoundExpressionNode> left, const std::shared_ptr<BoundBinaryOperator>& op, std::unique_ptr<BoundExpressionNode> right)
         : _left(std::move(left)), _op(op), _right(std::move(right))
     {}
 
@@ -70,6 +196,11 @@ namespace trylang
     BoundNodeKind BoundBinaryExpression::Kind()
     {
         return BoundNodeKind::BinaryExpression;
+    }
+
+    std::vector<BoundNode *> BoundBinaryExpression::GetChildren()
+    {
+        return {_left.get(), _op.get(), _right.get()};
     }
 
     BoundVariableExpression::BoundVariableExpression(VariableSymbol variable)
@@ -86,6 +217,11 @@ namespace trylang
         return _variable._type;
     }
 
+    std::vector<BoundNode *> BoundVariableExpression::GetChildren()
+    {
+        return {nullptr};
+    }
+
     BoundAssignmentExpression::BoundAssignmentExpression(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression)
         : _variable(std::move(variable)), _expression(std::move(expression))
     {}
@@ -98,6 +234,11 @@ namespace trylang
     BoundNodeKind BoundAssignmentExpression::Kind()
     {
         return BoundNodeKind::AssignmentExpression;
+    }
+
+    std::vector<BoundNode *> BoundAssignmentExpression::GetChildren()
+    {
+        return {_expression.get()};
     }
 
 
@@ -113,6 +254,19 @@ namespace trylang
         return BoundNodeKind::IfStatement;
     }
 
+    std::vector<BoundNode *> BoundIfStatement::GetChildren()
+    {
+        std::vector<BoundNode*> children(3);
+        children.push_back(_condition.get());
+        children.push_back(_statement.get());
+        if(_elseStatement != nullptr)
+        {
+            children.push_back(_elseStatement.get());
+        }
+
+        return children; // RVO
+    }
+
     BoundWhileStatement::BoundWhileStatement(std::unique_ptr<BoundExpressionNode> condition,
                                              std::unique_ptr<BoundStatementNode> body) : _condition(std::move(condition)), _body(std::move(body))
     {
@@ -122,6 +276,11 @@ namespace trylang
     BoundNodeKind BoundWhileStatement::Kind()
     {
         return BoundNodeKind::WhileStatement;
+    }
+
+    std::vector<BoundNode *> BoundWhileStatement::GetChildren()
+    {
+        return {_condition.get(), _body.get()};
     }
 
     BoundForStatement::BoundForStatement(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> lowerBound,
@@ -134,5 +293,10 @@ namespace trylang
     BoundNodeKind BoundForStatement::Kind()
     {
         return BoundNodeKind::ForStatement;
+    }
+
+    std::vector<BoundNode *> BoundForStatement::GetChildren()
+    {
+        return {_lowerBound.get(), _upperBound.get(), _body.get()};
     }
 }

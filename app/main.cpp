@@ -61,6 +61,7 @@ void Run2()
 {
     std::string line;
     bool showast = false;
+    bool showprogram = false;
     std::string errors;
 
     while(true)
@@ -107,6 +108,12 @@ void Run2()
             std::cout << (showast ? "Showing AST\n": "Not Showing AST\n");
             continue;
         }
+        else if(line == "#showprogram")
+        {
+            showprogram = !showprogram;
+            std::cout << (showprogram ? "Showing Program Tree\n": "Not Showing Program Tree\n");
+            continue;
+        }
         else if(line == "#exit")
         {
             break;
@@ -120,7 +127,14 @@ void Run2()
 
         if(showast)
         {
-            trylang::PrettyPrint(syntaxTree->_root.get());
+            trylang::PrettyPrintSyntaxNodes(syntaxTree->_root.get());
+        }
+
+        std::cout << "\n";
+
+        if(showprogram)
+        {
+            trylang::PrettyPrintBoundNodes((globalScope->_statement.get()));
         }
 
         if(!errors.empty())
