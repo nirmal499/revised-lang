@@ -6,13 +6,85 @@
 
 namespace trylang
 {
-    Evaluator::Evaluator(std::unique_ptr<BoundStatementNode> root, variable_map_t& variables)
+    Evaluator::Evaluator(std::unique_ptr<BoundBlockStatement> root, variable_map_t& variables)
         : _root(std::move(root)), _variable_map(variables)
     {}
 
     oobject_t Evaluator::Evaluate()
     {
-        this->EvaluateStatement(_root.get());
+
+        std::unordered_map<LabelSymbol, int, LabelSymbolHash> labelToIndex;
+        for(auto i = 0; i < _root->_statements.size(); i++)
+        {
+            auto* BLSnode = dynamic_cast<BoundLabelStatement*>(_root->_statements.at(i).get());
+            if(BLSnode != nullptr)
+            {
+                labelToIndex[BLSnode->_label] = i + 1;
+            }
+        }
+
+        auto index= 0;
+        while(index < _root->_statements.size())
+        {
+            if(_root->_statements.at(index) == nullptr)
+            {
+                index++;
+                continue;
+            }
+
+            auto* s = _root->_statements.at(index).get();
+
+            auto* BVDSnode = dynamic_cast<BoundVariableDeclaration*>(s);
+            if(BVDSnode != nullptr)
+            {
+                this->EvaluateVariableDeclaration(BVDSnode);
+                index++;
+                continue;
+            }
+
+            auto* BESnode = dynamic_cast<BoundExpressionStatement*>(s);
+            if(BESnode != nullptr)
+            {
+                this->EvaluateExpressionStatement(BESnode);
+                index++;
+                continue;
+            }
+
+            auto* BGnode = dynamic_cast<BoundGotoStatement*>(s);
+            if(BGnode != nullptr)
+            {
+                index = labelToIndex[BGnode->_label];
+                continue;
+            }
+
+            auto* BCGnode = dynamic_cast<BoundConditionalGotoStatement*>(s);
+            if(BCGnode != nullptr)
+            {
+                auto condition = this->EvaluateExpression(BCGnode->_condition.get());
+                bool condition_result = std::get<bool>(condition);
+
+                if(condition_result && !BCGnode->_jumpIfFalse || !condition_result && BCGnode->_jumpIfFalse)
+                {
+                    index = labelToIndex[BCGnode->_label];
+                }
+                else
+                {
+                    index++;
+                }
+                continue;
+            }
+
+            auto* BLSnode = dynamic_cast<BoundLabelStatement*>(s);
+            if(BLSnode != nullptr)
+            {
+                index++;
+                continue;
+            }
+
+            throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[s->Kind()]);
+        }
+
+//        this->EvaluateStatement(_root.get());
 
         if(_lastValue.index() == std::variant_npos)
         {
@@ -22,6 +94,7 @@ namespace trylang
         return _lastValue;
     }
 
+    /*
     void Evaluator::EvaluateStatement(BoundStatementNode* node)
     {
 
@@ -69,7 +142,9 @@ namespace trylang
 
         throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
     }
+     */
 
+    /*
     void Evaluator::EvaluateIfStatement(BoundIfStatement *node)
     {
         auto condition = this->EvaluateExpression(node->_condition.get());
@@ -84,6 +159,7 @@ namespace trylang
             this->EvaluateStatement(node->_elseStatement.get());
         }
     }
+     */
 
 
     void Evaluator::EvaluateVariableDeclaration(BoundVariableDeclaration *node)
@@ -93,6 +169,7 @@ namespace trylang
         _lastValue = value;
     }
 
+    /*
     void Evaluator::EvaluateBlockStatement(BoundBlockStatement *node)
     {
         for(const auto& statement: node->_statements)
@@ -103,6 +180,7 @@ namespace trylang
             }
         }
     }
+     */
 
     void Evaluator::EvaluateExpressionStatement(BoundExpressionStatement *node)
     {
@@ -283,6 +361,7 @@ namespace trylang
         throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
     }
 
+    /*
     void Evaluator::EvaluateWhileStatement(BoundWhileStatement *node)
     {
         auto condition = this->EvaluateExpression(node->_condition.get());
@@ -295,6 +374,7 @@ namespace trylang
             condition_result = std::get<bool>(condition);
         }
     }
+     */
 
 //    void Evaluator::EvaluateForStatement(BoundForStatement *node)
 //    {

@@ -26,6 +26,9 @@ namespace trylang
         IfStatement,
         WhileStatement,
         ForStatement,
+        GotoStatement,
+        ConditionalGotoStatement,
+        LabelStatement,
 
         Identity,
         Negation,
@@ -59,6 +62,9 @@ namespace trylang
         {BoundNodeKind::VariableDeclarationStatement, "VariableDeclarationStatement"},
         {BoundNodeKind::IfStatement, "IfStatement"},
         {BoundNodeKind::WhileStatement, "WhileStatement"},
+        {BoundNodeKind::GotoStatement, "GotoStatement"},
+        {BoundNodeKind::ConditionalGotoStatement, "ConditionalGotoStatement"},
+        {BoundNodeKind::LabelStatement, "LabelStatement"},
 
         {BoundNodeKind::Identity, "Identity"},
         {BoundNodeKind::Negation, "Negation"},

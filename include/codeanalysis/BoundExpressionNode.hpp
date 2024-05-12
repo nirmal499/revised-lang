@@ -85,6 +85,40 @@ namespace trylang
         std::vector<BoundNode*> GetChildren() override;
     };
 
+    /*********************************************************************************************************************/
+    struct BoundGotoStatement : public BoundStatementNode
+    {
+        LabelSymbol _label;
+
+        explicit BoundGotoStatement(LabelSymbol label);
+
+        BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
+    };
+
+    struct BoundConditionalGotoStatement : public BoundStatementNode
+    {
+        LabelSymbol _label;
+        std::unique_ptr<BoundExpressionNode> _condition;
+        bool _jumpIfFalse;
+
+        BoundConditionalGotoStatement(LabelSymbol label, std::unique_ptr<BoundExpressionNode> condition, bool jumpIfFalse);
+
+        BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
+    };
+
+    struct BoundLabelStatement : public BoundStatementNode
+    {
+        LabelSymbol _label;
+
+        explicit BoundLabelStatement(LabelSymbol label);
+
+        BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
+    };
+    /*********************************************************************************************************************/
+
     struct BoundExpressionStatement : public BoundStatementNode
     {
         std::unique_ptr<BoundExpressionNode> _expression;

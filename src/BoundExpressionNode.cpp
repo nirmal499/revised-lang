@@ -299,4 +299,51 @@ namespace trylang
     {
         return {_lowerBound.get(), _upperBound.get(), _body.get()};
     }
+
+    BoundNodeKind BoundGotoStatement::Kind()
+    {
+        return BoundNodeKind::GotoStatement;
+    }
+
+    BoundGotoStatement::BoundGotoStatement(LabelSymbol label) : _label(std::move(label))
+    {
+
+    }
+
+    std::vector<BoundNode *> BoundGotoStatement::GetChildren()
+    {
+        return {nullptr};
+    }
+
+    BoundLabelStatement::BoundLabelStatement(LabelSymbol label) : _label(std::move(label))
+    {
+
+    }
+
+    BoundNodeKind BoundLabelStatement::Kind()
+    {
+        return BoundNodeKind::LabelStatement;
+    }
+
+    std::vector<BoundNode *> BoundLabelStatement::GetChildren()
+    {
+        return {nullptr};
+    }
+
+    BoundConditionalGotoStatement::BoundConditionalGotoStatement(LabelSymbol label,
+                                                                 std::unique_ptr<BoundExpressionNode> condition,
+                                                                 bool jumpIfFalse) : _label(std::move(label)), _condition(std::move(condition)), _jumpIfFalse(jumpIfFalse)
+    {
+
+    }
+
+    BoundNodeKind BoundConditionalGotoStatement::Kind()
+    {
+        return BoundNodeKind::ConditionalGotoStatement;
+    }
+
+    std::vector<BoundNode *> BoundConditionalGotoStatement::GetChildren()
+    {
+        return {nullptr};
+    }
 }

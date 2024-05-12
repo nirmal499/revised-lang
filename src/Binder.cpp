@@ -4,9 +4,11 @@
 #include <codeanalysis/BoundScope.hpp>
 #include <codeanalysis/BoundExpressionNode.hpp>
 #include <algorithm>
+#include <stack>
 
 namespace trylang
 {
+
     Binder::Binder(const std::shared_ptr<BoundScope>& parent)
     {
         _scope = std::make_shared<BoundScope>(parent);
@@ -15,11 +17,14 @@ namespace trylang
     std::shared_ptr<BoundGlobalScope> Binder::BindGlobalScope(CompilationUnitSyntax* syntax)
     {
         Binder binder(nullptr);
+
         auto statement = binder.BindStatement(syntax->_statement.get());
+        auto flattened = Binder::Flatten(std::move(statement));
+
         auto variables = binder._scope->GetDeclaredVariable();
         auto errors = binder.Errors();
 
-        return std::make_shared<BoundGlobalScope>(nullptr, std::move(errors), std::move(variables), std::move(statement));
+        return std::make_shared<BoundGlobalScope>(nullptr, std::move(errors), std::move(variables), std::move(flattened));
     }
 
     std::unique_ptr<BoundStatementNode> Binder::BindStatement(StatementSyntax* syntax)
@@ -208,8 +213,54 @@ namespace trylang
         return std::make_unique<BoundBinaryExpression>(std::move(boundLeft), boundOperatorKind, std::move(boundRight));
     }
 
+//    std::unique_ptr<BoundStatementNode> Binder::BindIfStatement(trylang::IfStatementSyntax *syntax)
+//    {
+//        auto condition = this->BindExpression(syntax->_condition.get(), typeid(bool).name());
+//        auto statement = this->BindStatement(syntax->_thenStatement.get());
+//
+//        auto elseClause = static_cast<ElseClauseSyntax*>(syntax->_elseClause.get());
+//        auto elseStatement = syntax->_elseClause == nullptr ? nullptr : this->BindStatement(elseClause->_elseStatement.get());
+//
+//        return std::make_unique<BoundIfStatement>(std::move(condition), std::move(statement), std::move(elseStatement));
+//    }
+
+    LabelSymbol Binder::GenerateLabel()
+    {
+        auto name = "Label{" + std::to_string(++_labelCount) + "}";
+        LabelSymbol label(name);
+        return label;
+    }
+
     std::unique_ptr<BoundStatementNode> Binder::BindIfStatement(trylang::IfStatementSyntax *syntax)
     {
+        /**
+         * if <condition>
+         *      <then>
+         *
+         * ----------------------------------------->
+         *
+         * gotoIfFalse <condition> end
+         * <then>
+         * end:
+         *
+         *
+         * ================================================================================
+         * if <condition>
+         *      <then>
+         * else
+         *      <else>
+         *
+         * ----------------------------------------->
+         *
+         * gotoIfFalse <condition> else
+         * <then>
+         * goto end
+         * else:
+         * <else>
+         * end:
+         *
+         * **/
+
         auto condition = this->BindExpression(syntax->_condition.get(), typeid(bool).name());
         auto statement = this->BindStatement(syntax->_thenStatement.get());
 
@@ -220,15 +271,156 @@ namespace trylang
             elseStatement = this->BindStatement(elseClause->_elseStatement.get());
         }
 
-        return std::make_unique<BoundIfStatement>(std::move(condition), std::move(statement), std::move(elseStatement));
+        if(elseStatement == nullptr)
+        {
+            /**
+            * if <condition>
+            *      <then>
+            *
+            * ----------------------------------------->
+            *
+            * gotoIfFalse <condition> end
+            * <then>
+            * end:
+
+            * **/
+            auto endLabel = this->GenerateLabel();
+            auto gotoFalse = std::make_unique<BoundConditionalGotoStatement>(endLabel, std::move(condition), true);
+            auto endLabelStatement = std::make_unique<BoundLabelStatement>(endLabel);
+
+            std::vector<std::unique_ptr<BoundStatementNode>> statements_1;
+            statements_1.emplace_back(std::move(gotoFalse));
+            statements_1.emplace_back(std::move(statement));
+            statements_1.emplace_back(std::move(endLabelStatement));
+
+            auto result = std::make_unique<BoundBlockStatement>(std::move(statements_1));
+
+            return result;
+        }
+        else
+        {
+            /**
+            * if <condition>
+            *      <then>
+            * else
+            *      <else>
+            *
+            * ----------------------------------------->
+            *
+            * gotoIfFalse <condition> else
+            * <then>
+            * goto end
+            * else:
+            * <else>
+            * end:
+            *
+            * **/
+
+            auto elseLabel = this->GenerateLabel();
+            auto endLabel = this->GenerateLabel();
+            auto gotoFalse = std::make_unique<BoundConditionalGotoStatement>(elseLabel, std::move(condition), true);
+            auto gotoEndStatement = std::make_unique<BoundGotoStatement>(endLabel);
+            auto endLabelStatement = std::make_unique<BoundLabelStatement>(endLabel);
+            auto elseLabelStatement = std::make_unique<BoundLabelStatement>(elseLabel);
+
+            std::vector<std::unique_ptr<BoundStatementNode>> statements_1;
+            statements_1.emplace_back(std::move(gotoFalse));
+            statements_1.emplace_back(std::move(statement));
+            statements_1.emplace_back(std::move(gotoEndStatement));
+            statements_1.emplace_back(std::move(elseLabelStatement));
+            statements_1.emplace_back(std::move(elseStatement));
+            statements_1.emplace_back(std::move(endLabelStatement));
+
+            auto result = std::make_unique<BoundBlockStatement>(std::move(statements_1));
+
+            return result;
+        }
     }
+
+//    std::unique_ptr<BoundStatementNode> Binder::BindWhileStatement(WhileStatementSyntax *syntax)
+//    {
+//        auto condition = this->BindExpression(syntax->_condition.get(), typeid(bool).name());
+//        auto body = this->BindStatement(syntax->_body.get());
+//
+//        return std::make_unique<BoundWhileStatement>(std::move(condition), std::move(body));
+//    }
 
     std::unique_ptr<BoundStatementNode> Binder::BindWhileStatement(WhileStatementSyntax *syntax)
     {
+        /**
+         * while <condition>
+         *      <body>
+         *
+         * ------------------------------------------------->
+         * goto check
+         * continue:
+         * <body>
+         * check:
+         *      gotoIfTrue <condition> end
+         * end:
+         * */
         auto condition = this->BindExpression(syntax->_condition.get(), typeid(bool).name());
         auto body = this->BindStatement(syntax->_body.get());
 
-        return std::make_unique<BoundWhileStatement>(std::move(condition), std::move(body));
+        auto continueLabel = this->GenerateLabel();
+        auto checkLabel = this->GenerateLabel();
+        auto endLabel = this->GenerateLabel();
+
+        auto gotoCheck = std::make_unique<BoundGotoStatement>(checkLabel);
+        auto continueLabelStatement = std::make_unique<BoundLabelStatement>(continueLabel);
+        auto checkLabelStatement = std::make_unique<BoundLabelStatement>(checkLabel);
+        auto gotoTrue = std::make_unique<BoundConditionalGotoStatement>(continueLabel, std::move(condition), false);
+        auto endLabelStatement = std::make_unique<BoundLabelStatement>(endLabel);
+
+        std::vector<std::unique_ptr<BoundStatementNode>> statements_1;
+        statements_1.emplace_back(std::move(gotoCheck));
+        statements_1.emplace_back(std::move(continueLabelStatement));
+        statements_1.emplace_back(std::move(body));
+        statements_1.emplace_back(std::move(checkLabelStatement));
+        statements_1.emplace_back(std::move(gotoTrue));
+        statements_1.emplace_back(std::move(endLabelStatement));
+
+        auto result = std::make_unique<BoundBlockStatement>(std::move(statements_1));
+
+        return result;
+    }
+
+    std::unique_ptr<BoundStatementNode> Binder::BindWhileStatement(BoundWhileStatement *node)
+    {
+        /**
+         * while <condition>
+         *      <body>
+         *
+         * ------------------------------------------------->
+         * goto check
+         * continue:
+         * <body>
+         * check:
+         *      gotoIfTrue <condition> end
+         * end:
+         * */
+
+        auto continueLabel = this->GenerateLabel();
+        auto checkLabel = this->GenerateLabel();
+        auto endLabel = this->GenerateLabel();
+
+        auto gotoCheck = std::make_unique<BoundGotoStatement>(checkLabel);
+        auto continueLabelStatement = std::make_unique<BoundLabelStatement>(continueLabel);
+        auto checkLabelStatement = std::make_unique<BoundLabelStatement>(checkLabel);
+        auto gotoTrue = std::make_unique<BoundConditionalGotoStatement>(continueLabel, std::move(node->_condition), false);
+        auto endLabelStatement = std::make_unique<BoundLabelStatement>(endLabel);
+
+        std::vector<std::unique_ptr<BoundStatementNode>> statements_1;
+        statements_1.emplace_back(std::move(gotoCheck));
+        statements_1.emplace_back(std::move(continueLabelStatement));
+        statements_1.emplace_back(std::move(node->_body));
+        statements_1.emplace_back(std::move(checkLabelStatement));
+        statements_1.emplace_back(std::move(gotoTrue));
+        statements_1.emplace_back(std::move(endLabelStatement));
+
+        auto result = std::make_unique<BoundBlockStatement>(std::move(statements_1));
+
+        return result;
     }
 
 
@@ -323,12 +515,46 @@ namespace trylang
         auto whileBody = std::make_unique<BoundBlockStatement>(std::move(statements_1));
         auto whileStatement = std::make_unique<BoundWhileStatement>(std::move(condition), std::move(whileBody));
 
+        auto loweredWhileStatement = this->BindWhileStatement(whileStatement.get());
+
         std::vector<std::unique_ptr<BoundStatementNode>> statements_2(2);
         statements_2.emplace_back(std::move(variableDeclaration));
-        statements_2.emplace_back(std::move(whileStatement));
+        statements_2.emplace_back(std::move(loweredWhileStatement));
 
         auto result = std::make_unique<BoundBlockStatement>(std::move(statements_2));
 
         return result;
+    }
+
+    /* All the BoundBlockStatement will be removed and flattened into their BoundStatementNode */
+    std::unique_ptr<BoundBlockStatement> Binder::Flatten(std::unique_ptr<BoundStatementNode> statement)
+    {
+        std::vector<std::unique_ptr<BoundStatementNode>> statements;
+        std::stack<std::unique_ptr<BoundStatementNode>> m_stack;
+
+        m_stack.push(std::move(statement));
+
+        while(!m_stack.empty())
+        {
+            auto current = std::move(m_stack.top());
+            m_stack.pop();
+
+            auto* BBnode = dynamic_cast<BoundBlockStatement*>(current.get());
+            if(BBnode != nullptr)
+            {
+                for(const auto& stmt: BBnode->_statements){}
+                for(auto it = BBnode->_statements.rbegin(); it != BBnode->_statements.rend(); ++it)
+                {
+                    m_stack.push(std::move(*it));
+                }
+            }
+            else
+            {
+                statements.emplace_back(std::move(current));
+            }
+        }
+
+        return std::make_unique<BoundBlockStatement>(std::move(statements));
+
     }
 }

@@ -21,21 +21,21 @@ namespace trylang
     {
 
         variable_map_t& _variable_map;
-        std::unique_ptr<BoundStatementNode> _root;
+        std::unique_ptr<BoundBlockStatement> _root;
 
         oobject_t _lastValue;
 
-        explicit Evaluator(std::unique_ptr<BoundStatementNode> root, variable_map_t& variables);
+        explicit Evaluator(std::unique_ptr<BoundBlockStatement> root, variable_map_t& variables);
         oobject_t Evaluate();
 
         oobject_t EvaluateExpression(BoundExpressionNode* node);
-        void EvaluateStatement(BoundStatementNode* node);
+//        void EvaluateStatement(BoundStatementNode* node);
 
-        void EvaluateBlockStatement(BoundBlockStatement *node);
+//        void EvaluateBlockStatement(BoundBlockStatement *node);
         void EvaluateExpressionStatement(BoundExpressionStatement* node);
         void EvaluateVariableDeclaration(BoundVariableDeclaration *node);
-        void EvaluateIfStatement(BoundIfStatement *node);
-        void EvaluateWhileStatement(BoundWhileStatement *node);
+//        void EvaluateIfStatement(BoundIfStatement *node);
+//        void EvaluateWhileStatement(BoundWhileStatement *node);
 //        void EvaluateForStatement(BoundForStatement *node);
     };
 }

@@ -27,6 +27,8 @@ namespace trylang
 
     struct BoundExpressionNode;
     struct BoundStatementNode;
+    struct BoundBlockStatement;
+    struct BoundWhileStatement;
 
     struct CompilationUnitSyntax;
 
@@ -36,6 +38,8 @@ namespace trylang
     struct Binder
     {
         std::shared_ptr<BoundScope> _scope = nullptr;
+
+        int _labelCount = 0;
 
         explicit Binder(const std::shared_ptr<BoundScope>& parent);
         static std::shared_ptr<BoundGlobalScope> BindGlobalScope(CompilationUnitSyntax* syntax);
@@ -63,5 +67,10 @@ namespace trylang
         std::unique_ptr<BoundExpressionNode> BindUnaryExpression(UnaryExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindBinaryExpression(BinaryExpressionSyntax* syntax);
 
+        static std::unique_ptr<BoundBlockStatement> Flatten(std::unique_ptr<BoundStatementNode> statement);
+
+        std::unique_ptr<BoundStatementNode> BindWhileStatement(BoundWhileStatement *syntax);
+
+        LabelSymbol GenerateLabel();
     };
 }
