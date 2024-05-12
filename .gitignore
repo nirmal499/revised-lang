@@ -3,4 +3,6 @@ build
 cmake-build-debug
 .idea
 a.out
-test.cpp
+test*.cpp
+src/BoundTreeRewriter.cpp
+include/codeanalysis/BoundTreeRewriter.hpp

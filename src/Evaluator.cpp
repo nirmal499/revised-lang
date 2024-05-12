@@ -62,7 +62,7 @@ namespace trylang
         auto* BForSnode = dynamic_cast<BoundForStatement*>(node);
         if(BForSnode != nullptr)
         {
-            this->EvaluateWhileStatement(BForSnode);
+            this->EvaluateForStatement(BForSnode);
             return;
         }
 
@@ -292,7 +292,7 @@ namespace trylang
         }
     }
 
-    void Evaluator::EvaluateWhileStatement(BoundForStatement *node)
+    void Evaluator::EvaluateForStatement(BoundForStatement *node)
     {
         auto lowerBound = this->EvaluateExpression(node->_lowerBound.get());
         auto upperBound = this->EvaluateExpression(node->_upperBound.get());

@@ -227,21 +227,24 @@ namespace trylang
         return std::make_unique<BoundWhileStatement>(std::move(condition), std::move(body));
     }
 
+
     std::unique_ptr<BoundStatementNode> Binder::BindForStatement(ForStatementSyntax *syntax)
     {
+        auto lowerBound = this->BindExpression(syntax->_lowerBound.get(), typeid(int).name());
+        auto upperBound = this->BindExpression(syntax->_upperBound.get(), typeid(int).name());
+
+        _scope = std::make_shared<BoundScope>(_scope);
+
         const auto& varname = syntax->_identifier->_text;
         VariableSymbol variable(varname, /* isReadOnly */ true, typeid(int).name());
         if(!_scope->TryDeclare(variable))
         {
-            _buffer << "Variable '" << varname << "' Already Declared\n";
+            _buffer << "Variable '" << varname << "' Already Declared\n"; /* This error will never occur */
         }
-        
-        auto lowerBound = this->BindExpression(syntax->_lowerBound.get(), typeid(int).name());
-        auto upperBound = this->BindExpression(syntax->_upperBound.get(), typeid(int).name());
-
         auto body = this->BindStatement(syntax->_body.get());
 
-        return std::make_unique<BoundForStatement>(std::move(variable), std::move(lowerBound), std::move(upperBound), std::move(body));
+        _scope = _scope->_parent;
 
+        return std::make_unique<BoundForStatement>(std::move(variable), std::move(lowerBound), std::move(upperBound), std::move(body));
     }
 }
