@@ -213,8 +213,12 @@ namespace trylang
         auto condition = this->BindExpression(syntax->_condition.get(), typeid(bool).name());
         auto statement = this->BindStatement(syntax->_thenStatement.get());
 
-        auto elseClause = static_cast<ElseClauseSyntax*>(syntax->_elseClause.get());
-        auto elseStatement = syntax->_elseClause == nullptr ? nullptr : this->BindStatement(elseClause->_elseStatement.get());
+        std::unique_ptr<BoundStatementNode> elseStatement = nullptr;
+        if(syntax->_elseClause != nullptr)
+        {
+            auto elseClause = static_cast<ElseClauseSyntax*>(syntax->_elseClause.get());
+            elseStatement = this->BindStatement(elseClause->_elseStatement.get());
+        }
 
         return std::make_unique<BoundIfStatement>(std::move(condition), std::move(statement), std::move(elseStatement));
     }
