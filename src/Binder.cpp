@@ -451,22 +451,12 @@ namespace trylang
          * for <var> = <lower> to <upper>
          *      <body>
          *
-         * ------->
+         * ----------------------------------------------------------------->
          *
          * {
          *      var <var> = <lower>
-         *      while (<var> <= <upper>)
-         *      {
-         *          <body>
-         *          <var> = <var> + 1
-         *      }
-         * }
-         *
-         * ------------------------SOLVED ISSUE BELOW-------------------------------------------------------
-         *
-         * {
-         *      var <var> = <lower>
-         *      while (<var> <= <upper>)
+         *      let upperBound = <upper>
+         *      while (<var> <= upperBound)
          *      {
          *          <body>
          *          <var> = <var> + 1
@@ -489,14 +479,21 @@ namespace trylang
 
         auto body = this->BindStatement(syntax->_body.get());
 
+        VariableSymbol upperBoundSymbol("upperBound", true, typeid(int).name());
+        if(!_scope->TryDeclare(upperBoundSymbol))
+        {
+            _buffer << "Variable '" << "upperBound" << "' Already Declared\n"; /* This error is not possible */
+        }
+
         _scope = _scope->_parent;
 
         auto variableDeclaration = std::make_unique<BoundVariableDeclaration>(variable, std::move(lowerBound));
+        auto upperBoundVariableDeclaration = std::make_unique<BoundVariableDeclaration>(upperBoundSymbol, std::move(upperBound));
 
         auto condition = std::make_unique<BoundBinaryExpression>(
                 std::make_unique<BoundVariableExpression>(variable),
                 BoundBinaryOperator::Bind(SyntaxKind::LessThanEqualsToken, typeid(int).name(), typeid(int).name()),
-                std::move(upperBound)
+                std::make_unique<BoundVariableExpression>(upperBoundSymbol)
         );
         auto increment = std::make_unique<BoundExpressionStatement>(
                 std::make_unique<BoundAssignmentExpression>(
@@ -519,6 +516,7 @@ namespace trylang
 
         std::vector<std::unique_ptr<BoundStatementNode>> statements_2(2);
         statements_2.emplace_back(std::move(variableDeclaration));
+        statements_2.emplace_back(std::move(upperBoundVariableDeclaration));
         statements_2.emplace_back(std::move(loweredWhileStatement));
 
         auto result = std::make_unique<BoundBlockStatement>(std::move(statements_2));
