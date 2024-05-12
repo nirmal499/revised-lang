@@ -228,8 +228,57 @@ namespace trylang
     }
 
 
+//    std::unique_ptr<BoundStatementNode> Binder::BindForStatement(ForStatementSyntax *syntax)
+//    {
+//        auto lowerBound = this->BindExpression(syntax->_lowerBound.get(), typeid(int).name());
+//        auto upperBound = this->BindExpression(syntax->_upperBound.get(), typeid(int).name());
+//
+//        _scope = std::make_shared<BoundScope>(_scope);
+//
+//        const auto& varname = syntax->_identifier->_text;
+//        VariableSymbol variable(varname, /* isReadOnly */ true, typeid(int).name());
+//        if(!_scope->TryDeclare(variable))
+//        {
+//            _buffer << "Variable '" << varname << "' Already Declared\n"; /* This error will never occur */
+//        }
+//        auto body = this->BindStatement(syntax->_body.get());
+//
+//        _scope = _scope->_parent;
+//
+//        return std::make_unique<BoundForStatement>(std::move(variable), std::move(lowerBound), std::move(upperBound), std::move(body));
+//    }
+
     std::unique_ptr<BoundStatementNode> Binder::BindForStatement(ForStatementSyntax *syntax)
     {
+        /**
+         *
+         * for <var> = <lower> to <upper>
+         *      <body>
+         *
+         * ------->
+         *
+         * {
+         *      var <var> = <lower>
+         *      while (<var> <= <upper>)
+         *      {
+         *          <body>
+         *          <var> = <var> + 1
+         *      }
+         * }
+         *
+         * ------------------------SOLVED ISSUE BELOW-------------------------------------------------------
+         *
+         * {
+         *      var <var> = <lower>
+         *      while (<var> <= <upper>)
+         *      {
+         *          <body>
+         *          <var> = <var> + 1
+         *      }
+         * }
+         *
+         * */
+
         auto lowerBound = this->BindExpression(syntax->_lowerBound.get(), typeid(int).name());
         auto upperBound = this->BindExpression(syntax->_upperBound.get(), typeid(int).name());
 
@@ -239,12 +288,43 @@ namespace trylang
         VariableSymbol variable(varname, /* isReadOnly */ true, typeid(int).name());
         if(!_scope->TryDeclare(variable))
         {
-            _buffer << "Variable '" << varname << "' Already Declared\n"; /* This error will never occur */
+            _buffer << "Variable '" << varname << "' Already Declared\n";
         }
+
         auto body = this->BindStatement(syntax->_body.get());
 
         _scope = _scope->_parent;
 
-        return std::make_unique<BoundForStatement>(std::move(variable), std::move(lowerBound), std::move(upperBound), std::move(body));
+        auto variableDeclaration = std::make_unique<BoundVariableDeclaration>(variable, std::move(lowerBound));
+
+        auto condition = std::make_unique<BoundBinaryExpression>(
+                std::make_unique<BoundVariableExpression>(variable),
+                BoundBinaryOperator::Bind(SyntaxKind::LessThanEqualsToken, typeid(int).name(), typeid(int).name()),
+                std::move(upperBound)
+        );
+        auto increment = std::make_unique<BoundExpressionStatement>(
+                std::make_unique<BoundAssignmentExpression>(
+                        variable,
+                        std::make_unique<BoundBinaryExpression>(
+                                std::make_unique<BoundVariableExpression>(variable),
+                                BoundBinaryOperator::Bind(SyntaxKind::PlusToken, typeid(int).name(),typeid(int).name()),
+                                std::make_unique<BoundLiteralExpression>(1))
+                ));
+
+        /** This has to be done instead of doing std::make_unique<BoundBlockStatement>({std::move(body), std::move(increment)}) because BoundBlockStatement is explicit */
+        std::vector<std::unique_ptr<BoundStatementNode>> statements_1(2);
+        statements_1.emplace_back(std::move(body));
+        statements_1.emplace_back(std::move(increment));
+
+        auto whileBody = std::make_unique<BoundBlockStatement>(std::move(statements_1));
+        auto whileStatement = std::make_unique<BoundWhileStatement>(std::move(condition), std::move(whileBody));
+
+        std::vector<std::unique_ptr<BoundStatementNode>> statements_2(2);
+        statements_2.emplace_back(std::move(variableDeclaration));
+        statements_2.emplace_back(std::move(whileStatement));
+
+        auto result = std::make_unique<BoundBlockStatement>(std::move(statements_2));
+
+        return result;
     }
 }

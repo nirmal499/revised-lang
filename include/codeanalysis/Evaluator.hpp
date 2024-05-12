@@ -36,6 +36,6 @@ namespace trylang
         void EvaluateVariableDeclaration(BoundVariableDeclaration *node);
         void EvaluateIfStatement(BoundIfStatement *node);
         void EvaluateWhileStatement(BoundWhileStatement *node);
-        void EvaluateForStatement(BoundForStatement *node);
+//        void EvaluateForStatement(BoundForStatement *node);
     };
 }

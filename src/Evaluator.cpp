@@ -24,6 +24,7 @@ namespace trylang
 
     void Evaluator::EvaluateStatement(BoundStatementNode* node)
     {
+
         auto* BBSnode = dynamic_cast<BoundBlockStatement*>(node);
         if(BBSnode != nullptr)
         {
@@ -59,12 +60,12 @@ namespace trylang
             return;
         }
 
-        auto* BForSnode = dynamic_cast<BoundForStatement*>(node);
-        if(BForSnode != nullptr)
-        {
-            this->EvaluateForStatement(BForSnode);
-            return;
-        }
+//        auto* BForSnode = dynamic_cast<BoundForStatement*>(node);
+//        if(BForSnode != nullptr)
+//        {
+//            this->EvaluateForStatement(BForSnode);
+//            return;
+//        }
 
         throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
     }
@@ -96,7 +97,10 @@ namespace trylang
     {
         for(const auto& statement: node->_statements)
         {
-            this->EvaluateStatement(statement.get());
+            if(statement != nullptr)
+            {
+                this->EvaluateStatement(statement.get());
+            }
         }
     }
 
@@ -292,18 +296,18 @@ namespace trylang
         }
     }
 
-    void Evaluator::EvaluateForStatement(BoundForStatement *node)
-    {
-        auto lowerBound = this->EvaluateExpression(node->_lowerBound.get());
-        auto upperBound = this->EvaluateExpression(node->_upperBound.get());
-
-        int lowerBound_result = std::get<int>(lowerBound);
-        int upperBound_result = std::get<int>(upperBound);
-
-        for(int i = lowerBound_result; i <= upperBound_result; i++)
-        {
-            _variable_map[node->_variable] = i; /* It is IMP because the "this->EvaluateStatement(node->_body.get()); will be using the changed 'i' */
-            this->EvaluateStatement(node->_body.get());
-        }
-    }
+//    void Evaluator::EvaluateForStatement(BoundForStatement *node)
+//    {
+//        auto lowerBound = this->EvaluateExpression(node->_lowerBound.get());
+//        auto upperBound = this->EvaluateExpression(node->_upperBound.get());
+//
+//        int lowerBound_result = std::get<int>(lowerBound);
+//        int upperBound_result = std::get<int>(upperBound);
+//
+//        for(int i = lowerBound_result; i <= upperBound_result; i++)
+//        {
+//            _variable_map[node->_variable] = i; /* It is IMP because the "this->EvaluateStatement(node->_body.get()); will be using the changed 'i' */
+//            this->EvaluateStatement(node->_body.get());
+//        }
+//    }
 }

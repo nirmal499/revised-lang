@@ -6,3 +6,4 @@ a.out
 test*.cpp
 src/BoundTreeRewriter.cpp
 include/codeanalysis/BoundTreeRewriter.hpp
+to_delete.txt
