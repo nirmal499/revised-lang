@@ -99,3 +99,11 @@ Variable 'i' Already Declared
 >> #exit
 
 #########################################################################################################################
+
+>> (10 * false) || true
+
+
+Binary operator '*' is not defined for types int and bool
+Binary operator '||' is not defined for types ? and bool
+
+>> #exit

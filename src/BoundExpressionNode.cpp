@@ -346,4 +346,19 @@ namespace trylang
     {
         return {nullptr};
     }
+
+    const char *BoundErrorExpression::Type()
+    {
+        return Types::ERROR->Name();
+    }
+
+    BoundNodeKind BoundErrorExpression::Kind()
+    {
+        return BoundNodeKind::ErrorExpression;
+    }
+
+    std::vector<BoundNode *> BoundErrorExpression::GetChildren()
+    {
+        return {nullptr};
+    }
 }

@@ -20,6 +20,7 @@ namespace trylang
         ParenthesizedExpression, /* No use */
         VariableExpression,
         AssignmentExpression,
+        ErrorExpression,
 
         BlockStatement,
         ExpressionStatement,
@@ -57,6 +58,7 @@ namespace trylang
         {BoundNodeKind::ParenthesizedExpression, "ParenthesizedExpression"},
         {BoundNodeKind::VariableExpression, "VariableExpression"},
         {BoundNodeKind::AssignmentExpression, "AssignmentExpression"},
+        {BoundNodeKind::ErrorExpression, "ErrorExpression"},
 
         {BoundNodeKind::BlockStatement, "BlockStatement"},
         {BoundNodeKind::ExpressionStatement, "ExpressionStatement"},

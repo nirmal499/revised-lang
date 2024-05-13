@@ -27,6 +27,7 @@ namespace trylang
         inline std::unique_ptr<TypeSymbol> INT = std::make_unique<TypeSymbol>("int");
         inline std::unique_ptr<TypeSymbol> BOOL = std::make_unique<TypeSymbol>("bool");
         inline std::unique_ptr<TypeSymbol> STRING = std::make_unique<TypeSymbol>("string");
+        inline std::unique_ptr<TypeSymbol> ERROR = std::make_unique<TypeSymbol>("?");
     }
 
     struct VariableSymbol

@@ -132,12 +132,15 @@ namespace trylang
         if(!_scope->TryLookUp(varname, variable))
         {
             _buffer << "Undefined Name " << varname << "\n";
-            return std::make_unique<BoundLiteralExpression>(0);
+            return std::make_unique<BoundErrorExpression>();
         }
 
         return std::make_unique<BoundVariableExpression>(std::move(variable));
     }
 
+    /*
+     * Assignments are right associative :- `a= b = c`
+     * */
     std::unique_ptr<BoundExpressionNode> Binder::BindAssignmentExpression(AssignmentExpressionSyntax *syntax)
     {
         const auto& varname = syntax->_identifierToken->_text;
@@ -187,12 +190,19 @@ namespace trylang
     std::unique_ptr<BoundExpressionNode> Binder::BindUnaryExpression(UnaryExpressionSyntax* syntax)
     {
         auto boundOperand = this->BindExpression(syntax->_operand.get());
+
+        /* Below commented code will stop the issue of cascading errors */
+        if(std::strcmp(boundOperand->Type(), Types::ERROR->Name()) == 0)
+        {
+            return std::make_unique<BoundErrorExpression>();
+        }
+
         auto boundOperatorKind = BoundUnaryOperator::Bind(syntax->_operatorToken->Kind(),boundOperand->Type());
 
         if(boundOperatorKind == nullptr)
         {
             _buffer << "Unary operator '" << syntax->_operatorToken->_text << "' is not defined for type " << boundOperand->Type() << "\n";
-            return boundOperand;
+            return std::make_unique<BoundErrorExpression>();
         }
 
         return std::make_unique<BoundUnaryExpression>(boundOperatorKind, std::move(boundOperand));
@@ -202,12 +212,19 @@ namespace trylang
     {
         auto boundLeft = this->BindExpression(syntax->_left.get());
         auto boundRight = this->BindExpression(syntax->_right.get());
+
+        /* Below commented code will stop the issue of cascading errors */
+        if((std::strcmp(boundLeft->Type(), Types::ERROR->Name()) == 0) || (std::strcmp(boundRight->Type(), Types::ERROR->Name()) == 0))
+        {
+            return std::make_unique<BoundErrorExpression>();
+        }
+
         auto boundOperatorKind = BoundBinaryOperator::Bind(syntax->_operatorToken->Kind(), boundLeft->Type(), boundRight->Type());
         
         if(boundOperatorKind == nullptr)
         {
             _buffer << "Binary operator '" << syntax->_operatorToken->_text << "' is not defined for types " << boundLeft->Type() << " and " << boundRight->Type() << "\n";
-            return boundLeft;
+            return std::make_unique<BoundErrorExpression>();
         }
 
         return std::make_unique<BoundBinaryExpression>(std::move(boundLeft), boundOperatorKind, std::move(boundRight));

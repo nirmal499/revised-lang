@@ -187,6 +187,15 @@ namespace trylang
         std::vector<BoundNode*> GetChildren() override;
     };
 
+    struct BoundErrorExpression : public BoundExpressionNode
+    {
+        BoundErrorExpression() = default;
+
+        const char* Type() override;
+        BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
+    };
+
     struct BoundAssignmentExpression : public BoundExpressionNode
     {
         VariableSymbol _variable;
