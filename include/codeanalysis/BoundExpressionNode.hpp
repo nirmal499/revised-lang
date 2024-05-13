@@ -33,7 +33,7 @@ namespace trylang
                 : _syntaxKind(syntaxKind), _kind(kind), _operandType(operandType), _resultType(resultType)
         {}
 
-        static std::shared_ptr<BoundUnaryOperator> Bind(SyntaxKind syntaxKind, const char* operandType);
+        static BoundUnaryOperator* Bind(SyntaxKind syntaxKind, const char* operandType);
 
         /*****************************************************************************************************************************************************/
         BoundNodeKind Kind() override;
@@ -54,7 +54,7 @@ namespace trylang
                 : _syntaxKind(syntaxKind), _kind(kind), _leftOperandType(leftOperandType), _rightOperandType(rightOperandType), _resultType(resultType)
         {}
 
-        static std::shared_ptr<BoundBinaryOperator> Bind(SyntaxKind syntaxKind, const char* leftOperandType, const char* rightOperandType);
+        static BoundBinaryOperator* Bind(SyntaxKind syntaxKind, const char* leftOperandType, const char* rightOperandType);
 
         /*****************************************************************************************************************************************************/
         BoundNodeKind Kind() override;
@@ -211,10 +211,10 @@ namespace trylang
 
     struct BoundUnaryExpression : public BoundExpressionNode
     {
-        std::shared_ptr<BoundUnaryOperator> _op;
+        BoundUnaryOperator* _op;
         std::unique_ptr<BoundExpressionNode> _operand;
 
-        BoundUnaryExpression(const std::shared_ptr<BoundUnaryOperator>& op, std::unique_ptr<BoundExpressionNode> operand);
+        BoundUnaryExpression(BoundUnaryOperator* op, std::unique_ptr<BoundExpressionNode> operand);
         
         const char* Type() override;
         BoundNodeKind Kind() override;
@@ -224,10 +224,10 @@ namespace trylang
     struct BoundBinaryExpression : public BoundExpressionNode
     {
         std::unique_ptr<BoundExpressionNode> _left;
-        std::shared_ptr<BoundBinaryOperator> _op;
+        BoundBinaryOperator* _op;
         std::unique_ptr<BoundExpressionNode> _right;
 
-        BoundBinaryExpression(std::unique_ptr<BoundExpressionNode> left, const std::shared_ptr<BoundBinaryOperator>& op, std::unique_ptr<BoundExpressionNode> right);
+        BoundBinaryExpression(std::unique_ptr<BoundExpressionNode> left, BoundBinaryOperator* op, std::unique_ptr<BoundExpressionNode> right);
         
         const char* Type() override;
         BoundNodeKind Kind() override;
