@@ -8,6 +8,7 @@
 #include <array>
 #include <codeanalysis/Types.hpp>
 #include <stdexcept>
+#include <codeanalysis/VariableSymbol.hpp>
 
 namespace trylang
 {
@@ -95,12 +96,12 @@ namespace trylang
         auto index_in_variant = data->index();
         if(index_in_variant == 0)
         {
-            return typeid(int).name();
+            return Types::INT->Name();
         }
 
         if(index_in_variant == 1)
         {
-            return typeid(bool).name();
+            return Types::BOOL->Name();
         }
 
         /* index_in_variant == std::variant_npos */

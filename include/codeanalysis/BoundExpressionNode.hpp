@@ -64,7 +64,7 @@ namespace trylang
     };
     
     struct BoundExpressionNode : public BoundNode
-    {   
+    {
         /* const char* since typeid().name() returns that only */
         virtual const char* Type() = 0;
         ~BoundExpressionNode() override = default;

@@ -215,7 +215,7 @@ namespace trylang
 
 //    std::unique_ptr<BoundStatementNode> Binder::BindIfStatement(trylang::IfStatementSyntax *syntax)
 //    {
-//        auto condition = this->BindExpression(syntax->_condition.get(), typeid(bool).name());
+//        auto condition = this->BindExpression(syntax->_condition.get(), Types::BOOL->Name());
 //        auto statement = this->BindStatement(syntax->_thenStatement.get());
 //
 //        auto elseClause = static_cast<ElseClauseSyntax*>(syntax->_elseClause.get());
@@ -261,7 +261,7 @@ namespace trylang
          *
          * **/
 
-        auto condition = this->BindExpression(syntax->_condition.get(), typeid(bool).name());
+        auto condition = this->BindExpression(syntax->_condition.get(), Types::BOOL->Name());
         auto statement = this->BindStatement(syntax->_thenStatement.get());
 
         std::unique_ptr<BoundStatementNode> elseStatement = nullptr;
@@ -339,7 +339,7 @@ namespace trylang
 
 //    std::unique_ptr<BoundStatementNode> Binder::BindWhileStatement(WhileStatementSyntax *syntax)
 //    {
-//        auto condition = this->BindExpression(syntax->_condition.get(), typeid(bool).name());
+//        auto condition = this->BindExpression(syntax->_condition.get(), Types::BOOL->Name());
 //        auto body = this->BindStatement(syntax->_body.get());
 //
 //        return std::make_unique<BoundWhileStatement>(std::move(condition), std::move(body));
@@ -359,7 +359,7 @@ namespace trylang
          *      gotoIfTrue <condition> end
          * end:
          * */
-        auto condition = this->BindExpression(syntax->_condition.get(), typeid(bool).name());
+        auto condition = this->BindExpression(syntax->_condition.get(), Types::BOOL->Name());
         auto body = this->BindStatement(syntax->_body.get());
 
         auto continueLabel = this->GenerateLabel();
@@ -426,13 +426,13 @@ namespace trylang
 
 //    std::unique_ptr<BoundStatementNode> Binder::BindForStatement(ForStatementSyntax *syntax)
 //    {
-//        auto lowerBound = this->BindExpression(syntax->_lowerBound.get(), typeid(int).name());
-//        auto upperBound = this->BindExpression(syntax->_upperBound.get(), typeid(int).name());
+//        auto lowerBound = this->BindExpression(syntax->_lowerBound.get(), Types::INT->Name());
+//        auto upperBound = this->BindExpression(syntax->_upperBound.get(), Types::INT->Name());
 //
 //        _scope = std::make_shared<BoundScope>(_scope);
 //
 //        const auto& varname = syntax->_identifier->_text;
-//        VariableSymbol variable(varname, /* isReadOnly */ true, typeid(int).name());
+//        VariableSymbol variable(varname, /* isReadOnly */ true, Types::INT->Name());
 //        if(!_scope->TryDeclare(variable))
 //        {
 //            _buffer << "Variable '" << varname << "' Already Declared\n"; /* This error will never occur */
@@ -465,13 +465,13 @@ namespace trylang
          *
          * */
 
-        auto lowerBound = this->BindExpression(syntax->_lowerBound.get(), typeid(int).name());
-        auto upperBound = this->BindExpression(syntax->_upperBound.get(), typeid(int).name());
+        auto lowerBound = this->BindExpression(syntax->_lowerBound.get(), Types::INT->Name());
+        auto upperBound = this->BindExpression(syntax->_upperBound.get(), Types::INT->Name());
 
         _scope = std::make_shared<BoundScope>(_scope);
 
         const auto& varname = syntax->_identifier->_text;
-        VariableSymbol variable(varname, /* isReadOnly */ true, typeid(int).name());
+        VariableSymbol variable(varname, /* isReadOnly */ true, Types::INT->Name());
         if(!_scope->TryDeclare(variable))
         {
             _buffer << "Variable '" << varname << "' Already Declared\n";
@@ -479,7 +479,7 @@ namespace trylang
 
         auto body = this->BindStatement(syntax->_body.get());
 
-        VariableSymbol upperBoundSymbol("upperBound", true, typeid(int).name());
+        VariableSymbol upperBoundSymbol("upperBound", true, Types::INT->Name());
         if(!_scope->TryDeclare(upperBoundSymbol))
         {
             _buffer << "Variable '" << "upperBound" << "' Already Declared\n"; /* This error is not possible */
@@ -492,7 +492,7 @@ namespace trylang
 
         auto condition = std::make_unique<BoundBinaryExpression>(
                 std::make_unique<BoundVariableExpression>(variable),
-                BoundBinaryOperator::Bind(SyntaxKind::LessThanEqualsToken, typeid(int).name(), typeid(int).name()),
+                BoundBinaryOperator::Bind(SyntaxKind::LessThanEqualsToken, Types::INT->Name(), Types::INT->Name()),
                 std::make_unique<BoundVariableExpression>(upperBoundSymbol)
         );
         auto increment = std::make_unique<BoundExpressionStatement>(
@@ -500,7 +500,7 @@ namespace trylang
                         variable,
                         std::make_unique<BoundBinaryExpression>(
                                 std::make_unique<BoundVariableExpression>(variable),
-                                BoundBinaryOperator::Bind(SyntaxKind::PlusToken, typeid(int).name(),typeid(int).name()),
+                                BoundBinaryOperator::Bind(SyntaxKind::PlusToken, Types::INT->Name(),Types::INT->Name()),
                                 std::make_unique<BoundLiteralExpression>(1))
                 ));
 

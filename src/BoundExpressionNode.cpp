@@ -23,30 +23,30 @@ namespace trylang
 
     }
     std::array<std::unique_ptr<BoundUnaryOperator>, 3> _boundUnaryOperatorArray = {
-            std::make_unique<BoundUnaryOperator>(SyntaxKind::BangToken, BoundNodeKind::LogicalNegation, typeid(bool).name(),typeid(bool).name()),
-            std::make_unique<BoundUnaryOperator>(SyntaxKind::PlusToken, BoundNodeKind::Identity, typeid(int).name(),typeid(int).name()),
-            std::make_unique<BoundUnaryOperator>(SyntaxKind::MinusToken, BoundNodeKind::Negation, typeid(int).name(),typeid(int).name())
+            std::make_unique<BoundUnaryOperator>(SyntaxKind::BangToken, BoundNodeKind::LogicalNegation, Types::BOOL->Name(),Types::BOOL->Name()),
+            std::make_unique<BoundUnaryOperator>(SyntaxKind::PlusToken, BoundNodeKind::Identity, Types::INT->Name(),Types::INT->Name()),
+            std::make_unique<BoundUnaryOperator>(SyntaxKind::MinusToken, BoundNodeKind::Negation, Types::INT->Name(),Types::INT->Name())
     };
 
     std::array<std::unique_ptr<BoundBinaryOperator>, 14> _boundBinaryOperatorArray = {
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::PlusToken, BoundNodeKind::Addition, typeid(int).name(),typeid(int).name(), typeid(int).name()),
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::MinusToken, BoundNodeKind::Subtraction, typeid(int).name(),typeid(int).name(), typeid(int).name()),
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::SlashToken, BoundNodeKind::Division, typeid(int).name(),typeid(int).name(), typeid(int).name()),
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::StarToken, BoundNodeKind::Multiplication, typeid(int).name(),typeid(int).name(), typeid(int).name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::PlusToken, BoundNodeKind::Addition, Types::INT->Name(),Types::INT->Name(), Types::INT->Name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::MinusToken, BoundNodeKind::Subtraction, Types::INT->Name(),Types::INT->Name(), Types::INT->Name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::SlashToken, BoundNodeKind::Division, Types::INT->Name(),Types::INT->Name(), Types::INT->Name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::StarToken, BoundNodeKind::Multiplication, Types::INT->Name(),Types::INT->Name(), Types::INT->Name()),
 
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::EqualsEqualsToken, BoundNodeKind::LogicalEquality, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::BangsEqualsToken, BoundNodeKind::LogicalNotEquality, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::EqualsEqualsToken, BoundNodeKind::LogicalEquality, Types::INT->Name(),Types::INT->Name(), Types::BOOL->Name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::BangsEqualsToken, BoundNodeKind::LogicalNotEquality, Types::INT->Name(),Types::INT->Name(), Types::BOOL->Name()),
 
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::LessThanToken, BoundNodeKind::Less, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::LessThanEqualsToken, BoundNodeKind::LessEquals, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::GreaterThanToken, BoundNodeKind::Greater, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::GreaterThanEqualsToken, BoundNodeKind::GreaterEquals, typeid(int).name(),typeid(int).name(), typeid(bool).name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::LessThanToken, BoundNodeKind::Less, Types::INT->Name(),Types::INT->Name(), Types::BOOL->Name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::LessThanEqualsToken, BoundNodeKind::LessEquals, Types::INT->Name(),Types::INT->Name(), Types::BOOL->Name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::GreaterThanToken, BoundNodeKind::Greater, Types::INT->Name(),Types::INT->Name(), Types::BOOL->Name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::GreaterThanEqualsToken, BoundNodeKind::GreaterEquals, Types::INT->Name(),Types::INT->Name(), Types::BOOL->Name()),
 
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::AmpersandAmpersandToken, BoundNodeKind::LogicalAnd, typeid(bool).name(),typeid(bool).name(), typeid(bool).name()),
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::PipePipeToken, BoundNodeKind::LogicalOr, typeid(bool).name(),typeid(bool).name(), typeid(bool).name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::AmpersandAmpersandToken, BoundNodeKind::LogicalAnd, Types::BOOL->Name(),Types::BOOL->Name(), Types::BOOL->Name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::PipePipeToken, BoundNodeKind::LogicalOr, Types::BOOL->Name(),Types::BOOL->Name(), Types::BOOL->Name()),
 
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::EqualsEqualsToken, BoundNodeKind::LogicalEquality, typeid(bool).name(),typeid(bool).name(), typeid(bool).name()),
-            std::make_unique<BoundBinaryOperator>(SyntaxKind::BangsEqualsToken, BoundNodeKind::LogicalNotEquality, typeid(bool).name(),typeid(bool).name(), typeid(bool).name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::EqualsEqualsToken, BoundNodeKind::LogicalEquality, Types::BOOL->Name(),Types::BOOL->Name(), Types::BOOL->Name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::BangsEqualsToken, BoundNodeKind::LogicalNotEquality, Types::BOOL->Name(),Types::BOOL->Name(), Types::BOOL->Name()),
 
     };
 

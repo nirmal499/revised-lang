@@ -2,9 +2,33 @@
 
 #include <string>
 #include <typeinfo>
+#include <memory>
+#include <unordered_map>
 
 namespace trylang
 {
+
+    struct TypeSymbol
+    {
+        const char* _typeName;
+
+        explicit TypeSymbol(const char* typeName)
+                : _typeName(typeName)
+        {}
+
+        const char* Name()
+        {
+            return _typeName;
+        }
+    };
+
+    namespace Types
+    {
+        inline std::unique_ptr<TypeSymbol> INT = std::make_unique<TypeSymbol>("int");
+        inline std::unique_ptr<TypeSymbol> BOOL = std::make_unique<TypeSymbol>("bool");
+        inline std::unique_ptr<TypeSymbol> STRING = std::make_unique<TypeSymbol>("string");
+    }
+
     struct VariableSymbol
     {
         std::string _name{};
