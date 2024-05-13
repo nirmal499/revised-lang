@@ -106,6 +106,11 @@ namespace trylang
             return Types::BOOL->Name();
         }
 
+        if(index_in_variant == 2)
+        {
+            return Types::STRING->Name();
+        }
+
         /* index_in_variant == std::variant_npos */
         throw std::logic_error("Unexpected type_info");
 

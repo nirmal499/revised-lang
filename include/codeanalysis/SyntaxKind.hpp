@@ -31,6 +31,7 @@ namespace trylang
         LessThanEqualsToken,
         GreaterThanToken,
         GreaterThanEqualsToken,
+        StringToken,
 
         CompilationUnit,
 
@@ -88,6 +89,7 @@ namespace trylang
         {SyntaxKind::GreaterThanToken, "GreaterThanToken"},
         {SyntaxKind::LessThanEqualsToken, "LessThanEqualsToken"},
         {SyntaxKind::GreaterThanEqualsToken, "GreaterThanEqualsToken"},
+        {SyntaxKind::StringToken, "StringToken"},
 
         {SyntaxKind::CompilationUnit, "CompilationUnit"},
 

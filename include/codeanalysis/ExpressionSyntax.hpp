@@ -52,6 +52,11 @@ namespace trylang
         {
             std::cout << std::boolalpha << boolValue;
         }
+
+        void operator()(const std::string& str)
+        {
+            std::cout << str;
+        }
     };
 
     /* Abstract Class */

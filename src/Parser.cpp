@@ -51,7 +51,7 @@ namespace trylang
 
     std::shared_ptr<SyntaxToken> Parser::NextToken()
     {
-        std::shared_ptr<SyntaxToken> current = this->Current();
+        const std::shared_ptr<SyntaxToken>& current = this->Current();
         _position++;
         return current;
     }
@@ -147,6 +147,7 @@ namespace trylang
 
         auto openBraceToken = this->MatchToken(SyntaxKind::OpenBraceToken);
 
+        /* !(this->Current()->Kind() == SyntaxKind::EndOfFileToken || this->Current()->Kind() == SyntaxKind::CloseBraceToken) */
         while(this->Current()->Kind() != SyntaxKind::EndOfFileToken && this->Current()->Kind() != SyntaxKind::CloseBraceToken)
         {
             auto statement = this->ParseStatement();
@@ -281,6 +282,11 @@ namespace trylang
         {
             auto identifierToken = this->NextToken();
             return std::make_unique<NameExpressionSyntax>(identifierToken);
+        }
+        else if(this->Current()->Kind() == SyntaxKind::StringToken)
+        {
+            auto stringToken = this->NextToken();
+            return std::make_unique<LiteralExpressionSyntax>(std::move(stringToken));
         }
 
         std::shared_ptr<SyntaxToken> numberToken = this->MatchToken(SyntaxKind::NumberToken);

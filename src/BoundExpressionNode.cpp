@@ -28,7 +28,7 @@ namespace trylang
             std::make_unique<BoundUnaryOperator>(SyntaxKind::MinusToken, BoundNodeKind::Negation, Types::INT->Name(),Types::INT->Name())
     };
 
-    std::array<std::unique_ptr<BoundBinaryOperator>, 14> _boundBinaryOperatorArray = {
+    std::array<std::unique_ptr<BoundBinaryOperator>, 17> _boundBinaryOperatorArray = {
             std::make_unique<BoundBinaryOperator>(SyntaxKind::PlusToken, BoundNodeKind::Addition, Types::INT->Name(),Types::INT->Name(), Types::INT->Name()),
             std::make_unique<BoundBinaryOperator>(SyntaxKind::MinusToken, BoundNodeKind::Subtraction, Types::INT->Name(),Types::INT->Name(), Types::INT->Name()),
             std::make_unique<BoundBinaryOperator>(SyntaxKind::SlashToken, BoundNodeKind::Division, Types::INT->Name(),Types::INT->Name(), Types::INT->Name()),
@@ -47,6 +47,11 @@ namespace trylang
 
             std::make_unique<BoundBinaryOperator>(SyntaxKind::EqualsEqualsToken, BoundNodeKind::LogicalEquality, Types::BOOL->Name(),Types::BOOL->Name(), Types::BOOL->Name()),
             std::make_unique<BoundBinaryOperator>(SyntaxKind::BangsEqualsToken, BoundNodeKind::LogicalNotEquality, Types::BOOL->Name(),Types::BOOL->Name(), Types::BOOL->Name()),
+
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::EqualsEqualsToken, BoundNodeKind::LogicalEquality, Types::STRING->Name(),Types::STRING->Name(), Types::BOOL->Name()),
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::BangsEqualsToken, BoundNodeKind::LogicalNotEquality, Types::STRING->Name(),Types::STRING->Name(), Types::BOOL->Name()),
+
+            std::make_unique<BoundBinaryOperator>(SyntaxKind::PlusToken, BoundNodeKind::Addition, Types::STRING->Name(),Types::STRING->Name(), Types::STRING->Name())
 
     };
 

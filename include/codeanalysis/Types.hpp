@@ -20,7 +20,7 @@ namespace trylang
      *
      *  https://en.cppreference.com/w/cpp/types/type_info/name
     */
-    typedef std::variant<int, bool> oobject_t;
+    typedef std::variant<int, bool, std::string> oobject_t;
     typedef std::optional<oobject_t> object_t;
 
     typedef std::unordered_map<trylang::VariableSymbol, trylang::object_t, trylang::VariableSymbolHash> variable_map_t;

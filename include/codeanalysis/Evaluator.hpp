@@ -34,6 +34,7 @@ namespace trylang
 //        void EvaluateBlockStatement(BoundBlockStatement *node);
         void EvaluateExpressionStatement(BoundExpressionStatement* node);
         void EvaluateVariableDeclaration(BoundVariableDeclaration *node);
+
 //        void EvaluateIfStatement(BoundIfStatement *node);
 //        void EvaluateWhileStatement(BoundWhileStatement *node);
 //        void EvaluateForStatement(BoundForStatement *node);

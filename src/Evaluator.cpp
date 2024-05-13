@@ -239,15 +239,28 @@ namespace trylang
         auto* BBEnode = dynamic_cast<BoundBinaryExpression*>(node);
         if(BBEnode != nullptr)
         {
-            /* If we reach here we need to have a "int" or "bool" */
+            /* If we reach here we need to have a "int" or "bool" or "string" */
             oobject_t left = this->EvaluateExpression(BBEnode->_left.get());
             oobject_t right = this->EvaluateExpression(BBEnode->_right.get());
 
             if(BBEnode->_op->_kind == BoundNodeKind::Addition)
             {
-                int left_value = std::get<int>(left);
-                int right_value = std::get<int>(right);
-                return left_value + right_value;
+                if(std::strcmp(BBEnode->Type(), Types::INT->Name()) == 0)
+                {
+                    int left_value = std::get<int>(left);
+                    int right_value = std::get<int>(right);
+
+                    return left_value + right_value;
+                }
+
+                if(std::strcmp(BBEnode->Type(), Types::STRING->Name()) == 0)
+                {
+                    const std::string& left_value = std::get<std::string>(left);
+                    const std::string& right_value = std::get<std::string>(right);
+
+                    return left_value + right_value;
+                }
+
             }
 
             if(BBEnode->_op->_kind == BoundNodeKind::Subtraction)
@@ -287,43 +300,64 @@ namespace trylang
 
             if(BBEnode->_op->_kind == BoundNodeKind::LogicalEquality)
             {
-                auto* data_left_int = std::get_if<int>(&left);
-                auto* data_right_int = std::get_if<int>(&right);
-
-                auto* data_left_bool = std::get_if<bool>(&left);
-                auto* data_right_bool = std::get_if<bool>(&right);
-
-                if(data_left_int != nullptr && data_right_int != nullptr)
+                /* No need to check for both _right and _left. Checking any one of them would have been also fine */
+                if((std::strcmp(BBEnode->_right->Type(), Types::INT->Name()) == 0) &&
+                   (std::strcmp(BBEnode->_left->Type(), Types::INT->Name()) == 0))
                 {
-                    /* left and right are "int" */
-                    return ((*data_left_int) == (*data_right_int));
+                    int left_value = std::get<int>(left);
+                    int right_value = std::get<int>(right);
+
+                    return left_value == right_value;
                 }
 
-                if(data_left_bool != nullptr && data_right_bool != nullptr)
+                if((std::strcmp(BBEnode->_right->Type(), Types::STRING->Name()) == 0) &&
+                   (std::strcmp(BBEnode->_left->Type(), Types::STRING->Name()) == 0))
                 {
-                    /* left and right are "bool" */
-                    return ((*data_left_bool) == (*data_right_bool));
+                    const std::string& left_value = std::get<std::string>(left);
+                    const std::string& right_value = std::get<std::string>(right);
+
+                    return left_value == right_value;
+                }
+
+                if((std::strcmp(BBEnode->_right->Type(), Types::BOOL->Name()) == 0) &&
+                   (std::strcmp(BBEnode->_left->Type(), Types::BOOL->Name()) == 0))
+                {
+                    bool left_value = std::get<bool>(left);
+                    bool right_value = std::get<bool>(right);
+
+                    return left_value == right_value;
                 }
             }
 
             if(BBEnode->_op->_kind == BoundNodeKind::LogicalNotEquality)
             {
-                auto* data_left_int = std::get_if<int>(&left);
-                auto* data_right_int = std::get_if<int>(&right);
 
-                auto* data_left_bool = std::get_if<bool>(&left);
-                auto* data_right_bool = std::get_if<bool>(&right);
-
-                if(data_left_int != nullptr && data_right_int != nullptr)
+                /* No need to check for both _right and _left. Checking any one of them would have been also fine */
+                if((std::strcmp(BBEnode->_right->Type(), Types::INT->Name()) == 0) &&
+                   (std::strcmp(BBEnode->_left->Type(), Types::INT->Name()) == 0))
                 {
-                    /* left and right are "int" */
-                    return ((*data_left_int) != (*data_right_int));
+                    int left_value = std::get<int>(left);
+                    int right_value = std::get<int>(right);
+
+                    return left_value != right_value;
                 }
 
-                if(data_left_bool != nullptr && data_right_bool != nullptr)
+                if((std::strcmp(BBEnode->_right->Type(), Types::STRING->Name()) == 0) &&
+                   (std::strcmp(BBEnode->_left->Type(), Types::STRING->Name()) == 0))
                 {
-                    /* left and right are "bool" */
-                    return ((*data_left_bool) != (*data_right_bool));
+                    const std::string& left_value = std::get<std::string>(left);
+                    const std::string& right_value = std::get<std::string>(right);
+
+                    return left_value != right_value;
+                }
+
+                if((std::strcmp(BBEnode->_right->Type(), Types::BOOL->Name()) == 0) &&
+                   (std::strcmp(BBEnode->_left->Type(), Types::BOOL->Name()) == 0))
+                {
+                    bool left_value = std::get<bool>(left);
+                    bool right_value = std::get<bool>(right);
+
+                    return left_value != right_value;
                 }
             }
 

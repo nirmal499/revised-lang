@@ -195,6 +195,55 @@ namespace trylang
             return std::make_unique<SyntaxToken>(SyntaxKind::CloseBraceToken, _position++, ")", std::nullopt);
         }
 
+        if(this->Current() == '"')
+        {
+            /**
+             *
+             * "Test "" asd" ---> Test " asd
+             */
+
+            ++_position; /* Skip the current quote */
+
+            std::stringstream buffer;
+
+            bool done = false;
+
+            auto saved_position = _position;
+
+            while(!done)
+            {
+                switch (this->Current())
+                {
+                    case '\0':
+                    case '\r':
+                    case '\n':
+                        _buffer << "Unterminated String Not Supported\n";
+                        done = true;
+                        break;
+                    case '"':
+                        if(this->LookAhead() == '"')
+                        {
+                            buffer << this->Current();
+                            _position += 2;
+                        }
+                        else
+                        {
+                            /* Terminating quote */
+                            _position++;
+                            done = true;
+                        }
+                        break;
+                    default:
+                        buffer << this->Current();
+                        ++_position;
+                        break;
+                }
+            }
+
+            std::string value = buffer.str();
+            return std::make_unique<SyntaxToken>(SyntaxKind::StringToken, saved_position, buffer.str(), std::move(value));
+        }
+
         if(this->Current() == '&')
         {
             if(this->LookAhead() == '&')
