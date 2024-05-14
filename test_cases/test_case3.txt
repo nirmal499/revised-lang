@@ -1,0 +1,49 @@
+>> @{
+| 	for i = 0 to 10
+| 	{
+| 		print("Hello")
+| 	}
+| }@
+
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+Hello
+ 11
+>> #exit
+
+ ############################################################################################################################
+
+Previously
+
+./build/executable
+>> @{
+| 	for i = 0 to 10
+| 	{
+| 		var i = 32
+| 	}
+| }@
+
+For above we got no ERROR, after fixing we get the below
+
+./build/executable
+>> @{
+| 	for i = 0 to 10
+| 	{
+| 		var i = 32
+| 	}
+| }@
+
+
+Variable 'i' already declared
+
+>> #exit
+
+############################################################################################################################

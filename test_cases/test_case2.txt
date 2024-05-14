@@ -107,3 +107,16 @@ Binary operator '*' is not defined for types int and bool
 Binary operator '||' is not defined for types ? and bool
 
 >> #exit
+
+#########################################################################################################################
+
+./build/executable
+>> @{
+| 	var a = 10
+| 	for i = 1 to (a = a - 1)
+| 	{}
+| 	a
+| }@
+
+ 9
+>> #exit

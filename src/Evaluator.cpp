@@ -249,6 +249,30 @@ namespace trylang
 
                 return std::nullopt;
             }
+            else if(BCEnode->_function._name == BUILT_IN_FUNCTIONS::MAP.at("itos")._name)
+            {
+                auto evaluated_first_argument_value = this->EvaluateExpression(BCEnode->_arguments[0].get());
+                int integerNumber = std::get<int>(*evaluated_first_argument_value);
+
+                return std::to_string(integerNumber);
+            }
+            else if(BCEnode->_function._name == BUILT_IN_FUNCTIONS::MAP.at("stoi")._name)
+            {
+                auto evaluated_first_argument_value = this->EvaluateExpression(BCEnode->_arguments[0].get());
+                const auto& strValue = std::get<std::string>(*evaluated_first_argument_value);
+
+                int value = 0;
+                try
+                {
+                    value = std::stoi(strValue);
+
+                }catch (const std::exception& e)
+                {
+                    throw std::logic_error("Invalid String value provided for int conversion");
+                }
+
+                return value;
+            }
             else
             {
                 throw std::logic_error("Unexpected function " + BCEnode->_function._name); /* Logical this throw may never occur */

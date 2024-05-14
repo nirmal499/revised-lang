@@ -15,6 +15,8 @@ namespace trylang
 
         (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("print"));
         (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("input"));
+        (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("itos"));
+        (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("stoi"));
     }
 
     std::shared_ptr<BoundGlobalScope> Binder::BindGlobalScope(CompilationUnitSyntax* syntax)
@@ -71,7 +73,10 @@ namespace trylang
     {
         std::vector<std::unique_ptr<BoundStatementNode>> statements;
 
-        _scope = std::make_shared<BoundScope>(_scope);
+        if(_turnOnScopingInBlockStatement)
+        {
+            _scope = std::make_shared<BoundScope>(_scope);
+        }
 
         for(const auto& statementSyntax: syntax->_statements)
         {
@@ -79,7 +84,10 @@ namespace trylang
             statements.emplace_back(std::move(statement));
         }
 
-        _scope = _scope->_parent;
+        if(_turnOnScopingInBlockStatement)
+        {
+            _scope = _scope->_parent;
+        }
 
         return std::make_unique<BoundBlockStatement>(std::move(statements));
     }
@@ -515,7 +523,9 @@ namespace trylang
             _buffer << "Variable '" << varname << "' Already Declared\n";
         }
 
+        _turnOnScopingInBlockStatement = false;
         auto body = this->BindStatement(syntax->_body.get());
+        _turnOnScopingInBlockStatement = true;
 
         VariableSymbol upperBoundSymbol("upperBound", true, Types::INT->Name());
         if(!_scope->TryDeclareVariable(upperBoundSymbol))

@@ -39,6 +39,7 @@ namespace trylang
     struct Binder
     {
         std::shared_ptr<BoundScope> _scope = nullptr;
+        bool _turnOnScopingInBlockStatement = true;
 
         int _labelCount = 0;
 

@@ -78,8 +78,11 @@ namespace trylang
     namespace BUILT_IN_FUNCTIONS
     {
         inline std::unordered_map<std::string, FunctionSymbol> MAP = {
-                    {"print", FunctionSymbol{"print", std::vector<ParameterSymbol>{ParameterSymbol("text", Types::STRING->Name())}, Types::VOID->Name()}},
-                    {"input", FunctionSymbol{"input", std::vector<ParameterSymbol>{}, Types::STRING->Name()}}};
+                {"print", FunctionSymbol{"print",std::vector<ParameterSymbol>{ParameterSymbol("text", Types::STRING->Name())},Types::VOID->Name()}},
+                {"input", FunctionSymbol{"input", std::vector<ParameterSymbol>{}, Types::STRING->Name()}},
+                {"itos",  FunctionSymbol{"itos", std::vector<ParameterSymbol>{ParameterSymbol("integerNumber", Types::INT->Name())}, Types::STRING->Name()}},
+                {"stoi",  FunctionSymbol{"stoi", std::vector<ParameterSymbol>{ParameterSymbol("stringValue", Types::STRING->Name())}, Types::INT->Name()}}
+        };
     }
 
     struct LabelSymbol
