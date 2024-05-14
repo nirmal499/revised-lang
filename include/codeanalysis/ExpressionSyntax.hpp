@@ -41,6 +41,92 @@ namespace trylang
         friend std::ostream& operator<<(std::ostream& out, const SyntaxToken& token);
     };
 
+    struct BoolConvertVisitor
+    {
+        bool operator()(int number)
+        {
+            if(number == 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        bool operator()(const std::string& str)
+        {
+            if(str.empty())
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        bool operator()(bool boolValue)
+        {
+            return boolValue;
+        }
+    };
+
+    struct IntConvertVisitor
+    {
+        int operator()(int number)
+        {
+           return number;
+        }
+
+        int operator()(const std::string& str)
+        {
+            int value;
+
+            try
+            {
+                value = std::stoi(str);
+
+            }catch (const std::exception& e)
+            {
+                /*throw std::logic_error("Invalid String value provided for int conversion");*/
+                value = -1;
+            }
+
+            return value;
+        }
+
+        int operator()(bool boolValue)
+        {
+            if(boolValue)
+            {
+                return 1;
+            }
+
+            return 0;
+        }
+    };
+
+    struct StringConvertVisitor
+    {
+        std::string operator()(int number)
+        {
+            return std::to_string(number);
+        }
+
+        std::string operator()(const std::string& str)
+        {
+            return str;
+        }
+
+        std::string operator()(bool boolValue)
+        {
+            if(boolValue)
+            {
+                return "true";
+            }
+
+            return "false";
+        }
+    };
+
     struct PrintVisitor
     {
         void operator()(int number)

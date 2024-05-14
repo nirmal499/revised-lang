@@ -22,6 +22,7 @@ namespace trylang
         AssignmentExpression,
         ErrorExpression,
         CallExpression,
+        ConversionExpression,
 
         BlockStatement,
         ExpressionStatement,
@@ -61,6 +62,7 @@ namespace trylang
         {BoundNodeKind::AssignmentExpression, "AssignmentExpression"},
         {BoundNodeKind::ErrorExpression, "ErrorExpression"},
         {BoundNodeKind::CallExpression, "CallExpression"},
+        {BoundNodeKind::ConversionExpression, "ConversionExpression"},
 
         {BoundNodeKind::BlockStatement, "BlockStatement"},
         {BoundNodeKind::ExpressionStatement, "ExpressionStatement"},

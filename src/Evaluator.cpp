@@ -249,34 +249,35 @@ namespace trylang
 
                 return std::nullopt;
             }
-            else if(BCEnode->_function._name == BUILT_IN_FUNCTIONS::MAP.at("itos")._name)
-            {
-                auto evaluated_first_argument_value = this->EvaluateExpression(BCEnode->_arguments[0].get());
-                int integerNumber = std::get<int>(*evaluated_first_argument_value);
-
-                return std::to_string(integerNumber);
-            }
-            else if(BCEnode->_function._name == BUILT_IN_FUNCTIONS::MAP.at("stoi")._name)
-            {
-                auto evaluated_first_argument_value = this->EvaluateExpression(BCEnode->_arguments[0].get());
-                const auto& strValue = std::get<std::string>(*evaluated_first_argument_value);
-
-                int value = 0;
-                try
-                {
-                    value = std::stoi(strValue);
-
-                }catch (const std::exception& e)
-                {
-                    throw std::logic_error("Invalid String value provided for int conversion");
-                }
-
-                return value;
-            }
             else
             {
                 throw std::logic_error("Unexpected function " + BCEnode->_function._name); /* Logical this throw may never occur */
             }
+        }
+
+        auto* BConEnode = dynamic_cast<BoundConversionExpression*>(node);
+        if(BConEnode != nullptr)
+        {
+            auto value = this->EvaluateExpression(BConEnode->_expression.get());
+            if(std::strcmp(BConEnode->_toType->Name(), Types::BOOL->Name()) == 0)
+            {
+                /* It returns bool */
+                return std::visit(BoolConvertVisitor{}, *value);
+            }
+
+            if(std::strcmp(BConEnode->_toType->Name(), Types::INT->Name()) == 0)
+            {
+                /* It returns int */
+                return std::visit(IntConvertVisitor{}, *value);
+            }
+
+            if(std::strcmp(BConEnode->_toType->Name(), Types::STRING->Name()) == 0)
+            {
+                /* It returns std::string */
+                return std::visit(StringConvertVisitor{}, *value);
+            }
+
+            throw std::logic_error("Unexpected Type " + std::string(BConEnode->_toType->Name()));
         }
 
         auto* BBEnode = dynamic_cast<BoundBinaryExpression*>(node);

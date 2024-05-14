@@ -196,6 +196,7 @@ namespace trylang
         std::vector<BoundNode*> GetChildren() override;
     };
 
+
     struct BoundCallExpression : public BoundExpressionNode
     {
 
@@ -203,6 +204,18 @@ namespace trylang
         std::vector<std::unique_ptr<BoundExpressionNode>> _arguments;
 
         BoundCallExpression(FunctionSymbol function, std::vector<std::unique_ptr<BoundExpressionNode>> arguments);
+
+        const char* Type() override;
+        BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
+    };
+
+    struct BoundConversionExpression : public BoundExpressionNode
+    {
+        TypeSymbol* _toType; /* expression to be converted to _toType in the evaluator */
+        std::unique_ptr<BoundExpressionNode> _expression;
+
+        BoundConversionExpression(TypeSymbol* toType, std::unique_ptr<BoundExpressionNode> expression);
 
         const char* Type() override;
         BoundNodeKind Kind() override;

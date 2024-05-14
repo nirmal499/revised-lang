@@ -32,6 +32,26 @@ namespace trylang
         inline std::unique_ptr<TypeSymbol> ERROR = std::make_unique<TypeSymbol>("?");
     }
 
+    inline TypeSymbol* LookUpType(const std::string& name)
+    {
+        if(name == "int")
+        {
+            return Types::INT.get();
+        }
+        else if(name == "bool")
+        {
+            return Types::BOOL.get();
+        }
+        else if(name == "string")
+        {
+            return Types::STRING.get();
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
     struct VariableSymbol
     {
         std::string _name{};
@@ -79,9 +99,7 @@ namespace trylang
     {
         inline std::unordered_map<std::string, FunctionSymbol> MAP = {
                 {"print", FunctionSymbol{"print",std::vector<ParameterSymbol>{ParameterSymbol("text", Types::STRING->Name())},Types::VOID->Name()}},
-                {"input", FunctionSymbol{"input", std::vector<ParameterSymbol>{}, Types::STRING->Name()}},
-                {"itos",  FunctionSymbol{"itos", std::vector<ParameterSymbol>{ParameterSymbol("integerNumber", Types::INT->Name())}, Types::STRING->Name()}},
-                {"stoi",  FunctionSymbol{"stoi", std::vector<ParameterSymbol>{ParameterSymbol("stringValue", Types::STRING->Name())}, Types::INT->Name()}}
+                {"input", FunctionSymbol{"input", std::vector<ParameterSymbol>{}, Types::STRING->Name()}}
         };
     }
 

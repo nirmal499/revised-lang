@@ -3,6 +3,7 @@
 #include <codeanalysis/BoundNodeKind.hpp>
 #include <codeanalysis/BoundScope.hpp>
 #include <codeanalysis/BoundExpressionNode.hpp>
+#include <codeanalysis/Conversion.hpp>
 #include <algorithm>
 #include <stack>
 
@@ -15,8 +16,6 @@ namespace trylang
 
         (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("print"));
         (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("input"));
-        (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("itos"));
-        (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("stoi"));
     }
 
     std::shared_ptr<BoundGlobalScope> Binder::BindGlobalScope(CompilationUnitSyntax* syntax)
@@ -604,8 +603,35 @@ namespace trylang
 
     }
 
+    std::unique_ptr<BoundExpressionNode> Binder::BindConversion(TypeSymbol* type, ExpressionSyntax *syntax)
+    {
+        /**
+         * Here we check whether the given expressionSyntax is of allowed to be converted to type given by the TypeSymbol
+         * */
+
+        auto expression = this->BindExpression(syntax);
+        auto conversion = trylang::Classify(/* fromType */ expression->Type(), /* ToType */ type->_typeName);
+        if(!conversion->_exists)
+        {
+            _buffer << "Cannot convert " << expression->Type() << " to " << type->_typeName << "\n";
+            return std::make_unique<BoundErrorExpression>();
+        }
+
+        /**
+         * Here we are returning "BoundConversionExpression" containing {type, expression}. Basically we checked if the conversion is allowed or not in
+         * above code and here we are returning "BoundConversionExpression", so that it can be evaluated in the evaluator
+         * */
+        return std::make_unique<BoundConversionExpression>(type, std::move(expression));
+    }
+
     std::unique_ptr<BoundExpressionNode> Binder::BindCallExpression(CallExpressionSyntax *syntax)
     {
+
+        auto* type = trylang::LookUpType(syntax->_identifer->_text);
+        if(syntax->_arguments.size() == 1 && type != nullptr)
+        {
+            return this->BindConversion(type, syntax->_arguments[0].get());
+        }
 
         std::vector<std::unique_ptr<BoundExpressionNode>> boundArguments;
         for(const auto& expr: syntax->_arguments)
