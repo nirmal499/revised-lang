@@ -259,25 +259,25 @@ namespace trylang
         if(BConEnode != nullptr)
         {
             auto value = this->EvaluateExpression(BConEnode->_expression.get());
-            if(std::strcmp(BConEnode->_toType->Name(), Types::BOOL->Name()) == 0)
+            if(std::strcmp(BConEnode->_toType, Types::BOOL->Name()) == 0)
             {
                 /* It returns bool */
                 return std::visit(BoolConvertVisitor{}, *value);
             }
 
-            if(std::strcmp(BConEnode->_toType->Name(), Types::INT->Name()) == 0)
+            if(std::strcmp(BConEnode->_toType, Types::INT->Name()) == 0)
             {
                 /* It returns int */
                 return std::visit(IntConvertVisitor{}, *value);
             }
 
-            if(std::strcmp(BConEnode->_toType->Name(), Types::STRING->Name()) == 0)
+            if(std::strcmp(BConEnode->_toType, Types::STRING->Name()) == 0)
             {
                 /* It returns std::string */
                 return std::visit(StringConvertVisitor{}, *value);
             }
 
-            throw std::logic_error("Unexpected Type " + std::string(BConEnode->_toType->Name()));
+            throw std::logic_error("Unexpected Type " + std::string(BConEnode->_toType));
         }
 
         auto* BBEnode = dynamic_cast<BoundBinaryExpression*>(node);

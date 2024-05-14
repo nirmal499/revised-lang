@@ -103,12 +103,9 @@ namespace trylang
 
     std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax* syntax, const char* targetType)
     {
-        auto result = this->BindExpression(syntax);
-        if(std::strcmp(result->Type(), targetType) != 0)
-        {
-            _buffer << "Cannot convert from " << result->Type() << " to " << targetType << "\n";
-        }
-
+        /*
+         * BindConversion checks whatever type the expression syntax results in is convertible to type targetType */
+        auto result = this->BindConversion(targetType, syntax);
         return result;
     }
 
@@ -188,13 +185,9 @@ namespace trylang
             _buffer << "Variable '" << varname << "' is read-only and cannot be reassigned\n";
         }
 
-        if(std::strcmp(variable._type, boundExpression->Type()) != 0)
-        {
-            _buffer << "Cannot convert from " << boundExpression->Type() << " to " << variable._type << "\n";
-            return boundExpression;
-        }
+        auto conversionExpression = this->BindConversion(variable._type, std::move(boundExpression));
 
-        return std::make_unique<BoundAssignmentExpression>(std::move(variable), std::move(boundExpression));
+        return std::make_unique<BoundAssignmentExpression>(std::move(variable), std::move(conversionExpression));
     }
 
     std::unique_ptr<BoundExpressionNode> Binder::BindParenthesizedExpression(ParenthesizedExpressionSyntax* syntax)
@@ -603,18 +596,47 @@ namespace trylang
 
     }
 
-    std::unique_ptr<BoundExpressionNode> Binder::BindConversion(TypeSymbol* type, ExpressionSyntax *syntax)
+    std::unique_ptr<BoundExpressionNode> Binder::BindConversion(const char* type, ExpressionSyntax *syntax)
+    {
+        auto expression = this->BindExpression(syntax);
+        return this->BindConversion(type, std::move(expression));
+    }
+
+    std::unique_ptr<BoundExpressionNode> Binder::BindConversion(const char* type, std::unique_ptr<BoundExpressionNode> expression)
     {
         /**
-         * Here we check whether the given expressionSyntax is of allowed to be converted to type given by the TypeSymbol
+         * Here we check whether the given expression is of allowed to be converted to type given by the const char* type
          * */
-
-        auto expression = this->BindExpression(syntax);
-        auto conversion = trylang::Classify(/* fromType */ expression->Type(), /* ToType */ type->_typeName);
+        auto conversion = trylang::Classify(/* fromType */ expression->Type(), /* ToType */ type);
         if(!conversion->_exists)
         {
-            _buffer << "Cannot convert " << expression->Type() << " to " << type->_typeName << "\n";
+            if(
+                    (std::strcmp(expression->Type(), Types::ERROR->Name())) == 0 &&
+                    (std::strcmp(type, Types::ERROR->Name())) == 0
+            )
+            {
+                _buffer << "Cannot convert " << expression->Type() << " to " << type << "\n";
+            }
             return std::make_unique<BoundErrorExpression>();
+        }
+
+        /**
+         * For not allowing Explicit conversions */
+//        if(!conversion->_exists || conversion->_isExplicit)
+//        {
+//            if(
+//                    ((std::strcmp(expression->Type(), Types::ERROR->Name())) == 0 &&
+//                     (std::strcmp(type, Types::ERROR->Name())) == 0) || (std::strcmp(expression->Type(), type) != 0)
+//                    )
+//            {
+//                _buffer << "Cannot convert " << expression->Type() << " to " << type << "\n";
+//            }
+//            return std::make_unique<BoundErrorExpression>();
+//        }
+
+        if(conversion->_isIdentity)
+        {
+            return expression;
         }
 
         /**
@@ -630,7 +652,7 @@ namespace trylang
         auto* type = trylang::LookUpType(syntax->_identifer->_text);
         if(syntax->_arguments.size() == 1 && type != nullptr)
         {
-            return this->BindConversion(type, syntax->_arguments[0].get());
+            return this->BindConversion(type->_typeName, syntax->_arguments[0].get());
         }
 
         std::vector<std::unique_ptr<BoundExpressionNode>> boundArguments;

@@ -53,7 +53,8 @@ namespace trylang
         std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax, bool canBeVoid = false);
         std::unique_ptr<BoundExpressionNode> BindExpressionInternal(ExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax, const char* targetType);
-        std::unique_ptr<BoundExpressionNode> BindConversion(TypeSymbol* type, ExpressionSyntax *syntax);
+        std::unique_ptr<BoundExpressionNode> BindConversion(const char* type, ExpressionSyntax *syntax);
+        std::unique_ptr<BoundExpressionNode> BindConversion(const char* type, std::unique_ptr<BoundExpressionNode> expression);
 
         std::unique_ptr<BoundStatementNode> BindStatement(StatementSyntax* syntax);
         std::unique_ptr<BoundStatementNode> BindVariableDeclaration(VariableDeclarationSyntax* syntax);

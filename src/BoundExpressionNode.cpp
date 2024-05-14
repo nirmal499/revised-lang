@@ -396,14 +396,14 @@ namespace trylang
     }
 
 
-    BoundConversionExpression::BoundConversionExpression(TypeSymbol *toType, std::unique_ptr<BoundExpressionNode> expression): _toType(toType), _expression(std::move(expression))
+    BoundConversionExpression::BoundConversionExpression(const char *toType, std::unique_ptr<BoundExpressionNode> expression): _toType(toType), _expression(std::move(expression))
     {
 
     }
 
     const char *BoundConversionExpression::Type()
     {
-        return _toType->Name();
+        return _toType;
     }
 
     BoundNodeKind BoundConversionExpression::Kind()

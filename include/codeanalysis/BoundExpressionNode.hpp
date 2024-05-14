@@ -212,10 +212,10 @@ namespace trylang
 
     struct BoundConversionExpression : public BoundExpressionNode
     {
-        TypeSymbol* _toType; /* expression to be converted to _toType in the evaluator */
+        const char* _toType; /* expression to be converted to _toType in the evaluator */
         std::unique_ptr<BoundExpressionNode> _expression;
 
-        BoundConversionExpression(TypeSymbol* toType, std::unique_ptr<BoundExpressionNode> expression);
+        BoundConversionExpression(const char* toType, std::unique_ptr<BoundExpressionNode> expression);
 
         const char* Type() override;
         BoundNodeKind Kind() override;
