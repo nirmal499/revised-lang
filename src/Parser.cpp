@@ -280,8 +280,35 @@ namespace trylang
         }
         else if(this->Current()->Kind() == SyntaxKind::IdentifierToken)
         {
-            auto identifierToken = this->NextToken();
-            return std::make_unique<NameExpressionSyntax>(identifierToken);
+            if(this->Peek(1)->Kind() == SyntaxKind::OpenParenthesisToken)
+            {
+                auto identifierToken = this->NextToken();
+                auto openParenthesis = this->MatchToken(SyntaxKind::OpenParenthesisToken);
+
+                std::vector<std::unique_ptr<ExpressionSyntax>> arguments;
+                if(this->Current()->Kind() != SyntaxKind::CloseBraceToken)
+                {
+                    while(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken && this->Current()->Kind() != SyntaxKind::EndOfFileToken)
+                    {
+                        auto expression = this->ParseExpression();
+                        arguments.emplace_back(std::move(expression));
+
+                        if(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken)
+                        {
+                            auto commaToken = this->MatchToken(SyntaxKind::CommaToken);
+//                            arguments.emplace_back(std::move(commaToken));
+                        }
+                    }
+                }
+                auto closeParenthesis = this->MatchToken(SyntaxKind::CloseParenthesisToken);
+
+                return std::make_unique<CallExpressionSyntax>(identifierToken, openParenthesis, std::move(arguments), closeParenthesis);
+            }
+            else
+            {
+                auto identifierToken = this->NextToken();
+                return std::make_unique<NameExpressionSyntax>(identifierToken);
+            }
         }
         else if(this->Current()->Kind() == SyntaxKind::StringToken)
         {

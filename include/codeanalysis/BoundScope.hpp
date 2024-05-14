@@ -13,12 +13,43 @@ namespace trylang
     {
         std::shared_ptr<BoundScope> _parent;
         std::unordered_map<std::string, std::unique_ptr<VariableSymbol>> _variables;
+        std::unordered_map<std::string, std::unique_ptr<FunctionSymbol>> _functions;
 
         explicit  BoundScope(const std::shared_ptr<BoundScope>& parent)
          : _parent(parent)
         {}
 
-        bool TryDeclare(const VariableSymbol& variable)
+        bool TryDeclareFunction(const FunctionSymbol& function)
+        {
+            auto it = _functions.find(function._name);
+            if(it != _functions.end())
+            {
+                return false;
+            }
+
+            _functions[function._name] = std::make_unique<FunctionSymbol>(function);
+
+            return true;
+        }
+
+        bool TryLookUpFunction(const std::string& name,FunctionSymbol& function)
+        {
+            auto it = _functions.find(name);
+            if(it != _functions.end())
+            {
+                function = *it->second;
+                return true;
+            }
+
+            if(_parent == nullptr)
+            {
+                return false;
+            }
+
+            return _parent->TryLookUpFunction(name, function);
+        }
+
+        bool TryDeclareVariable(const VariableSymbol& variable)
         {
             auto it = _variables.find(variable._name);
             if(it != _variables.end())
@@ -30,7 +61,8 @@ namespace trylang
 
             return true;
         }
-        bool TryLookUp(const std::string& name,VariableSymbol& variable)
+
+        bool TryLookUpVariable(const std::string& name,VariableSymbol& variable)
         {
             auto it = _variables.find(name);
             if(it != _variables.end())
@@ -44,14 +76,26 @@ namespace trylang
                 return false;
             }
 
-            return _parent->TryLookUp(name, variable);
+            return _parent->TryLookUpVariable(name, variable);
         }
 
-        std::vector<std::string> GetDeclaredVariable()
+        std::vector<std::string> GetDeclaredVariables()
         {
             std::vector<std::string> keys(_variables.size());
             /* Extract keys and return it */
             for(auto const& pair: _variables)
+            {
+                keys.push_back(pair.first);
+            }
+
+            return keys; // RVO
+        }
+
+        std::vector<std::string> GetDeclaredFunctions()
+        {
+            std::vector<std::string> keys(_functions.size());
+            /* Extract keys and return it */
+            for(auto const& pair: _functions)
             {
                 keys.push_back(pair.first);
             }

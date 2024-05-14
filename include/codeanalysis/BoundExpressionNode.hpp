@@ -196,6 +196,19 @@ namespace trylang
         std::vector<BoundNode*> GetChildren() override;
     };
 
+    struct BoundCallExpression : public BoundExpressionNode
+    {
+
+        FunctionSymbol _function;
+        std::vector<std::unique_ptr<BoundExpressionNode>> _arguments;
+
+        BoundCallExpression(FunctionSymbol function, std::vector<std::unique_ptr<BoundExpressionNode>> arguments);
+
+        const char* Type() override;
+        BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
+    };
+
     struct BoundAssignmentExpression : public BoundExpressionNode
     {
         VariableSymbol _variable;

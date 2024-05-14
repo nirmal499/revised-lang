@@ -366,4 +366,34 @@ namespace trylang
     {
         return {nullptr};
     }
+
+    BoundCallExpression::BoundCallExpression(FunctionSymbol function,
+                                             std::vector<std::unique_ptr<BoundExpressionNode>> arguments) : _function(std::move(function)), _arguments(std::move(arguments))
+    {
+
+    }
+
+    const char *BoundCallExpression::Type()
+    {
+        return _function._type;
+    }
+
+    BoundNodeKind BoundCallExpression::Kind()
+    {
+        return BoundNodeKind::CallExpression;
+    }
+
+    std::vector<BoundNode *> BoundCallExpression::GetChildren()
+    {
+        std::vector<BoundNode*> children(_arguments.size());
+
+        for(const auto& arg: _arguments)
+        {
+            children.push_back(arg.get());
+        }
+
+        return std::move(children);
+    }
+
+
 }

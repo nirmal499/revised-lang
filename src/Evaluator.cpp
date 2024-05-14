@@ -10,7 +10,7 @@ namespace trylang
         : _root(std::move(root)), _variable_map(variables)
     {}
 
-    oobject_t Evaluator::Evaluate()
+    object_t Evaluator::Evaluate()
     {
 
         std::unordered_map<LabelSymbol, int, LabelSymbolHash> labelToIndex;
@@ -61,7 +61,7 @@ namespace trylang
             if(BCGnode != nullptr)
             {
                 auto condition = this->EvaluateExpression(BCGnode->_condition.get());
-                bool condition_result = std::get<bool>(condition);
+                bool condition_result = std::get<bool>(*condition);
 
                 if(condition_result && !BCGnode->_jumpIfFalse || !condition_result && BCGnode->_jumpIfFalse)
                 {
@@ -85,11 +85,6 @@ namespace trylang
         }
 
 //        this->EvaluateStatement(_root.get());
-
-        if(_lastValue.index() == std::variant_npos)
-        {
-            throw std::logic_error("Internal Error: No Value Found in _lastValue");
-        }
 
         return _lastValue;
     }
@@ -187,7 +182,7 @@ namespace trylang
         _lastValue = this->EvaluateExpression(node->_expression.get());
     }
 
-    oobject_t Evaluator::EvaluateExpression(BoundExpressionNode* node)
+    object_t Evaluator::EvaluateExpression(BoundExpressionNode* node)
     {   
         auto* BLEnode = dynamic_cast<BoundLiteralExpression*>(node);
         if(BLEnode != nullptr)
@@ -214,34 +209,58 @@ namespace trylang
         auto* BUEnode = dynamic_cast<BoundUnaryExpression*>(node);
         if(BUEnode != nullptr)
         {   
-            oobject_t operand = this->EvaluateExpression(BUEnode->_operand.get());
+            object_t operand = this->EvaluateExpression(BUEnode->_operand.get());
             
             if(BUEnode->_op->_kind == BoundNodeKind::Identity)
             {
-                int operand_value = std::get<int>(operand); /* If we are reaching here means operand has "int" */
+                int operand_value = std::get<int>(*operand); /* If we are reaching here means operand has "int" */
                 return operand_value;
             }
 
             if(BUEnode->_op->_kind == BoundNodeKind::Negation)
             {
-                int operand_value = std::get<int>(operand); /* If we are reaching here means operand has "int" */
+                int operand_value = std::get<int>(*operand); /* If we are reaching here means operand has "int" */
                 return -operand_value;
             }
 
             if(BUEnode->_op->_kind == BoundNodeKind::LogicalNegation)
             {
-                bool operand_value = std::get<bool>(operand); /* If we are reaching here means operand has "bool" */
+                bool operand_value = std::get<bool>(*operand); /* If we are reaching here means operand has "bool" */
                 return !operand_value;
             }
             throw std::logic_error("Unexpected unary operator " + trylang::__boundNodeStringMap[BUEnode->_op->_kind]);
+        }
+
+        auto* BCEnode = dynamic_cast<BoundCallExpression*>(node);
+        if(BCEnode != nullptr)
+        {
+            if(BCEnode->_function._name == BUILT_IN_FUNCTIONS::MAP.at("input")._name)
+            {
+                std::string input;
+                std::getline(std::cin, input);
+
+                return input;
+            }
+            else if(BCEnode->_function._name == BUILT_IN_FUNCTIONS::MAP.at("print")._name)
+            {
+                auto evaluated_first_argument_value = this->EvaluateExpression(BCEnode->_arguments[0].get());
+                const auto& message = std::get<std::string>(*evaluated_first_argument_value);
+                std::cout << message << "\n";
+
+                return std::nullopt;
+            }
+            else
+            {
+                throw std::logic_error("Unexpected function " + BCEnode->_function._name); /* Logical this throw may never occur */
+            }
         }
 
         auto* BBEnode = dynamic_cast<BoundBinaryExpression*>(node);
         if(BBEnode != nullptr)
         {
             /* If we reach here we need to have a "int" or "bool" or "string" */
-            oobject_t left = this->EvaluateExpression(BBEnode->_left.get());
-            oobject_t right = this->EvaluateExpression(BBEnode->_right.get());
+            oobject_t left = *(this->EvaluateExpression(BBEnode->_left.get()));
+            oobject_t right = *(this->EvaluateExpression(BBEnode->_right.get()));
 
             if(BBEnode->_op->_kind == BoundNodeKind::Addition)
             {

@@ -296,4 +296,33 @@ namespace trylang
     {
         return {_keyword.get(), _identifier.get(), _equalsToken.get(), _lowerBound.get(), _upperBound.get()};
     }
+
+    SyntaxKind CallExpressionSyntax::Kind()
+    {
+        return SyntaxKind::CallExpression;
+    }
+
+    std::vector<SyntaxNode *> CallExpressionSyntax::GetChildren()
+    {
+        std::vector<SyntaxNode*> children(_arguments.size() + 3);
+        children.push_back(_identifer.get());
+        children.push_back(_openParenthesis.get());
+
+        for(const auto& argument: _arguments)
+        {
+            children.push_back(argument.get());
+        }
+
+        children.push_back(_closeParenthesis.get());
+
+        return children;
+    }
+
+    CallExpressionSyntax::CallExpressionSyntax(const std::shared_ptr<SyntaxToken> &identifier,
+                                               const std::shared_ptr<SyntaxToken>& openParenthesis,
+                                               std::vector<std::unique_ptr<ExpressionSyntax>> arguments,
+                                               const std::shared_ptr<SyntaxToken>& closeParenthesis) : _identifer(identifier), _openParenthesis(openParenthesis), _arguments(std::move(arguments)), _closeParenthesis(closeParenthesis)
+    {
+
+    }
 }

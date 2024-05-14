@@ -12,6 +12,9 @@ namespace trylang
     Binder::Binder(const std::shared_ptr<BoundScope>& parent)
     {
         _scope = std::make_shared<BoundScope>(parent);
+
+        (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("print"));
+        (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("input"));
     }
 
     std::shared_ptr<BoundGlobalScope> Binder::BindGlobalScope(CompilationUnitSyntax* syntax)
@@ -21,7 +24,7 @@ namespace trylang
         auto statement = binder.BindStatement(syntax->_statement.get());
         auto flattened = Binder::Flatten(std::move(statement));
 
-        auto variables = binder._scope->GetDeclaredVariable();
+        auto variables = binder._scope->GetDeclaredVariables();
         auto errors = binder.Errors();
 
         return std::make_shared<BoundGlobalScope>(nullptr, std::move(errors), std::move(variables), std::move(flattened));
@@ -56,7 +59,7 @@ namespace trylang
 
         VariableSymbol variable(varname, isReadOnly, expression->Type());
 
-        if(!_scope->TryDeclare(variable))
+        if(!_scope->TryDeclareVariable(variable))
         {
             _buffer << "Variable '" << varname << "' already declared\n";
         }
@@ -83,7 +86,11 @@ namespace trylang
 
     std::unique_ptr<BoundStatementNode> Binder::BindExpressionStatement(ExpressionStatementSyntax *syntax)
     {
-        auto expression = this->BindExpression(syntax->_expression.get());
+        /**
+         *
+         * let name = print("Name") ---> will throw error
+         * */
+        auto expression = this->BindExpression(syntax->_expression.get(), /* canBeVoid */ true);
         return std::make_unique<BoundExpressionStatement>(std::move(expression));
     }
 
@@ -98,7 +105,19 @@ namespace trylang
         return result;
     }
 
-    std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax* syntax)
+    std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax *syntax, bool canBeVoid)
+    {
+        auto result = this->BindExpressionInternal(syntax);
+        if(!canBeVoid && (std::strcmp(result->Type(), Types::VOID->Name()) == 0))
+        {
+            _buffer << "Expression Must have a value\n";
+            return std::make_unique<BoundErrorExpression>();
+        }
+
+        return result;
+    }
+
+    std::unique_ptr<BoundExpressionNode> Binder::BindExpressionInternal(ExpressionSyntax* syntax)
     {
         switch (syntax->Kind())
         {
@@ -114,6 +133,8 @@ namespace trylang
                 return this->BindNameExpression(static_cast<NameExpressionSyntax*>(syntax));
             case SyntaxKind::AssignmentExpression:
                 return this->BindAssignmentExpression(static_cast<AssignmentExpressionSyntax*>(syntax));
+            case SyntaxKind::CallExpression:
+                return this->BindCallExpression(static_cast<CallExpressionSyntax*>(syntax));
             default:
                 throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
         }
@@ -129,7 +150,7 @@ namespace trylang
         const auto& varname = syntax->_identifierToken->_text;
 
         VariableSymbol variable;
-        if(!_scope->TryLookUp(varname, variable))
+        if(!_scope->TryLookUpVariable(varname, variable))
         {
             _buffer << "Undefined Name " << varname << "\n";
             return std::make_unique<BoundErrorExpression>();
@@ -147,7 +168,7 @@ namespace trylang
         auto boundExpression = this->BindExpression(syntax->_expression.get());
 
         VariableSymbol variable;
-        if(!_scope->TryLookUp(varname, variable))
+        if(!_scope->TryLookUpVariable(varname, variable))
         {
             /* We did not have varname variable declared */
             _buffer << "Undefined Name " << varname << "\n";
@@ -450,7 +471,7 @@ namespace trylang
 //
 //        const auto& varname = syntax->_identifier->_text;
 //        VariableSymbol variable(varname, /* isReadOnly */ true, Types::INT->Name());
-//        if(!_scope->TryDeclare(variable))
+//        if(!_scope->TryDeclareVariable(variable))
 //        {
 //            _buffer << "Variable '" << varname << "' Already Declared\n"; /* This error will never occur */
 //        }
@@ -489,7 +510,7 @@ namespace trylang
 
         const auto& varname = syntax->_identifier->_text;
         VariableSymbol variable(varname, /* isReadOnly */ true, Types::INT->Name());
-        if(!_scope->TryDeclare(variable))
+        if(!_scope->TryDeclareVariable(variable))
         {
             _buffer << "Variable '" << varname << "' Already Declared\n";
         }
@@ -497,7 +518,7 @@ namespace trylang
         auto body = this->BindStatement(syntax->_body.get());
 
         VariableSymbol upperBoundSymbol("upperBound", true, Types::INT->Name());
-        if(!_scope->TryDeclare(upperBoundSymbol))
+        if(!_scope->TryDeclareVariable(upperBoundSymbol))
         {
             _buffer << "Variable '" << "upperBound" << "' Already Declared\n"; /* This error is not possible */
         }
@@ -572,4 +593,44 @@ namespace trylang
         return std::make_unique<BoundBlockStatement>(std::move(statements));
 
     }
+
+    std::unique_ptr<BoundExpressionNode> Binder::BindCallExpression(CallExpressionSyntax *syntax)
+    {
+
+        std::vector<std::unique_ptr<BoundExpressionNode>> boundArguments;
+        for(const auto& expr: syntax->_arguments)
+        {
+            auto boundExpr = this->BindExpression(expr.get());
+            boundArguments.emplace_back(std::move(boundExpr));
+        }
+
+        FunctionSymbol function;
+        if(!_scope->TryLookUpFunction(syntax->_identifer->_text, function))
+        {
+            _buffer << "Function '" << syntax->_identifer->_text << "' doesn't exist\n";
+            return std::make_unique<BoundErrorExpression>();
+        }
+
+        if(syntax->_arguments.size() != function._parameters.size())
+        {
+            _buffer << "Wrong No.of Arguments Reported in function call " << syntax->_identifer->_text << "\n";
+            return std::make_unique<BoundErrorExpression>();
+        }
+
+        for(auto i = 0; i < syntax->_arguments.size(); i++)
+        {
+            const auto& argument = boundArguments[i];
+            const auto& parameter = function._parameters[i];
+
+            if(argument->Type() != parameter._type)
+            {
+                _buffer << "Wrong Argument Type provided in function call " << syntax->_identifer->_text << "\n";
+                return std::make_unique<BoundErrorExpression>();
+            }
+        }
+
+        return std::make_unique<BoundCallExpression>(function, std::move(boundArguments));
+
+    }
+
 }

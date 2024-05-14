@@ -144,8 +144,11 @@ void Run2()
         else
         {
             trylang::Evaluator evaluator(std::move(globalScope->_statement), g_variable_map);
-            trylang::oobject_t result = evaluator.Evaluate();
-            std::visit(trylang::PrintVisitor{}, result);
+            trylang::object_t result = evaluator.Evaluate();
+            if(result.has_value())
+            {
+                std::visit(trylang::PrintVisitor{}, *result);
+            }
             std::cout << "\n";
         }
 

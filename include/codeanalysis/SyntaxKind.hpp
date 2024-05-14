@@ -32,6 +32,7 @@ namespace trylang
         GreaterThanToken,
         GreaterThanEqualsToken,
         StringToken,
+        CommaToken,
 
         CompilationUnit,
 
@@ -53,6 +54,7 @@ namespace trylang
         ParenthesizedExpression,
         NameExpression,
         AssignmentExpression,
+        CallExpression,
 
         /* Statements */
         BlockStatement,
@@ -90,6 +92,7 @@ namespace trylang
         {SyntaxKind::LessThanEqualsToken, "LessThanEqualsToken"},
         {SyntaxKind::GreaterThanEqualsToken, "GreaterThanEqualsToken"},
         {SyntaxKind::StringToken, "StringToken"},
+        {SyntaxKind::CommaToken, "CommaToken"},
 
         {SyntaxKind::CompilationUnit, "CompilationUnit"},
 
@@ -109,6 +112,7 @@ namespace trylang
         {SyntaxKind::ParenthesizedExpression, "ParenthesizedExpression"},
         {SyntaxKind::NameExpression, "NameExpression"},
         {SyntaxKind::AssignmentExpression, "AssignmentExpression"},
+        {SyntaxKind::CallExpression, "CallExpression"},
 
 
         {SyntaxKind::BlockStatement, "BlockStatement"},

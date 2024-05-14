@@ -202,6 +202,24 @@ namespace trylang
         std::vector<SyntaxNode*> GetChildren() override;
     };
 
+
+    struct CallExpressionSyntax: public ExpressionSyntax
+    {
+        std::shared_ptr<SyntaxToken> _identifer; /* name of the function during calling function */
+        std::shared_ptr<SyntaxToken> _openParenthesis;
+        std::shared_ptr<SyntaxToken> _closeParenthesis;
+        std::vector<std::unique_ptr<ExpressionSyntax>> _arguments;
+
+        CallExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifier,
+                             const std::shared_ptr<SyntaxToken>& openParenthesis,
+                             std::vector<std::unique_ptr<ExpressionSyntax>> arguments,
+                             const std::shared_ptr<SyntaxToken>& closeParenthesis);
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct NameExpressionSyntax : public ExpressionSyntax
     {
         std::shared_ptr<SyntaxToken> _identifierToken;

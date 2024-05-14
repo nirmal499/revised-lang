@@ -17,6 +17,7 @@ namespace trylang
     struct ParenthesizedExpressionSyntax;
     struct NameExpressionSyntax;
     struct AssignmentExpressionSyntax;
+    struct CallExpressionSyntax;
 
     struct BlockStatementSyntax;
     struct ExpressionStatementSyntax;
@@ -48,7 +49,8 @@ namespace trylang
 
         std::string Errors();
 
-        std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax);
+        std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax, bool canBeVoid = false);
+        std::unique_ptr<BoundExpressionNode> BindExpressionInternal(ExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax, const char* targetType);
 
         std::unique_ptr<BoundStatementNode> BindStatement(StatementSyntax* syntax);
@@ -66,6 +68,7 @@ namespace trylang
         std::unique_ptr<BoundExpressionNode> BindLiteralExpression(LiteralExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindUnaryExpression(UnaryExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindBinaryExpression(BinaryExpressionSyntax* syntax);
+        std::unique_ptr<BoundExpressionNode> BindCallExpression(CallExpressionSyntax *syntax);
 
         static std::unique_ptr<BoundBlockStatement> Flatten(std::unique_ptr<BoundStatementNode> statement);
 
