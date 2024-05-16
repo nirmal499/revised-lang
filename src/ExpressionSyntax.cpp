@@ -70,9 +70,10 @@ namespace trylang
     VariableDeclarationSyntax::VariableDeclarationSyntax(
             const std::shared_ptr<SyntaxToken>& keyword,
             const std::shared_ptr<SyntaxToken>& identifier,
+            std::unique_ptr<TypeClauseSyntax> typeClause,
             const std::shared_ptr<SyntaxToken>& equalsToken,
             std::unique_ptr<ExpressionSyntax> expression
-        ) : _keyword(keyword), _identifier(identifier), _equalsToken(equalsToken), _expression(std::move(expression))
+        ) : _keyword(keyword), _identifier(identifier), _typeClause(std::move(typeClause)) ,_equalsToken(equalsToken), _expression(std::move(expression))
     {}
 
     SyntaxKind VariableDeclarationSyntax::Kind()
@@ -82,7 +83,7 @@ namespace trylang
 
     std::vector<SyntaxNode*> VariableDeclarationSyntax::GetChildren()
     {
-        return {_keyword.get(), _identifier.get(), _equalsToken.get(), _expression.get()};
+        return {_keyword.get(), _identifier.get(), _typeClause.get() ,_equalsToken.get(), _expression.get()};
     }
 
     ExpressionStatementSyntax::ExpressionStatementSyntax(std::unique_ptr<ExpressionSyntax> expression) : _expression(std::move(expression))
@@ -246,17 +247,7 @@ namespace trylang
 
     std::vector<SyntaxNode *> IfStatementSyntax::GetChildren()
     {
-        std::vector<SyntaxNode*> children(4);
-
-        children.push_back(_ifKeyword.get());
-        children.push_back(_condition.get());
-        children.push_back(_thenStatement.get());
-        if(_elseClause != nullptr)
-        {
-            children.push_back(_elseClause.get());
-        }
-
-        return children; // RVO
+        return {_ifKeyword.get(), _condition.get(), _thenStatement.get(), _elseClause.get()};
     }
 
     WhileStatementSyntax::WhileStatementSyntax(const std::shared_ptr<SyntaxToken> &whileKeyword,
@@ -324,5 +315,21 @@ namespace trylang
                                                const std::shared_ptr<SyntaxToken>& closeParenthesis) : _identifer(identifier), _openParenthesis(openParenthesis), _arguments(std::move(arguments)), _closeParenthesis(closeParenthesis)
     {
 
+    }
+
+    TypeClauseSyntax::TypeClauseSyntax(const std::shared_ptr<SyntaxToken> &colonToken,
+                                       const std::shared_ptr<SyntaxToken> &identifierToken): _colonToken(colonToken), _identifierToken(identifierToken)
+    {
+
+    }
+
+    SyntaxKind TypeClauseSyntax::Kind()
+    {
+        return SyntaxKind::ColonToken;
+    }
+
+    std::vector<SyntaxNode *> TypeClauseSyntax::GetChildren()
+    {
+        return {_colonToken.get(), _identifierToken.get()};
     }
 }

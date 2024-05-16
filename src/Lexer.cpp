@@ -195,6 +195,11 @@ namespace trylang
             return std::make_unique<SyntaxToken>(SyntaxKind::CloseBraceToken, _position++, ")", std::nullopt);
         }
 
+        if(this->Current() == ':')
+        {
+            return std::make_unique<SyntaxToken>(SyntaxKind::ColonToken, _position++, ":", std::nullopt);
+        }
+
         if(this->Current() == ',')
         {
             return std::make_unique<SyntaxToken>(SyntaxKind::CommaToken, _position++, ",", std::nullopt);

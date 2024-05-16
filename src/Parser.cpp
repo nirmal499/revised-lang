@@ -135,10 +135,11 @@ namespace trylang
         auto expected = this->Current()->Kind() == SyntaxKind::VarKeyword ? SyntaxKind::VarKeyword : SyntaxKind::LetKeyword;
         auto keyword = this->MatchToken(expected);
         auto identifier = this->MatchToken(SyntaxKind::IdentifierToken);
+        auto typeClause = this->ParseOptionalTypeClause();
         auto equalsToken = this->MatchToken(SyntaxKind::EqualsToken);
         auto initializer = this->ParseExpression();
 
-        return std::make_unique<VariableDeclarationSyntax>(keyword, identifier, equalsToken, std::move(initializer));
+        return std::make_unique<VariableDeclarationSyntax>(keyword, identifier, std::move(typeClause) ,equalsToken, std::move(initializer));
     }
 
     std::unique_ptr<StatementSyntax> Parser::ParseBlockStatement()
@@ -344,5 +345,23 @@ namespace trylang
         auto body = this->ParseStatement();
 
         return std::make_unique<ForStatementSyntax>(keyword, identifier, equalsToken, std::move(lowerBound), toKeyword,std::move(upperBound), std::move(body));
+    }
+
+    std::unique_ptr<TypeClauseSyntax> Parser::ParseOptionalTypeClause()
+    {
+        if(this->Current()->Kind() != SyntaxKind::ColonToken)
+        {
+            return nullptr;
+        }
+
+        return this->ParseTypeClause();
+    }
+
+    std::unique_ptr<TypeClauseSyntax> Parser::ParseTypeClause()
+    {
+        auto colonToken = this->MatchToken(SyntaxKind::ColonToken);
+        auto identifierToken = this->MatchToken(SyntaxKind::IdentifierToken);
+
+        return std::make_unique<TypeClauseSyntax>(colonToken, identifierToken);
     }
 }

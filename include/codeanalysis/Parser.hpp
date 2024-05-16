@@ -8,6 +8,7 @@
 namespace trylang
 {
     struct SyntaxToken;
+    struct TypeClauseSyntax;
     struct ExpressionSyntax;
     struct SyntaxTree;
     struct CompilationUnitSyntax;
@@ -35,6 +36,8 @@ namespace trylang
         std::unique_ptr<StatementSyntax> ParseBlockStatement();
         std::unique_ptr<StatementSyntax> ParseExpressionStatement();
         std::unique_ptr<StatementSyntax> ParseVariableDeclaration();
+        std::unique_ptr<TypeClauseSyntax> ParseOptionalTypeClause();
+        std::unique_ptr<TypeClauseSyntax> ParseTypeClause();
         std::unique_ptr<StatementSyntax> ParseIfStatement();
         std::unique_ptr<StatementSyntax> ParseElseClause();
         std::unique_ptr<StatementSyntax> ParseWhileStatement();

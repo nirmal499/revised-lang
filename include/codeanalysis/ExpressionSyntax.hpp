@@ -157,6 +157,16 @@ namespace trylang
         ~StatementSyntax() override = default;
     };
 
+    struct TypeClauseSyntax : public SyntaxNode
+    {
+        std::shared_ptr<SyntaxToken> _colonToken;
+        std::shared_ptr<SyntaxToken> _identifierToken;
+
+        TypeClauseSyntax(const std::shared_ptr<SyntaxToken>& colonToken, const std::shared_ptr<SyntaxToken>& identifierToken);
+        SyntaxKind Kind() override;
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct CompilationUnitSyntax : public SyntaxNode
     {
         std::unique_ptr<StatementSyntax> _statement;
@@ -187,7 +197,8 @@ namespace trylang
     struct VariableDeclarationSyntax : public StatementSyntax
     {
         std::shared_ptr<SyntaxToken> _keyword;
-        std::shared_ptr<SyntaxToken> _identifier;
+        std::shared_ptr<SyntaxToken> _identifier; /* identifierToken */
+        std::unique_ptr<TypeClauseSyntax> _typeClause = nullptr;
         std::shared_ptr<SyntaxToken> _equalsToken;
         std::unique_ptr<ExpressionSyntax> _expression;
 
@@ -195,6 +206,7 @@ namespace trylang
         VariableDeclarationSyntax(
                     const std::shared_ptr<SyntaxToken>& keyword,
                     const std::shared_ptr<SyntaxToken>& identifier,
+                    std::unique_ptr<TypeClauseSyntax> typeClause,
                     const std::shared_ptr<SyntaxToken>& equalsToken,
                     std::unique_ptr<ExpressionSyntax> expression
                     );

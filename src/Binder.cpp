@@ -56,17 +56,37 @@ namespace trylang
     {
         const auto& varname = syntax->_identifier->_text;
         auto isReadOnly = syntax->_keyword->Kind() == SyntaxKind::LetKeyword;
+        const char* type = this->BindTypeClause(syntax->_typeClause.get());
         auto expression = this->BindExpression(syntax->_expression.get());
+        auto variableType = type == nullptr ? expression->Type() : type;
+        auto conversionExpression = this->BindConversion(variableType, std::move(expression));
 
-        VariableSymbol variable(varname, isReadOnly, expression->Type());
-
+        VariableSymbol variable(varname, isReadOnly, variableType);
         if(!_scope->TryDeclareVariable(variable))
         {
             _buffer << "Variable '" << varname << "' already declared\n";
         }
 
-        return std::make_unique<BoundVariableDeclaration>(std::move(variable), std::move(expression));
+        return std::make_unique<BoundVariableDeclaration>(std::move(variable), std::move(conversionExpression));
     }
+
+    const char* Binder::BindTypeClause(TypeClauseSyntax *syntax)
+    {
+        if(syntax == nullptr)
+        {
+            return nullptr;
+        }
+
+        auto* type = trylang::LookUpType(syntax->_identifierToken->_text);
+        if(type == nullptr)
+        {
+            _buffer << "Type '" << syntax->_identifierToken->_text <<  "' doesn't exists.\n";
+            return nullptr;
+        }
+
+        return type->Name();
+    }
+
 
     std::unique_ptr<BoundStatementNode> Binder::BindBlockStatement(BlockStatementSyntax *syntax)
     {
@@ -596,13 +616,13 @@ namespace trylang
 
     }
 
-    std::unique_ptr<BoundExpressionNode> Binder::BindConversion(const char* type, ExpressionSyntax *syntax)
+    std::unique_ptr<BoundExpressionNode> Binder::BindConversion(const char* type, ExpressionSyntax *syntax, bool allowExplicit)
     {
         auto expression = this->BindExpression(syntax);
-        return this->BindConversion(type, std::move(expression));
+        return this->BindConversion(type, std::move(expression), allowExplicit);
     }
 
-    std::unique_ptr<BoundExpressionNode> Binder::BindConversion(const char* type, std::unique_ptr<BoundExpressionNode> expression)
+    std::unique_ptr<BoundExpressionNode> Binder::BindConversion(const char* type, std::unique_ptr<BoundExpressionNode> expression, bool allowExplicit)
     {
         /**
          * Here we check whether the given expression is of allowed to be converted to type given by the const char* type
@@ -617,6 +637,12 @@ namespace trylang
             {
                 _buffer << "Cannot convert " << expression->Type() << " to " << type << "\n";
             }
+            return std::make_unique<BoundErrorExpression>();
+        }
+
+        if(conversion->_isExplicit && !allowExplicit)
+        {
+            _buffer << "Cannot convert " << expression->Type() << " to " << type << ". An explicit conversion exists; are you missing a cast ?\n";
             return std::make_unique<BoundErrorExpression>();
         }
 
@@ -652,7 +678,7 @@ namespace trylang
         auto* type = trylang::LookUpType(syntax->_identifer->_text);
         if(syntax->_arguments.size() == 1 && type != nullptr)
         {
-            return this->BindConversion(type->_typeName, syntax->_arguments[0].get());
+            return this->BindConversion(type->_typeName, syntax->_arguments[0].get(), /* allowExplicit */ true);
         }
 
         std::vector<std::unique_ptr<BoundExpressionNode>> boundArguments;

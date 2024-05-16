@@ -33,6 +33,7 @@ namespace trylang
         GreaterThanEqualsToken,
         StringToken,
         CommaToken,
+        ColonToken,
 
         CompilationUnit,
 
@@ -93,6 +94,7 @@ namespace trylang
         {SyntaxKind::GreaterThanEqualsToken, "GreaterThanEqualsToken"},
         {SyntaxKind::StringToken, "StringToken"},
         {SyntaxKind::CommaToken, "CommaToken"},
+        {SyntaxKind::ColonToken, "ColonToken"},
 
         {SyntaxKind::CompilationUnit, "CompilationUnit"},
 
