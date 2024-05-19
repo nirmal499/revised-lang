@@ -2,21 +2,28 @@
 #include <codeanalysis/ExpressionSyntax.hpp>
 #include <codeanalysis/BoundExpressionNode.hpp>
 #include <codeanalysis/SyntaxKind.hpp>
+#include <codeanalysis/BoundScope.hpp>
 #include <variant>
 
 namespace trylang
 {
-    Evaluator::Evaluator(std::unique_ptr<BoundBlockStatement> root, variable_map_t& variables)
-        : _root(std::move(root)), _variable_map(variables)
+    Evaluator::Evaluator(std::unique_ptr<BoundProgram> program, variable_map_t &variables)
+        : _program(std::move(program)) ,_globals(variables)
     {}
+
 
     object_t Evaluator::Evaluate()
     {
+        return this->EvaluateStatement(_program->_globalScope->_statement.get());
+    }
+
+    object_t Evaluator::EvaluateStatement(BoundBlockStatement* body)
+    {
 
         std::unordered_map<LabelSymbol, int, LabelSymbolHash> labelToIndex;
-        for(auto i = 0; i < _root->_statements.size(); i++)
+        for(auto i = 0; i < body->_statements.size(); i++)
         {
-            auto* BLSnode = dynamic_cast<BoundLabelStatement*>(_root->_statements.at(i).get());
+            auto* BLSnode = dynamic_cast<BoundLabelStatement*>(body->_statements.at(i).get());
             if(BLSnode != nullptr)
             {
                 labelToIndex[BLSnode->_label] = i + 1;
@@ -24,15 +31,16 @@ namespace trylang
         }
 
         auto index= 0;
-        while(index < _root->_statements.size())
+        while(index < body->_statements.size())
         {
-            if(_root->_statements.at(index) == nullptr)
+            if(body->_statements.at(index) == nullptr)
             {
+                /* Some statement are nullptr. This is happened during lowering of while, if, for into gotos */
                 index++;
                 continue;
             }
 
-            auto* s = _root->_statements.at(index).get();
+            auto* s = body->_statements.at(index).get();
 
             auto* BVDSnode = dynamic_cast<BoundVariableDeclaration*>(s);
             if(BVDSnode != nullptr)
@@ -84,98 +92,29 @@ namespace trylang
             throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[s->Kind()]);
         }
 
-//        this->EvaluateStatement(_root.get());
-
         return _lastValue;
     }
-
-    /*
-    void Evaluator::EvaluateStatement(BoundStatementNode* node)
-    {
-
-        auto* BBSnode = dynamic_cast<BoundBlockStatement*>(node);
-        if(BBSnode != nullptr)
-        {
-            this->EvaluateBlockStatement(BBSnode);
-            return;
-        }
-
-        auto* BESnode = dynamic_cast<BoundExpressionStatement*>(node);
-        if(BESnode != nullptr)
-        {
-            this->EvaluateExpressionStatement(BESnode);
-            return;
-        }
-
-        auto* BVDSnode = dynamic_cast<BoundVariableDeclaration*>(node);
-        if(BVDSnode != nullptr)
-        {
-            this->EvaluateVariableDeclaration(BVDSnode);
-            return;
-        }
-
-        auto* BIfSnode = dynamic_cast<BoundIfStatement*>(node);
-        if(BIfSnode != nullptr)
-        {
-            this->EvaluateIfStatement(BIfSnode);
-            return;
-        }
-
-        auto* BWhileSnode = dynamic_cast<BoundWhileStatement*>(node);
-        if(BWhileSnode != nullptr)
-        {
-            this->EvaluateWhileStatement(BWhileSnode);
-            return;
-        }
-
-//        auto* BForSnode = dynamic_cast<BoundForStatement*>(node);
-//        if(BForSnode != nullptr)
-//        {
-//            this->EvaluateForStatement(BForSnode);
-//            return;
-//        }
-
-        throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
-    }
-     */
-
-    /*
-    void Evaluator::EvaluateIfStatement(BoundIfStatement *node)
-    {
-        auto condition = this->EvaluateExpression(node->_condition.get());
-        bool condition_result = std::get<bool>(condition);
-
-        if(condition_result)
-        {
-            this->EvaluateStatement(node->_statement.get());
-        }
-        else if(node->_elseStatement != nullptr)
-        {
-            this->EvaluateStatement(node->_elseStatement.get());
-        }
-    }
-     */
-
 
     void Evaluator::EvaluateVariableDeclaration(BoundVariableDeclaration *node)
     {
         auto value = this->EvaluateExpression(node->_expression.get());
-        _variable_map[node->_variable] = value;
         _lastValue = value;
-    }
 
-    /*
-    void Evaluator::EvaluateBlockStatement(BoundBlockStatement *node)
-    {
-        for(const auto& statement: node->_statements)
+        if(node->_variable->Kind() == SymbolKind::GlobalVariable)
         {
-            if(statement != nullptr)
+            _globals[node->_variable->_name] = value;
+        }
+        else
+        {
+            if(_locals.empty())
             {
-                this->EvaluateStatement(statement.get());
+                throw std::logic_error("_locals ie EMPTY");
             }
+
+            auto& locals = _locals.top();
+            locals.insert({node->_variable->_name, value}); /* Here insert is IMP */
         }
     }
-     */
 
     void Evaluator::EvaluateExpressionStatement(BoundExpressionStatement *node)
     {
@@ -193,16 +132,41 @@ namespace trylang
         auto* BVEnode = dynamic_cast<BoundVariableExpression*>(node);
         if(BVEnode != nullptr)
         {
-            /* In the binder we ensured that "BVEnode->_variable" exists in _variable_map AND *object_value will always have a value */
-            const auto& object_value = _variable_map.at(BVEnode->_variable);
-            return *object_value;
+            if(BVEnode->_variable->Kind() == SymbolKind::GlobalVariable)
+            {
+                return _globals.at(BVEnode->_variable->_name);
+            }
+            else
+            {
+                if(_locals.empty())
+                {
+                    throw std::logic_error("_locals ie EMPTY");
+                }
+                const auto& locals = _locals.top();
+                return locals.at(BVEnode->_variable->_name);
+            }
         }
 
         auto* BAEnode = dynamic_cast<BoundAssignmentExpression*>(node);
         if(BAEnode != nullptr)
         {
             auto value = this->EvaluateExpression(BAEnode->_expression.get());
-            _variable_map[BAEnode->_variable] = value;
+
+            if(BAEnode->_variable->Kind() == SymbolKind::GlobalVariable)
+            {
+                _globals[BAEnode->_variable->_name] = value;
+            }
+            else
+            {
+                if(_locals.empty())
+                {
+                    throw std::logic_error("_locals ie EMPTY");
+                }
+
+                auto& locals = _locals.top();
+                locals.at(BAEnode->_variable->_name) = value;
+            }
+
             return value;
         }
 
@@ -234,14 +198,14 @@ namespace trylang
         auto* BCEnode = dynamic_cast<BoundCallExpression*>(node);
         if(BCEnode != nullptr)
         {
-            if(BCEnode->_function._name == BUILT_IN_FUNCTIONS::MAP.at("input")._name)
+            if(BCEnode->_function->_name == BUILT_IN_FUNCTIONS::MAP.at("input")->_name)
             {
                 std::string input;
                 std::getline(std::cin, input);
 
                 return input;
             }
-            else if(BCEnode->_function._name == BUILT_IN_FUNCTIONS::MAP.at("print")._name)
+            else if(BCEnode->_function->_name == BUILT_IN_FUNCTIONS::MAP.at("print")->_name)
             {
                 auto evaluated_first_argument_value = this->EvaluateExpression(BCEnode->_arguments[0].get());
                 const auto& message = std::get<std::string>(*evaluated_first_argument_value);
@@ -249,9 +213,30 @@ namespace trylang
 
                 return std::nullopt;
             }
+
             else
             {
-                throw std::logic_error("Unexpected function " + BCEnode->_function._name); /* Logical this throw may never occur */
+                variable_map_t locals;
+                for(auto i = 0 ; i < BCEnode->_arguments.size() ; i++)
+                {
+                    auto parameter = BCEnode->_function->_parameters[i];
+                    auto value = this->EvaluateExpression(BCEnode->_arguments[i].get());
+                    locals[parameter._name] = value;
+                }
+
+
+                _locals.push(locals);
+
+                auto it = _program->_functionBodies.find(BCEnode->_function->_name);
+                if(it == _program->_functionBodies.end())
+                {
+                     throw std::logic_error("Unexpected function " + BCEnode->_function->_name); /* Logically this throw may never occur */
+                }
+                auto result = this->EvaluateStatement(it->second.second.get());
+
+                _locals.pop();
+
+                return result;
             }
         }
 
@@ -438,34 +423,4 @@ namespace trylang
 
         throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[node->Kind()]);
     }
-
-    /*
-    void Evaluator::EvaluateWhileStatement(BoundWhileStatement *node)
-    {
-        auto condition = this->EvaluateExpression(node->_condition.get());
-        bool condition_result = std::get<bool>(condition);
-        while(condition_result)
-        {
-            this->EvaluateStatement(node->_body.get());
-
-            condition = this->EvaluateExpression((node->_condition.get()));
-            condition_result = std::get<bool>(condition);
-        }
-    }
-     */
-
-//    void Evaluator::EvaluateForStatement(BoundForStatement *node)
-//    {
-//        auto lowerBound = this->EvaluateExpression(node->_lowerBound.get());
-//        auto upperBound = this->EvaluateExpression(node->_upperBound.get());
-//
-//        int lowerBound_result = std::get<int>(lowerBound);
-//        int upperBound_result = std::get<int>(upperBound);
-//
-//        for(int i = lowerBound_result; i <= upperBound_result; i++)
-//        {
-//            _variable_map[node->_variable] = i; /* It is IMP because the "this->EvaluateStatement(node->_body.get()); will be using the changed 'i' */
-//            this->EvaluateStatement(node->_body.get());
-//        }
-//    }
 }

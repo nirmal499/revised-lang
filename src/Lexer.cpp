@@ -89,6 +89,11 @@ namespace trylang
             return  SyntaxKind::ToKeyword;
         }
 
+        if(text == "function")
+        {
+            return SyntaxKind::FunctionKeyword;
+        }
+
         return SyntaxKind::IdentifierToken;
     }
 

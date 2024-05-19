@@ -13,6 +13,8 @@ namespace trylang
     struct SyntaxTree;
     struct CompilationUnitSyntax;
     struct StatementSyntax;
+    struct MemberSyntax;
+    struct ParameterSyntax;
 
     struct Parser
     {
@@ -31,6 +33,13 @@ namespace trylang
         std::shared_ptr<SyntaxToken> MatchToken(SyntaxKind kind);
 
         std::unique_ptr<CompilationUnitSyntax> ParseCompilationUnit();
+
+        std::vector<std::unique_ptr<MemberSyntax>> ParseMembers();
+        std::unique_ptr<MemberSyntax> ParseMember();
+        std::unique_ptr<MemberSyntax> ParseFunctionDeclaration();
+        std::vector<std::unique_ptr<ParameterSyntax>> ParseParameterList();
+        std::unique_ptr<ParameterSyntax> ParseParameter();
+        std::unique_ptr<MemberSyntax> ParseGlobalStatement();
 
         std::unique_ptr<StatementSyntax> ParseStatement();
         std::unique_ptr<StatementSyntax> ParseBlockStatement();

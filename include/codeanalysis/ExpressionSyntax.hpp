@@ -157,6 +157,20 @@ namespace trylang
         ~StatementSyntax() override = default;
     };
 
+    struct MemberSyntax : public SyntaxNode
+    {
+        ~MemberSyntax() override = default;
+    };
+
+    struct GlobalStatement : public MemberSyntax
+    {
+        std::unique_ptr<StatementSyntax> _statement;
+
+        explicit GlobalStatement(std::unique_ptr<StatementSyntax> statement);
+        SyntaxKind Kind() override;
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct TypeClauseSyntax : public SyntaxNode
     {
         std::shared_ptr<SyntaxToken> _colonToken;
@@ -167,12 +181,47 @@ namespace trylang
         std::vector<SyntaxNode*> GetChildren() override;
     };
 
+    struct ParameterSyntax : public SyntaxNode
+    {
+        std::shared_ptr<SyntaxToken> _identifier;
+        std::unique_ptr<TypeClauseSyntax> _type;
+
+        ParameterSyntax(const std::shared_ptr<SyntaxToken>& identifier, std::unique_ptr<TypeClauseSyntax> type);
+        SyntaxKind Kind() override;
+        std::vector<SyntaxNode*> GetChildren() override;
+
+    };
+
+    struct FunctionDeclarationSyntax : public MemberSyntax
+    {
+        std::shared_ptr<SyntaxToken> _functionKeyword;
+        std::shared_ptr<SyntaxToken> _identifier;
+        std::shared_ptr<SyntaxToken> _openParenthesisToken;
+        std::vector<std::unique_ptr<ParameterSyntax>> _parameters;
+        std::shared_ptr<SyntaxToken> _closeParenthesisToken;
+        std::unique_ptr<TypeClauseSyntax> _typeClause;
+        std::unique_ptr<StatementSyntax> _body;
+
+        FunctionDeclarationSyntax(
+                const std::shared_ptr<SyntaxToken>& functionKeyword,
+                const std::shared_ptr<SyntaxToken>& identifier,
+                const std::shared_ptr<SyntaxToken>& openParenthesisToken,
+                std::vector<std::unique_ptr<ParameterSyntax>> parameters,
+                const std::shared_ptr<SyntaxToken>& closeParenthesisToken,
+                std::unique_ptr<TypeClauseSyntax> typeClause,
+                std::unique_ptr<StatementSyntax> body
+        );
+
+        SyntaxKind Kind() override;
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct CompilationUnitSyntax : public SyntaxNode
     {
-        std::unique_ptr<StatementSyntax> _statement;
+        std::vector<std::unique_ptr<MemberSyntax>> _members; /* This includes both GlobalStatementSyntax and FunctionDeclarationSyntax */
         std::shared_ptr<SyntaxToken> _endOfFileToken;
 
-        CompilationUnitSyntax(std::unique_ptr<StatementSyntax> statement, const std::shared_ptr<SyntaxToken>& endOfFileToken);
+        CompilationUnitSyntax(std::vector<std::unique_ptr<MemberSyntax>> members, const std::shared_ptr<SyntaxToken>& endOfFileToken);
 
         SyntaxKind Kind() override;
         std::vector<SyntaxNode*> GetChildren() override;
@@ -303,7 +352,7 @@ namespace trylang
 
     struct CallExpressionSyntax: public ExpressionSyntax
     {
-        std::shared_ptr<SyntaxToken> _identifer; /* name of the function during calling function */
+        std::shared_ptr<SyntaxToken> _identifier; /* name of the function during calling function */
         std::shared_ptr<SyntaxToken> _openParenthesis;
         std::shared_ptr<SyntaxToken> _closeParenthesis;
         std::vector<std::unique_ptr<ExpressionSyntax>> _arguments;

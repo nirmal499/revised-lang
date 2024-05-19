@@ -155,8 +155,8 @@ namespace trylang
         return {_expression.get()};
     }
 
-    BoundVariableDeclaration::BoundVariableDeclaration(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression)
-    : _variable(std::move(variable)), _expression(std::move(expression))
+    BoundVariableDeclaration::BoundVariableDeclaration(const std::shared_ptr<VariableSymbol>& variable, std::unique_ptr<BoundExpressionNode> expression)
+    : _variable(variable), _expression(std::move(expression))
     {}
 
 
@@ -208,8 +208,8 @@ namespace trylang
         return {_left.get(), _op, _right.get()};
     }
 
-    BoundVariableExpression::BoundVariableExpression(VariableSymbol variable)
-        : _variable(std::move(variable))
+    BoundVariableExpression::BoundVariableExpression(const std::shared_ptr<VariableSymbol>& variable)
+        : _variable(variable)
     {}
 
     BoundNodeKind BoundVariableExpression::Kind()
@@ -219,7 +219,7 @@ namespace trylang
 
     const char* BoundVariableExpression::Type()
     {
-        return _variable._type;
+        return _variable->_type;
     }
 
     std::vector<BoundNode *> BoundVariableExpression::GetChildren()
@@ -227,8 +227,8 @@ namespace trylang
         return {nullptr};
     }
 
-    BoundAssignmentExpression::BoundAssignmentExpression(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression)
-        : _variable(std::move(variable)), _expression(std::move(expression))
+    BoundAssignmentExpression::BoundAssignmentExpression(const std::shared_ptr<VariableSymbol>& variable, std::unique_ptr<BoundExpressionNode> expression)
+        : _variable(variable), _expression(std::move(expression))
     {}
 
     const char* BoundAssignmentExpression::Type()
@@ -288,9 +288,9 @@ namespace trylang
         return {_condition.get(), _body.get()};
     }
 
-    BoundForStatement::BoundForStatement(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> lowerBound,
+    BoundForStatement::BoundForStatement(const std::shared_ptr<VariableSymbol>& variable, std::unique_ptr<BoundExpressionNode> lowerBound,
                                          std::unique_ptr<BoundExpressionNode> upperBound,
-                                         std::unique_ptr<BoundStatementNode> body) : _variable(std::move(variable)), _lowerBound(std::move(lowerBound)), _upperBound(std::move(upperBound)), _body(std::move(body))
+                                         std::unique_ptr<BoundStatementNode> body) : _variable(variable), _lowerBound(std::move(lowerBound)), _upperBound(std::move(upperBound)), _body(std::move(body))
     {
 
     }
@@ -367,15 +367,15 @@ namespace trylang
         return {nullptr};
     }
 
-    BoundCallExpression::BoundCallExpression(FunctionSymbol function,
-                                             std::vector<std::unique_ptr<BoundExpressionNode>> arguments) : _function(std::move(function)), _arguments(std::move(arguments))
+    BoundCallExpression::BoundCallExpression(const std::shared_ptr<FunctionSymbol>& function,
+                                             std::vector<std::unique_ptr<BoundExpressionNode>> arguments) : _function(function), _arguments(std::move(arguments))
     {
 
     }
 
     const char *BoundCallExpression::Type()
     {
-        return _function._type;
+        return _function->_type;
     }
 
     BoundNodeKind BoundCallExpression::Kind()

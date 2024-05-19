@@ -27,8 +27,8 @@ namespace trylang
 
     }
 
-    CompilationUnitSyntax::CompilationUnitSyntax(std::unique_ptr<StatementSyntax> statement, const std::shared_ptr<SyntaxToken>& endOfFileToken)
-        : _statement(std::move(statement)), _endOfFileToken(endOfFileToken)
+    CompilationUnitSyntax::CompilationUnitSyntax(std::vector<std::unique_ptr<MemberSyntax>> members, const std::shared_ptr<SyntaxToken>& endOfFileToken)
+        : _members(std::move(members)), _endOfFileToken(endOfFileToken)
     {}
 
 
@@ -39,7 +39,13 @@ namespace trylang
 
     std::vector<SyntaxNode*> CompilationUnitSyntax::GetChildren()
     {
-        return {_statement.get()};
+        std::vector<SyntaxNode*> children(_members.size());
+        for(const auto& member: _members)
+        {
+            children.push_back(member.get());
+        }
+
+        return children; //RVO
     }
 
     BlockStatementSyntax::BlockStatementSyntax(
@@ -296,7 +302,7 @@ namespace trylang
     std::vector<SyntaxNode *> CallExpressionSyntax::GetChildren()
     {
         std::vector<SyntaxNode*> children(_arguments.size() + 3);
-        children.push_back(_identifer.get());
+        children.push_back(_identifier.get());
         children.push_back(_openParenthesis.get());
 
         for(const auto& argument: _arguments)
@@ -312,7 +318,7 @@ namespace trylang
     CallExpressionSyntax::CallExpressionSyntax(const std::shared_ptr<SyntaxToken> &identifier,
                                                const std::shared_ptr<SyntaxToken>& openParenthesis,
                                                std::vector<std::unique_ptr<ExpressionSyntax>> arguments,
-                                               const std::shared_ptr<SyntaxToken>& closeParenthesis) : _identifer(identifier), _openParenthesis(openParenthesis), _arguments(std::move(arguments)), _closeParenthesis(closeParenthesis)
+                                               const std::shared_ptr<SyntaxToken>& closeParenthesis) : _identifier(identifier), _openParenthesis(openParenthesis), _arguments(std::move(arguments)), _closeParenthesis(closeParenthesis)
     {
 
     }
@@ -331,5 +337,69 @@ namespace trylang
     std::vector<SyntaxNode *> TypeClauseSyntax::GetChildren()
     {
         return {_colonToken.get(), _identifierToken.get()};
+    }
+
+    GlobalStatement::GlobalStatement(std::unique_ptr<StatementSyntax> statement) : _statement(std::move(statement))
+    {
+
+    }
+
+    SyntaxKind GlobalStatement::Kind()
+    {
+        return SyntaxKind::GlobalStatement;
+    }
+
+    std::vector<SyntaxNode *> GlobalStatement::GetChildren()
+    {
+        return {_statement.get()};
+    }
+
+    ParameterSyntax::ParameterSyntax(const std::shared_ptr<SyntaxToken> &identifier,
+                                     std::unique_ptr<TypeClauseSyntax> type) : _identifier(identifier), _type(std::move(type))
+    {
+
+    }
+
+    SyntaxKind ParameterSyntax::Kind()
+    {
+        return SyntaxKind::Parameter;
+    }
+
+    std::vector<SyntaxNode *> ParameterSyntax::GetChildren()
+    {
+        return {_identifier.get(), _type.get()};
+    }
+
+    FunctionDeclarationSyntax::FunctionDeclarationSyntax(const std::shared_ptr<SyntaxToken> &functionKeyword,
+                                                         const std::shared_ptr<SyntaxToken> &identifier,
+                                                         const std::shared_ptr<SyntaxToken> &openParenthesisToken,
+                                                         std::vector<std::unique_ptr<ParameterSyntax>> parameters,
+                                                         const std::shared_ptr<SyntaxToken> &closeParenthesisToken,
+                                                         std::unique_ptr<TypeClauseSyntax> typeClause,
+                                                         std::unique_ptr<StatementSyntax> body) : _functionKeyword(functionKeyword), _identifier(identifier), _openParenthesisToken(openParenthesisToken), _parameters(std::move(parameters)), _closeParenthesisToken(closeParenthesisToken), _typeClause(std::move(typeClause)), _body(std::move(body))
+    {
+
+    }
+
+    SyntaxKind FunctionDeclarationSyntax::Kind()
+    {
+        return SyntaxKind::FunctionDeclaration;
+    }
+
+    std::vector<SyntaxNode *> FunctionDeclarationSyntax::GetChildren()
+    {
+        std::vector<SyntaxNode*> children(5 + _parameters.size());
+        children.push_back(_functionKeyword.get());
+        children.push_back(_identifier.get());
+        children.push_back(_openParenthesisToken.get());
+        for(const auto& param: _parameters)
+        {
+            children.push_back(param.get());
+        }
+        children.push_back(_closeParenthesisToken.get());
+        children.push_back(_typeClause.get());
+        children.push_back(_body.get());
+
+        return children; // RVO
     }
 }

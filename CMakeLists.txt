@@ -20,6 +20,7 @@ add_executable(${EXECUTABLE_NAME}
     src/ExpressionSyntax.cpp
     src/Binder.cpp
     src/BoundExpressionNode.cpp
+    src/Symbol.cpp
 
 )
 

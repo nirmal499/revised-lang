@@ -9,7 +9,7 @@
 #include <variant>
 #include <iostream>
 #include <typeinfo>
-#include <codeanalysis/VariableSymbol.hpp>
+#include <codeanalysis/Symbol.hpp>
 
 namespace trylang
 {
@@ -154,12 +154,12 @@ namespace trylang
 
     struct BoundForStatement : public BoundStatementNode
     {
-        VariableSymbol _variable;
+        std::shared_ptr<VariableSymbol> _variable;
         std::unique_ptr<BoundExpressionNode>_lowerBound;
         std::unique_ptr<BoundExpressionNode> _upperBound;
         std::unique_ptr<BoundStatementNode> _body;
 
-        BoundForStatement(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> lowerBound, std::unique_ptr<BoundExpressionNode> upperBound, std::unique_ptr<BoundStatementNode> body);
+        BoundForStatement(const std::shared_ptr<VariableSymbol>& variable, std::unique_ptr<BoundExpressionNode> lowerBound, std::unique_ptr<BoundExpressionNode> upperBound, std::unique_ptr<BoundStatementNode> body);
 
         BoundNodeKind Kind() override;
         std::vector<BoundNode*> GetChildren() override;
@@ -167,10 +167,10 @@ namespace trylang
 
     struct BoundVariableDeclaration : public BoundStatementNode
     {
-        VariableSymbol _variable;
+        std::shared_ptr<VariableSymbol> _variable;
         std::unique_ptr<BoundExpressionNode> _expression;
 
-        BoundVariableDeclaration(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression);
+        BoundVariableDeclaration(const std::shared_ptr<VariableSymbol>& variable, std::unique_ptr<BoundExpressionNode> expression);
 
         BoundNodeKind Kind() override;
         std::vector<BoundNode*> GetChildren() override;
@@ -178,9 +178,9 @@ namespace trylang
 
     struct BoundVariableExpression : public BoundExpressionNode
     {
-        VariableSymbol _variable;
+        std::shared_ptr<VariableSymbol> _variable;
 
-        explicit BoundVariableExpression(VariableSymbol variable);
+        explicit BoundVariableExpression(const std::shared_ptr<VariableSymbol>& variable);
 
         const char* Type() override;
         BoundNodeKind Kind() override;
@@ -200,10 +200,10 @@ namespace trylang
     struct BoundCallExpression : public BoundExpressionNode
     {
 
-        FunctionSymbol _function;
+        std::shared_ptr<FunctionSymbol> _function;
         std::vector<std::unique_ptr<BoundExpressionNode>> _arguments;
 
-        BoundCallExpression(FunctionSymbol function, std::vector<std::unique_ptr<BoundExpressionNode>> arguments);
+        BoundCallExpression(const std::shared_ptr<FunctionSymbol>& function, std::vector<std::unique_ptr<BoundExpressionNode>> arguments);
 
         const char* Type() override;
         BoundNodeKind Kind() override;
@@ -224,9 +224,9 @@ namespace trylang
 
     struct BoundAssignmentExpression : public BoundExpressionNode
     {
-        VariableSymbol _variable;
+        std::shared_ptr<VariableSymbol> _variable;
         std::unique_ptr<BoundExpressionNode> _expression;
-        BoundAssignmentExpression(VariableSymbol variable, std::unique_ptr<BoundExpressionNode> expression);
+        BoundAssignmentExpression(const std::shared_ptr<VariableSymbol>& variable, std::unique_ptr<BoundExpressionNode> expression);
 
         const char* Type() override;
         BoundNodeKind Kind() override;

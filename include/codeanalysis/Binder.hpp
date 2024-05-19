@@ -4,13 +4,16 @@
 #include <sstream>
 #include <optional>
 #include <codeanalysis/SyntaxKind.hpp>
-#include <codeanalysis/VariableSymbol.hpp>
+#include <codeanalysis/Symbol.hpp>
 
 namespace trylang
 {
+    struct SyntaxToken;
+
     struct ExpressionSyntax;
     struct StatementSyntax;
     struct TypeClauseSyntax;
+    struct FunctionDeclarationSyntax;
 
     struct LiteralExpressionSyntax;
     struct UnaryExpressionSyntax;
@@ -36,16 +39,20 @@ namespace trylang
 
     struct BoundScope;
     struct BoundGlobalScope;
+    struct BoundProgram;
 
     struct Binder
     {
         std::shared_ptr<BoundScope> _scope = nullptr;
         bool _turnOnScopingInBlockStatement = true;
+        FunctionSymbol* _function = nullptr;
 
         int _labelCount = 0;
+        std::shared_ptr<BoundScope> CreateScope(const std::shared_ptr<BoundGlobalScope>& globalScope);
 
-        explicit Binder(const std::shared_ptr<BoundScope>& parent);
+        explicit Binder(const std::shared_ptr<BoundScope>& parent, FunctionSymbol* _function);
         static std::shared_ptr<BoundGlobalScope> BindGlobalScope(CompilationUnitSyntax* syntax);
+        static std::unique_ptr<BoundProgram> BindProgram(const std::shared_ptr<BoundGlobalScope>& globalScope);
 
         std::stringstream _buffer;
 
@@ -56,9 +63,11 @@ namespace trylang
         std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax, const char* targetType);
         std::unique_ptr<BoundExpressionNode> BindConversion(const char* type, ExpressionSyntax *syntax, bool allowExplicit = false);
         std::unique_ptr<BoundExpressionNode> BindConversion(const char* type, std::unique_ptr<BoundExpressionNode> expression, bool allowExplicit = false);
+        std::shared_ptr<VariableSymbol> BindVariable(std::string varName, bool isReadOnly, const char* type);
 
         std::unique_ptr<BoundStatementNode> BindStatement(StatementSyntax* syntax);
         std::unique_ptr<BoundStatementNode> BindVariableDeclaration(VariableDeclarationSyntax* syntax);
+        void BindFunctionDeclaration(FunctionDeclarationSyntax* syntax);
         const char* BindTypeClause(TypeClauseSyntax* syntax);
 
         std::unique_ptr<BoundStatementNode> BindBlockStatement(BlockStatementSyntax *syntax);

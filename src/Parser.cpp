@@ -72,12 +72,80 @@ namespace trylang
 
     std::unique_ptr<CompilationUnitSyntax> Parser::ParseCompilationUnit()
     {
-        auto statement = this->ParseStatement();
+        auto members = this->ParseMembers();
 
         /* After Parsing we are confirming that the end token is SyntaxKind::EndOfFileToken token*/
         std::shared_ptr<SyntaxToken> endOfFileToken = this->MatchToken(SyntaxKind::EndOfFileToken);
 
-        return std::make_unique<CompilationUnitSyntax>(std::move(statement), endOfFileToken);
+        return std::make_unique<CompilationUnitSyntax>(std::move(members), endOfFileToken);
+    }
+
+    std::vector<std::unique_ptr<MemberSyntax>> Parser::ParseMembers()
+    {
+        std::vector<std::unique_ptr<MemberSyntax>> members;
+
+        while(this->Current()->Kind() != SyntaxKind::EndOfFileToken)
+        {
+            auto member = this->ParseMember();
+            members.emplace_back(std::move(member));
+        }
+
+        return members;
+    }
+
+    std::unique_ptr<MemberSyntax> Parser::ParseMember()
+    {
+        if(this->Current()->Kind() == SyntaxKind::FunctionKeyword)
+        {
+            return this->ParseFunctionDeclaration();
+        }
+
+        return this->ParseGlobalStatement();
+    }
+
+    std::unique_ptr<MemberSyntax> Parser::ParseFunctionDeclaration()
+    {
+        auto functionKeyword = this->MatchToken(SyntaxKind::FunctionKeyword);
+        auto identifier = this->MatchToken(SyntaxKind::IdentifierToken);
+        auto openParenthesis = this->MatchToken(SyntaxKind::OpenParenthesisToken);
+        auto parameters = this->ParseParameterList();
+        auto closeParenthesis = this->MatchToken(SyntaxKind::CloseParenthesisToken);
+        auto typeClause = this->ParseOptionalTypeClause(); /* return type of the function */
+        auto body = this->ParseBlockStatement();
+
+        return std::make_unique<FunctionDeclarationSyntax>(functionKeyword, identifier, openParenthesis, std::move(parameters), closeParenthesis, std::move(typeClause), std::move(body));
+    }
+
+    std::vector<std::unique_ptr<ParameterSyntax>> Parser::ParseParameterList()
+    {
+        std::vector<std::unique_ptr<ParameterSyntax>> parameters;
+
+        while(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken && this->Current()->Kind() != SyntaxKind::EndOfFileToken)
+        {
+            auto parameter = this->ParseParameter();
+            parameters.emplace_back(std::move(parameter));
+
+            if(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken)
+            {
+                auto commaToken = this->MatchToken(SyntaxKind::CommaToken);
+                // parameters.emplace_back(std::move(commaToken));
+            }
+        }
+
+        return parameters; // RVO
+    }
+
+    std::unique_ptr<ParameterSyntax> Parser::ParseParameter()
+    {
+        auto identifier = this->MatchToken(SyntaxKind::IdentifierToken);
+        auto typeClause = this->ParseTypeClause(); /* typeClause is not optional */
+        return std::make_unique<ParameterSyntax>(identifier, std::move(typeClause));
+    }
+
+    std::unique_ptr<MemberSyntax> Parser::ParseGlobalStatement()
+    {
+        auto statement = this->ParseStatement();
+        return std::make_unique<GlobalStatement>(std::move(statement));
     }
 
     std::unique_ptr<StatementSyntax> Parser::ParseStatement()
@@ -287,18 +355,15 @@ namespace trylang
                 auto openParenthesis = this->MatchToken(SyntaxKind::OpenParenthesisToken);
 
                 std::vector<std::unique_ptr<ExpressionSyntax>> arguments;
-                if(this->Current()->Kind() != SyntaxKind::CloseBraceToken)
+                while(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken && this->Current()->Kind() != SyntaxKind::EndOfFileToken)
                 {
-                    while(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken && this->Current()->Kind() != SyntaxKind::EndOfFileToken)
-                    {
-                        auto expression = this->ParseExpression();
-                        arguments.emplace_back(std::move(expression));
+                    auto expression = this->ParseExpression();
+                    arguments.emplace_back(std::move(expression));
 
-                        if(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken)
-                        {
-                            auto commaToken = this->MatchToken(SyntaxKind::CommaToken);
-//                            arguments.emplace_back(std::move(commaToken));
-                        }
+                    if(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken)
+                    {
+                        auto commaToken = this->MatchToken(SyntaxKind::CommaToken);
+                        // arguments.emplace_back(std::move(commaToken));
                     }
                 }
                 auto closeParenthesis = this->MatchToken(SyntaxKind::CloseParenthesisToken);

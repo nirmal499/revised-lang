@@ -3,12 +3,15 @@
 #include <memory>
 #include <codeanalysis/Types.hpp>
 #include <unordered_map>
-#include <codeanalysis/VariableSymbol.hpp>
+#include <codeanalysis/Symbol.hpp>
+#include <stack>
 
 namespace trylang
 {
     struct BoundExpressionNode;
     struct BoundStatementNode;
+
+    struct BoundProgram;
 
     struct BoundBlockStatement;
     struct BoundExpressionStatement;
@@ -20,13 +23,17 @@ namespace trylang
     struct Evaluator
     {
 
-        variable_map_t& _variable_map;
-        std::unique_ptr<BoundBlockStatement> _root;
+        variable_map_t& _globals;
+        std::stack<variable_map_t> _locals;
+
+        std::unique_ptr<BoundProgram> _program;
 
         object_t _lastValue;
 
-        explicit Evaluator(std::unique_ptr<BoundBlockStatement> root, variable_map_t& variables);
+        Evaluator(std::unique_ptr<BoundProgram> program,variable_map_t& variables);
+
         object_t Evaluate();
+        object_t EvaluateStatement(BoundBlockStatement* body);
 
         object_t EvaluateExpression(BoundExpressionNode* node);
 //        void EvaluateStatement(BoundStatementNode* node);

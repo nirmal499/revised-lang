@@ -5,11 +5,14 @@
 #include <codeanalysis/SyntaxTree.hpp>
 #include <codeanalysis/ExpressionSyntax.hpp>
 #include <codeanalysis/Binder.hpp>
-#include <codeanalysis/VariableSymbol.hpp>
 #include <codeanalysis/BoundScope.hpp>
+#include <fstream>
+
+#define FILE_PATH "/home/nbaskey/Desktop/nirmal/projects/compiler/source_file/"
 
 void Run1();
 void Run2();
+void Run3();
 
 trylang::variable_map_t g_variable_map;
 
@@ -18,7 +21,8 @@ int main()
     try
     {
         // Run1();
-        Run2();
+        // Run2();
+        Run3();
     }
     catch(const std::exception& e)
     {
@@ -121,9 +125,11 @@ void Run2()
 
         std::unique_ptr<trylang::SyntaxTree> syntaxTree = trylang::SyntaxTree::Parse(std::move(text));
         std::shared_ptr<trylang::BoundGlobalScope> globalScope = trylang::Binder::BindGlobalScope(syntaxTree->_root.get());
+        auto program = trylang::Binder::BindProgram(globalScope);
 
         errors.append(syntaxTree->_errors);
         errors.append(globalScope->_errors);
+        errors.append(program->_errors);
 
         if(showast)
         {
@@ -143,7 +149,8 @@ void Run2()
         }
         else
         {
-            trylang::Evaluator evaluator(std::move(globalScope->_statement), g_variable_map);
+
+            trylang::Evaluator evaluator(std::move(program), g_variable_map);
             trylang::object_t result = evaluator.Evaluate();
             if(result.has_value())
             {
@@ -154,5 +161,43 @@ void Run2()
 
         errors.clear();
 
+    }
+}
+
+void Run3()
+{
+    std::string errors;
+
+    std::ifstream infile(FILE_PATH "main.txt");
+    if(!infile.is_open())
+    {
+        throw std::runtime_error("Not able to open file");
+    }
+
+    std::stringstream buffer;
+    buffer << infile.rdbuf();
+
+    std::unique_ptr<trylang::SyntaxTree> syntaxTree = trylang::SyntaxTree::Parse(buffer.str());
+    std::shared_ptr<trylang::BoundGlobalScope> globalScope = trylang::Binder::BindGlobalScope(syntaxTree->_root.get());
+    auto program = trylang::Binder::BindProgram(globalScope);
+
+    errors.append(syntaxTree->_errors);
+    errors.append(globalScope->_errors);
+    errors.append(program->_errors);
+
+    if(!errors.empty())
+    {
+        std::cout << "\n" << errors << "\n";
+    }
+    else
+    {
+
+        trylang::Evaluator evaluator(std::move(program), g_variable_map);
+        trylang::object_t result = evaluator.Evaluate();
+        if(result.has_value())
+        {
+            std::visit(trylang::PrintVisitor{}, *result);
+        }
+        std::cout << "\n";
     }
 }

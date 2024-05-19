@@ -8,7 +8,7 @@
 #include <array>
 #include <codeanalysis/Types.hpp>
 #include <stdexcept>
-#include <codeanalysis/VariableSymbol.hpp>
+#include <codeanalysis/Symbol.hpp>
 
 namespace trylang
 {
