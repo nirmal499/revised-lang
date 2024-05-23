@@ -19,8 +19,10 @@ add_executable(${EXECUTABLE_NAME}
     src/Parser.cpp
     src/ExpressionSyntax.cpp
     src/Binder.cpp
+    src/BoundNodePrinter.cpp
     src/BoundExpressionNode.cpp
     src/Symbol.cpp
+
 
 )
 

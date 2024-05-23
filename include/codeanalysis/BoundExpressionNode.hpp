@@ -146,7 +146,9 @@ namespace trylang
         std::unique_ptr<BoundExpressionNode> _condition;
         std::unique_ptr<BoundStatementNode> _body;
 
-        BoundWhileStatement(std::unique_ptr<BoundExpressionNode> condition, std::unique_ptr<BoundStatementNode> body);
+        std::pair<LabelSymbol, LabelSymbol> _loopLabel; /* break and continue Label */
+
+        BoundWhileStatement(std::unique_ptr<BoundExpressionNode> condition, std::unique_ptr<BoundStatementNode> body, std::pair<LabelSymbol, LabelSymbol> loopLabel);
 
         BoundNodeKind Kind() override;
         std::vector<BoundNode*> GetChildren() override;
@@ -159,7 +161,15 @@ namespace trylang
         std::unique_ptr<BoundExpressionNode> _upperBound;
         std::unique_ptr<BoundStatementNode> _body;
 
-        BoundForStatement(const std::shared_ptr<VariableSymbol>& variable, std::unique_ptr<BoundExpressionNode> lowerBound, std::unique_ptr<BoundExpressionNode> upperBound, std::unique_ptr<BoundStatementNode> body);
+        std::pair<LabelSymbol, LabelSymbol> _loopLabel; /* break and continue Label */
+
+        BoundForStatement(
+                const std::shared_ptr<VariableSymbol>& variable,
+                std::unique_ptr<BoundExpressionNode> lowerBound,
+                std::unique_ptr<BoundExpressionNode> upperBound,
+                std::unique_ptr<BoundStatementNode> body,
+                std::pair<LabelSymbol, LabelSymbol> loopLabel
+                );
 
         BoundNodeKind Kind() override;
         std::vector<BoundNode*> GetChildren() override;

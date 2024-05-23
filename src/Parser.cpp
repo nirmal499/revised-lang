@@ -170,6 +170,14 @@ namespace trylang
         {
             return this->ParseForStatement();
         }
+        else if(this->Current()->Kind() == SyntaxKind::BreakKeyword)
+        {
+            return this->ParseBreakStatement();
+        }
+        else if(this->Current()->Kind() == SyntaxKind::ContinueKeyword)
+        {
+            return this->ParseContinueStatement();
+        }
 
         return this->ParseExpressionStatement();
     }
@@ -428,5 +436,17 @@ namespace trylang
         auto identifierToken = this->MatchToken(SyntaxKind::IdentifierToken);
 
         return std::make_unique<TypeClauseSyntax>(colonToken, identifierToken);
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseBreakStatement()
+    {
+        auto keyword = this->MatchToken(SyntaxKind::BreakKeyword);
+        return std::make_unique<BreakStatementSyntax>(keyword);
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseContinueStatement()
+    {
+        auto keyword = this->MatchToken(SyntaxKind::ContinueKeyword);
+        return std::make_unique<ContinueStatementSyntax>(keyword);
     }
 }

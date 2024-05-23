@@ -5,6 +5,7 @@
 #include <optional>
 #include <codeanalysis/SyntaxKind.hpp>
 #include <codeanalysis/Symbol.hpp>
+#include <stack>
 
 namespace trylang
 {
@@ -29,6 +30,8 @@ namespace trylang
     struct IfStatementSyntax;
     struct WhileStatementSyntax;
     struct ForStatementSyntax;
+    struct BreakStatementSyntax;
+    struct ContinueStatementSyntax;
 
     struct BoundExpressionNode;
     struct BoundStatementNode;
@@ -47,14 +50,16 @@ namespace trylang
         bool _turnOnScopingInBlockStatement = true;
         FunctionSymbol* _function = nullptr;
 
-        int _labelCount = 0;
-        std::shared_ptr<BoundScope> CreateScope(const std::shared_ptr<BoundGlobalScope>& globalScope);
+        int _labelCountForIfStatement = 0;
+        int _labelCountForBreakAndContinueStatement = 0;
 
         explicit Binder(const std::shared_ptr<BoundScope>& parent, FunctionSymbol* _function);
         static std::shared_ptr<BoundGlobalScope> BindGlobalScope(CompilationUnitSyntax* syntax);
-        static std::unique_ptr<BoundProgram> BindProgram(const std::shared_ptr<BoundGlobalScope>& globalScope);
+        static std::unique_ptr<BoundProgram> BindProgram(CompilationUnitSyntax* syntaxTree);
 
         std::stringstream _buffer;
+
+        std::stack<std::pair<LabelSymbol, LabelSymbol>> _loopStack; /* One for BreakLabel and other for ContinueLabel */
 
         std::string Errors();
 
@@ -75,6 +80,10 @@ namespace trylang
         std::unique_ptr<BoundStatementNode> BindIfStatement(IfStatementSyntax *syntax);
         std::unique_ptr<BoundStatementNode> BindWhileStatement(WhileStatementSyntax *syntax);
         std::unique_ptr<BoundStatementNode> BindForStatement(ForStatementSyntax *syntax);
+        std::unique_ptr<BoundStatementNode> BindBreakStatement(BreakStatementSyntax *syntax);
+        std::unique_ptr<BoundStatementNode> BindContinueStatement(ContinueStatementSyntax *syntax);
+        std::unique_ptr<BoundStatementNode> BindErrorStatement();
+        std::pair<std::unique_ptr<BoundStatementNode>, std::pair<LabelSymbol, LabelSymbol>> BindLoopBody(StatementSyntax* body);
 
         std::unique_ptr<BoundExpressionNode> BindParenthesizedExpression(ParenthesizedExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindNameExpression(NameExpressionSyntax* syntax);

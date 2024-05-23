@@ -94,6 +94,16 @@ namespace trylang
             return SyntaxKind::FunctionKeyword;
         }
 
+        if(text == "break")
+        {
+            return SyntaxKind::BreakKeyword;
+        }
+
+        if(text == "continue")
+        {
+            return SyntaxKind::ContinueKeyword;
+        }
+
         return SyntaxKind::IdentifierToken;
     }
 

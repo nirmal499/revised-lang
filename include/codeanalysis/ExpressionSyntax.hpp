@@ -324,6 +324,28 @@ namespace trylang
         std::vector<SyntaxNode*> GetChildren() override;
     };
 
+    struct BreakStatementSyntax : public StatementSyntax
+    {
+        std::shared_ptr<SyntaxToken> _breakKeyword;
+
+        explicit BreakStatementSyntax(const std::shared_ptr<SyntaxToken>& breakKeyword);
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
+    struct ContinueStatementSyntax : public StatementSyntax
+    {
+        std::shared_ptr<SyntaxToken> _continueKeyword;
+
+        explicit ContinueStatementSyntax(const std::shared_ptr<SyntaxToken>& continueKeyword);
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct ForStatementSyntax : public StatementSyntax
     {
         std::shared_ptr<SyntaxToken> _keyword;

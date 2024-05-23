@@ -6,6 +6,7 @@
 #include <codeanalysis/ExpressionSyntax.hpp>
 #include <codeanalysis/Binder.hpp>
 #include <codeanalysis/BoundScope.hpp>
+#include <codeanalysis/BoundNodePrinter.hpp>
 #include <fstream>
 
 #define FILE_PATH "/home/nbaskey/Desktop/nirmal/projects/compiler/source_file/"
@@ -21,8 +22,8 @@ int main()
     try
     {
         // Run1();
-        // Run2();
-        Run3();
+        Run2();
+        // Run3();
     }
     catch(const std::exception& e)
     {
@@ -66,6 +67,7 @@ void Run2()
     std::string line;
     bool showast = false;
     bool showprogram = false;
+    bool showcompact = false;
     std::string errors;
 
     while(true)
@@ -118,29 +120,39 @@ void Run2()
             std::cout << (showprogram ? "Showing Program Tree\n": "Not Showing Program Tree\n");
             continue;
         }
+        else if(line == "#showcompact")
+        {
+            showcompact = !showcompact;
+            std::cout << (showcompact ? "Showing Compact Version\n": "Not Showing Compact Version\n");
+            continue;
+        }
         else if(line == "#exit")
         {
             break;
         }
 
         std::unique_ptr<trylang::SyntaxTree> syntaxTree = trylang::SyntaxTree::Parse(std::move(text));
-        std::shared_ptr<trylang::BoundGlobalScope> globalScope = trylang::Binder::BindGlobalScope(syntaxTree->_root.get());
-        auto program = trylang::Binder::BindProgram(globalScope);
+        auto program = trylang::Binder::BindProgram(syntaxTree->_root.get());
 
         errors.append(syntaxTree->_errors);
-        errors.append(globalScope->_errors);
         errors.append(program->_errors);
 
         if(showast)
         {
             trylang::PrettyPrintSyntaxNodes(syntaxTree->_root.get());
+            std::cout << "\n";
         }
-
-        std::cout << "\n";
 
         if(showprogram)
         {
-            trylang::PrettyPrintBoundNodes((globalScope->_statement.get()));
+            trylang::PrettyPrintBoundNodes((program->_globalScope->_statement.get()));
+            std::cout << "\n";
+        }
+
+        if(showcompact)
+        {
+            trylang::NodePrinter::Write(program->_globalScope->_statement.get());
+            std::cout << "\n";
         }
 
         if(!errors.empty())
@@ -178,11 +190,9 @@ void Run3()
     buffer << infile.rdbuf();
 
     std::unique_ptr<trylang::SyntaxTree> syntaxTree = trylang::SyntaxTree::Parse(buffer.str());
-    std::shared_ptr<trylang::BoundGlobalScope> globalScope = trylang::Binder::BindGlobalScope(syntaxTree->_root.get());
-    auto program = trylang::Binder::BindProgram(globalScope);
+    auto program = trylang::Binder::BindProgram(syntaxTree->_root.get());
 
     errors.append(syntaxTree->_errors);
-    errors.append(globalScope->_errors);
     errors.append(program->_errors);
 
     if(!errors.empty())
@@ -191,7 +201,6 @@ void Run3()
     }
     else
     {
-
         trylang::Evaluator evaluator(std::move(program), g_variable_map);
         trylang::object_t result = evaluator.Evaluate();
         if(result.has_value())

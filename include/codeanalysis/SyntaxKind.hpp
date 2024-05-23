@@ -48,6 +48,8 @@ namespace trylang
         ForKeyword,
         ToKeyword,
         FunctionKeyword,
+        BreakKeyword,
+        ContinueKeyword,
 
         /* Expressions */
         LiteralExpression,
@@ -66,6 +68,8 @@ namespace trylang
         ElseStatement,
         WhileStatement,
         ForStatement,
+        BreakStatement,
+        ContinueStatement,
 
         GlobalStatement,
         Parameter,
@@ -114,6 +118,8 @@ namespace trylang
         {SyntaxKind::ForKeyword, "ForKeyword"},
         {SyntaxKind::ToKeyword, "ToKeyword"},
         {SyntaxKind::FunctionKeyword, "FunctionKeyword"},
+        {SyntaxKind::BreakKeyword, "BreakKeyword"},
+        {SyntaxKind::ContinueKeyword, "ContinueKeyword"},
 
         {SyntaxKind::LiteralExpression, "LiteralExpression"},
         {SyntaxKind::BinaryExpression, "BinaryExpression"},
@@ -131,6 +137,9 @@ namespace trylang
         {SyntaxKind::ElseStatement, "ElseStatement"},
         {SyntaxKind::WhileStatement, "WhileStatement"},
         {SyntaxKind::ForStatement, "ForStatement"},
+        {SyntaxKind::BreakStatement, "BreakStatement"},
+        {SyntaxKind::ContinueStatement, "ContinueStatement"},
+
         {SyntaxKind::GlobalStatement, "GlobalStatement"},
         {SyntaxKind::FunctionDeclaration, "FunctionDeclaration"},
         {SyntaxKind::Parameter, "Parameter"},

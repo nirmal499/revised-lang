@@ -402,4 +402,34 @@ namespace trylang
 
         return children; // RVO
     }
+
+    BreakStatementSyntax::BreakStatementSyntax(const std::shared_ptr<SyntaxToken> &breakKeyword): _breakKeyword(breakKeyword)
+    {
+
+    }
+
+    SyntaxKind BreakStatementSyntax::Kind()
+    {
+        return SyntaxKind::BreakStatement;
+    }
+
+    std::vector<SyntaxNode *> BreakStatementSyntax::GetChildren()
+    {
+        return {_breakKeyword.get()};
+    }
+
+    ContinueStatementSyntax::ContinueStatementSyntax(const std::shared_ptr<SyntaxToken> &continueKeyword): _continueKeyword(continueKeyword)
+    {
+
+    }
+
+    SyntaxKind ContinueStatementSyntax::Kind()
+    {
+        return SyntaxKind::ContinueStatement;
+    }
+
+    std::vector<SyntaxNode *> ContinueStatementSyntax::GetChildren()
+    {
+        return {_continueKeyword.get()};
+    }
 }

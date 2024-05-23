@@ -273,7 +273,9 @@ namespace trylang
     }
 
     BoundWhileStatement::BoundWhileStatement(std::unique_ptr<BoundExpressionNode> condition,
-                                             std::unique_ptr<BoundStatementNode> body) : _condition(std::move(condition)), _body(std::move(body))
+                                             std::unique_ptr<BoundStatementNode> body,
+                                             std::pair<LabelSymbol, LabelSymbol> loopLabel
+                                             ) : _condition(std::move(condition)), _body(std::move(body)), _loopLabel(std::move(loopLabel))
     {
 
     }
@@ -290,7 +292,9 @@ namespace trylang
 
     BoundForStatement::BoundForStatement(const std::shared_ptr<VariableSymbol>& variable, std::unique_ptr<BoundExpressionNode> lowerBound,
                                          std::unique_ptr<BoundExpressionNode> upperBound,
-                                         std::unique_ptr<BoundStatementNode> body) : _variable(variable), _lowerBound(std::move(lowerBound)), _upperBound(std::move(upperBound)), _body(std::move(body))
+                                         std::unique_ptr<BoundStatementNode> body,
+                                         std::pair<LabelSymbol, LabelSymbol> loopLabel
+                                         ) : _variable(variable), _lowerBound(std::move(lowerBound)), _upperBound(std::move(upperBound)), _body(std::move(body)), _loopLabel(std::move(loopLabel))
     {
 
     }
