@@ -78,36 +78,40 @@ namespace trylang
         }
     };
 
-    struct BoundGlobalScope
+    // struct BoundGlobalScope
+    // {
+    //     std::string _errors;
+    //     std::unordered_map<std::string, std::shared_ptr<FunctionSymbol>> _functions;
+    //     std::unordered_map<std::string, std::shared_ptr<VariableSymbol>> _variables;
+    //     std::unique_ptr<BoundBlockStatement> _statement;
+
+    //     BoundGlobalScope(
+    //             std::string errors,
+    //             std::unordered_map<std::string, std::shared_ptr<FunctionSymbol>>&& functions,
+    //             std::unordered_map<std::string, std::shared_ptr<VariableSymbol>>&& variables,
+    //             std::unique_ptr<BoundBlockStatement> statement)
+    //             :   _errors(std::move(errors)),
+    //                 _functions(std::move(functions)),
+    //                 _variables(std::move(variables)),
+    //                 _statement(std::move(statement))
+    //     {}
+    // };
+
+    struct BoundProgram
     {
-        std::string _errors;
+        std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>> _functionBodies;
         std::unordered_map<std::string, std::shared_ptr<FunctionSymbol>> _functions;
         std::unordered_map<std::string, std::shared_ptr<VariableSymbol>> _variables;
         std::unique_ptr<BoundBlockStatement> _statement;
 
-        BoundGlobalScope(
-                std::string errors,
-                std::unordered_map<std::string, std::shared_ptr<FunctionSymbol>>&& functions,
-                std::unordered_map<std::string, std::shared_ptr<VariableSymbol>>&& variables,
-                std::unique_ptr<BoundBlockStatement> statement)
-                :   _errors(std::move(errors)),
-                    _functions(std::move(functions)),
-                    _variables(std::move(variables)),
-                    _statement(std::move(statement))
-        {}
-    };
-
-    struct BoundProgram
-    {
-        std::string _errors;
-        std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>> _functionBodies;
-        std::shared_ptr<BoundGlobalScope> _globalScope;
-
         BoundProgram(
-                    std::string errors,
+                    std::unordered_map<std::string, std::shared_ptr<FunctionSymbol>>&& functions,
+                    std::unordered_map<std::string, std::shared_ptr<VariableSymbol>>&& variables,
                     std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>> functionBodies,
-                    const std::shared_ptr<BoundGlobalScope>& globalScope) : _errors(std::move(errors)), _functionBodies(std::move(functionBodies)), _globalScope(globalScope)
+                    std::unique_ptr<BoundBlockStatement> statement
+                ) : _functionBodies(std::move(functionBodies)), _functions(std::move(functions)), _variables(std::move(variables)), _statement(std::move(statement))
         {
         }
+        
     };
 }

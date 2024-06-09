@@ -14,7 +14,7 @@ namespace trylang
     struct ExpressionSyntax;
     struct StatementSyntax;
     struct TypeClauseSyntax;
-    struct FunctionDeclarationSyntax;
+    struct FunctionDeclarationStatementSyntax;
 
     struct LiteralExpressionSyntax;
     struct UnaryExpressionSyntax;
@@ -26,7 +26,7 @@ namespace trylang
 
     struct BlockStatementSyntax;
     struct ExpressionStatementSyntax;
-    struct VariableDeclarationSyntax;
+    struct VariableDeclarationStatementSyntax;
     struct IfStatementSyntax;
     struct WhileStatementSyntax;
     struct ForStatementSyntax;
@@ -57,11 +57,10 @@ namespace trylang
         static std::shared_ptr<BoundGlobalScope> BindGlobalScope(CompilationUnitSyntax* syntax);
         static std::unique_ptr<BoundProgram> BindProgram(CompilationUnitSyntax* syntaxTree);
 
-        std::stringstream _buffer;
+        static std::stringstream _buffer;
+        static std::string Errors();
 
         std::stack<std::pair<LabelSymbol, LabelSymbol>> _loopStack; /* One for BreakLabel and other for ContinueLabel */
-
-        std::string Errors();
 
         std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax, bool canBeVoid = false);
         std::unique_ptr<BoundExpressionNode> BindExpressionInternal(ExpressionSyntax* syntax);
@@ -71,8 +70,8 @@ namespace trylang
         std::shared_ptr<VariableSymbol> BindVariable(std::string varName, bool isReadOnly, const char* type);
 
         std::unique_ptr<BoundStatementNode> BindStatement(StatementSyntax* syntax);
-        std::unique_ptr<BoundStatementNode> BindVariableDeclaration(VariableDeclarationSyntax* syntax);
-        void BindFunctionDeclaration(FunctionDeclarationSyntax* syntax);
+        std::unique_ptr<BoundStatementNode> BindVariableDeclaration(VariableDeclarationStatementSyntax* syntax);
+        void BindFunctionDeclaration(FunctionDeclarationStatementSyntax* syntax);
         const char* BindTypeClause(TypeClauseSyntax* syntax);
 
         std::unique_ptr<BoundStatementNode> BindBlockStatement(BlockStatementSyntax *syntax);

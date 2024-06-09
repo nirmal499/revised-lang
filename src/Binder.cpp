@@ -5,12 +5,22 @@
 #include <codeanalysis/BoundExpressionNode.hpp>
 #include <codeanalysis/Conversion.hpp>
 #include <algorithm>
+#include <memory>
+#include <sstream>
 #include <stack>
 
 namespace trylang
 {
+    std::stringstream Binder::_buffer; /* Definition */
+    std::string Binder::Errors()
+    {
+        return _buffer.str();
+    }
+
     Binder::Binder(const std::shared_ptr<BoundScope>& parent, FunctionSymbol* function)
     {
+        _buffer.str("");
+
         _scope = std::make_shared<BoundScope>(parent);
         _function = function;
 
@@ -27,50 +37,35 @@ namespace trylang
         (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("input"));
     }
 
-    std::shared_ptr<BoundGlobalScope> Binder::BindGlobalScope(CompilationUnitSyntax* syntax)
+    std::unique_ptr<BoundProgram> Binder::BindProgram(CompilationUnitSyntax* syntaxTree)
     {
         Binder binder(nullptr, nullptr);
         std::vector<std::unique_ptr<BoundStatementNode>> statements;
 
-        for(const auto& member: syntax->_members)
+        for(const auto& member: syntaxTree->_statements)
         {
-            if(member->Kind() == SyntaxKind::GlobalStatement)
+            if(member->Kind() == SyntaxKind::FunctionDeclarationStatement)
             {
-                auto statement = binder.BindStatement(static_cast<GlobalStatement*>(member.get())->_statement.get());
-                statements.emplace_back(std::move(statement));
-            }
-            else if(member->Kind() == SyntaxKind::FunctionDeclaration)
-            {
-                binder.BindFunctionDeclaration(static_cast<FunctionDeclarationSyntax*>(member.get()));
+                binder.BindFunctionDeclaration(static_cast<FunctionDeclarationStatementSyntax*>(member.get()));
             }
             else
             {
-                throw std::logic_error("Unexpected SyntaxKind. INTERNAL ERROR " + __syntaxStringMap[syntax->Kind()]);
+                auto statement = binder.BindStatement(member.get());
+                statements.emplace_back(std::move(statement));
             }
         }
 
         auto statement = std::make_unique<BoundBlockStatement>(std::move(statements));
         auto flattened = Binder::Flatten(std::move(statement));
+        auto errors = Binder::Errors();
 
-        auto functions = std::move(binder._scope->_functions);
-        auto variables = std::move(binder._scope->_variables);
-        auto errors = binder.Errors();
+        auto scope = std::make_shared<BoundScope>(nullptr); /* Global Environment */
 
-        return std::make_shared<BoundGlobalScope>(std::move(errors), std::move(functions) ,std::move(variables), std::move(flattened));
-    }
-
-    std::unique_ptr<BoundProgram> Binder::BindProgram(CompilationUnitSyntax* syntaxTree)
-    {
-        std::shared_ptr<trylang::BoundGlobalScope> globalScope = trylang::Binder::BindGlobalScope(syntaxTree);
-
-        std::string errors(globalScope->_errors);
-
-        auto scope = std::make_shared<BoundScope>(nullptr);
-        scope->_variables = globalScope->_variables;
-        scope->_functions = globalScope->_functions;
+        scope->_variables = std::move(binder._scope->_variables);
+        scope->_functions = std::move(binder._scope->_functions);
 
         std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>> functionBodies;
-        for(const auto& function: globalScope->_functions)
+        for(const auto& function: scope->_functions)
         {
             if(function.second->_declaration == nullptr)
             {
@@ -83,10 +78,19 @@ namespace trylang
             auto flattenedBody = Binder::Flatten(std::move(body));
             functionBodies[function.first] = std::make_pair(function.second, std::move(flattenedBody));
 
-            errors.append(binder.Errors());
+            errors.append(Binder::Errors());
         }
 
-        auto boundProgram = std::make_unique<BoundProgram>(std::move(errors), std::move(functionBodies), globalScope);
+        std::unique_ptr<BoundProgram> boundProgram;
+        if(!errors.empty())
+        {
+            std::cout << "Binding Errors Reported:\n";
+            std::cout << "\n" << errors << "\n";
+        }
+        else
+        {
+            boundProgram = std::make_unique<BoundProgram>(std::move(scope->_functions), std::move(scope->_variables),std::move(functionBodies), std::move(flattened));
+        }
 
         return boundProgram;
     }
@@ -100,7 +104,7 @@ namespace trylang
             case SyntaxKind::ExpressionStatement:
                 return this->BindExpressionStatement(static_cast<ExpressionStatementSyntax*>(syntax));
             case SyntaxKind::VariableDeclarationStatement:
-                return this->BindVariableDeclaration(static_cast<VariableDeclarationSyntax*>(syntax));
+                return this->BindVariableDeclaration(static_cast<VariableDeclarationStatementSyntax*>(syntax));
             case SyntaxKind::IfStatement:
                 return this->BindIfStatement(static_cast<IfStatementSyntax*>(syntax));
             case SyntaxKind::WhileStatement:
@@ -116,7 +120,7 @@ namespace trylang
         }
     }
 
-    std::unique_ptr<BoundStatementNode> Binder::BindVariableDeclaration(VariableDeclarationSyntax *syntax)
+    std::unique_ptr<BoundStatementNode> Binder::BindVariableDeclaration(VariableDeclarationStatementSyntax *syntax)
     {
         auto isReadOnly = syntax->_keyword->Kind() == SyntaxKind::LetKeyword;
         const char* type = this->BindTypeClause(syntax->_typeClause.get());
@@ -242,11 +246,6 @@ namespace trylang
         }
     }
 
-    std::string Binder::Errors()
-    {
-        return _buffer.str();
-    }
-
     std::unique_ptr<BoundExpressionNode> Binder::BindNameExpression(NameExpressionSyntax *syntax)
     {
         const auto& varname = syntax->_identifierToken->_text;
@@ -310,9 +309,9 @@ namespace trylang
     {
         auto boundOperand = this->BindExpression(syntax->_operand.get());
 
-        /* Below commented code will stop the issue of cascading errors */
         if(std::strcmp(boundOperand->Type(), Types::ERROR->Name()) == 0)
         {
+            _buffer << "type " << boundOperand->Type() << " caused issue\n";
             return std::make_unique<BoundErrorExpression>();
         }
 
@@ -332,9 +331,9 @@ namespace trylang
         auto boundLeft = this->BindExpression(syntax->_left.get());
         auto boundRight = this->BindExpression(syntax->_right.get());
 
-        /* Below commented code will stop the issue of cascading errors */
         if((std::strcmp(boundLeft->Type(), Types::ERROR->Name()) == 0) || (std::strcmp(boundRight->Type(), Types::ERROR->Name()) == 0))
         {
+            _buffer << "type " << boundLeft->Type() << " and " << boundLeft->Type() << " caused issue\n";
             return std::make_unique<BoundErrorExpression>();
         }
 
@@ -392,7 +391,7 @@ namespace trylang
         std::unique_ptr<BoundStatementNode> elseStatement = nullptr;
         if(syntax->_elseClause != nullptr)
         {
-            auto elseClause = static_cast<ElseClauseSyntax*>(syntax->_elseClause.get());
+            auto elseClause = static_cast<ElseStatementSyntax*>(syntax->_elseClause.get());
             elseStatement = this->BindStatement(elseClause->_elseStatement.get());
         }
 
@@ -686,6 +685,8 @@ namespace trylang
             {
                 _buffer << "Cannot convert " << expression->Type() << " to " << type << "\n";
             }
+
+            _buffer << "Conversion does not exists from " << expression->Type() << " to " << type << "\n";
             return std::make_unique<BoundErrorExpression>();
         }
 
@@ -751,7 +752,7 @@ namespace trylang
         return std::make_unique<BoundCallExpression>(std::make_unique<FunctionSymbol>(*function), std::move(boundArguments));
     }
 
-    void Binder::BindFunctionDeclaration(FunctionDeclarationSyntax *syntax)
+    void Binder::BindFunctionDeclaration(FunctionDeclarationStatementSyntax *syntax)
     {
         std::vector<ParameterSymbol> parameters;
         std::vector<std::string> seenParameterNames(syntax->_parameters.size());

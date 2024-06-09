@@ -34,6 +34,7 @@ namespace trylang
         StringToken,
         CommaToken,
         ColonToken,
+        SemicolonToken,
 
         CompilationUnit,
 
@@ -71,9 +72,8 @@ namespace trylang
         BreakStatement,
         ContinueStatement,
 
-        GlobalStatement,
-        Parameter,
-        FunctionDeclaration,
+        ParameterExpression,
+        FunctionDeclarationStatement,
 
     };
 
@@ -105,6 +105,7 @@ namespace trylang
         {SyntaxKind::StringToken, "StringToken"},
         {SyntaxKind::CommaToken, "CommaToken"},
         {SyntaxKind::ColonToken, "ColonToken"},
+        {SyntaxKind::SemicolonToken, "SemicolonToken"},
 
         {SyntaxKind::CompilationUnit, "CompilationUnit"},
 
@@ -140,9 +141,8 @@ namespace trylang
         {SyntaxKind::BreakStatement, "BreakStatement"},
         {SyntaxKind::ContinueStatement, "ContinueStatement"},
 
-        {SyntaxKind::GlobalStatement, "GlobalStatement"},
-        {SyntaxKind::FunctionDeclaration, "FunctionDeclaration"},
-        {SyntaxKind::Parameter, "Parameter"},
+        {SyntaxKind::FunctionDeclarationStatement, "FunctionDeclarationStatement"},
+        {SyntaxKind::ParameterExpression, "ParameterExpression"},
     };
 
     inline std::ostream& operator<<(std::ostream& out, SyntaxKind kind)

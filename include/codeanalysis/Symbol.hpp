@@ -17,7 +17,7 @@ namespace trylang
         Type
     };
 
-    struct FunctionDeclarationSyntax;
+    struct FunctionDeclarationStatementSyntax;
 
     struct Symbol
     {
@@ -88,9 +88,9 @@ namespace trylang
     {
         const char* _type = nullptr; /* Return type of function */
         std::vector<ParameterSymbol> _parameters;
-        FunctionDeclarationSyntax* _declaration = nullptr;
+        FunctionDeclarationStatementSyntax* _declaration = nullptr;
 
-        FunctionSymbol(std::string name, std::vector<ParameterSymbol> parameters, const char* type, FunctionDeclarationSyntax* _declaration = nullptr)
+        FunctionSymbol(std::string name, std::vector<ParameterSymbol> parameters, const char* type, FunctionDeclarationStatementSyntax* _declaration = nullptr)
             : Symbol(std::move(name)), _type(type), _parameters(std::move(parameters)), _declaration(_declaration)
         {}
 

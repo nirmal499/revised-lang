@@ -27,8 +27,8 @@ namespace trylang
 
     }
 
-    CompilationUnitSyntax::CompilationUnitSyntax(std::vector<std::unique_ptr<MemberSyntax>> members, const std::shared_ptr<SyntaxToken>& endOfFileToken)
-        : _members(std::move(members)), _endOfFileToken(endOfFileToken)
+    CompilationUnitSyntax::CompilationUnitSyntax(std::vector<std::unique_ptr<StatementSyntax>> statements)
+        : _statements(std::move(statements))
     {}
 
 
@@ -39,19 +39,19 @@ namespace trylang
 
     std::vector<SyntaxNode*> CompilationUnitSyntax::GetChildren()
     {
-        std::vector<SyntaxNode*> children(_members.size());
-        for(const auto& member: _members)
+        std::vector<SyntaxNode*> children(_statements.size());
+        for(const auto& stmt: _statements)
         {
-            children.push_back(member.get());
+            children.push_back(stmt.get());
         }
 
         return children; //RVO
     }
 
     BlockStatementSyntax::BlockStatementSyntax(
-            const std::shared_ptr<SyntaxToken>& openBraceToken,
+            std::unique_ptr<SyntaxToken> openBraceToken,
             std::vector<std::unique_ptr<StatementSyntax>> statements ,
-            const std::shared_ptr<SyntaxToken>& closeBraceToken) : _openBraceToken(openBraceToken), _statements(std::move(statements)), _closeBraceToken(closeBraceToken)
+            std::unique_ptr<SyntaxToken> closeBraceToken) : _openBraceToken(std::move(openBraceToken)), _statements(std::move(statements)), _closeBraceToken(std::move(closeBraceToken))
     {}
 
     SyntaxKind BlockStatementSyntax::Kind()
@@ -73,21 +73,21 @@ namespace trylang
         return children; // RVO
     }
 
-    VariableDeclarationSyntax::VariableDeclarationSyntax(
-            const std::shared_ptr<SyntaxToken>& keyword,
-            const std::shared_ptr<SyntaxToken>& identifier,
+    VariableDeclarationStatementSyntax::VariableDeclarationStatementSyntax(
+            std::unique_ptr<SyntaxToken> keyword,
+            std::unique_ptr<SyntaxToken> identifier,
             std::unique_ptr<TypeClauseSyntax> typeClause,
-            const std::shared_ptr<SyntaxToken>& equalsToken,
+            std::unique_ptr<SyntaxToken> equalsToken,
             std::unique_ptr<ExpressionSyntax> expression
-        ) : _keyword(keyword), _identifier(identifier), _typeClause(std::move(typeClause)) ,_equalsToken(equalsToken), _expression(std::move(expression))
+        ) : _keyword(std::move(keyword)), _identifier(std::move(identifier)), _typeClause(std::move(typeClause)) ,_equalsToken(std::move(equalsToken)), _expression(std::move(expression))
     {}
 
-    SyntaxKind VariableDeclarationSyntax::Kind()
+    SyntaxKind VariableDeclarationStatementSyntax::Kind()
     {
         return SyntaxKind::VariableDeclarationStatement;
     }
 
-    std::vector<SyntaxNode*> VariableDeclarationSyntax::GetChildren()
+    std::vector<SyntaxNode*> VariableDeclarationStatementSyntax::GetChildren()
     {
         return {_keyword.get(), _identifier.get(), _typeClause.get() ,_equalsToken.get(), _expression.get()};
     }
@@ -105,8 +105,8 @@ namespace trylang
         return {_expression.get()};
     }
 
-    NameExpressionSyntax::NameExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifierToken)
-            : _identifierToken(identifierToken)
+    NameExpressionSyntax::NameExpressionSyntax(std::unique_ptr<SyntaxToken> identifierToken)
+            : _identifierToken(std::move(identifierToken))
     {}
 
     SyntaxKind NameExpressionSyntax::Kind()
@@ -119,8 +119,8 @@ namespace trylang
         return std::vector<SyntaxNode*>{_identifierToken.get()};
     }
 
-    AssignmentExpressionSyntax::AssignmentExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifierToken, const std::shared_ptr<SyntaxToken>& equalsToken, std::unique_ptr<ExpressionSyntax> expression)
-            : _identifierToken(identifierToken), _equalsToken(equalsToken), _expression(std::move(expression))
+    AssignmentExpressionSyntax::AssignmentExpressionSyntax(std::unique_ptr<SyntaxToken> identifierToken, std::unique_ptr<SyntaxToken> equalsToken, std::unique_ptr<ExpressionSyntax> expression)
+            : _identifierToken(std::move(identifierToken)), _equalsToken(std::move(equalsToken)), _expression(std::move(expression))
     {}
 
     SyntaxKind AssignmentExpressionSyntax::Kind()
@@ -133,14 +133,14 @@ namespace trylang
         return std::vector<SyntaxNode*>{_identifierToken.get(), _equalsToken.get(), _expression.get()};
     }
     
-    LiteralExpressionSyntax::LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken)
-        : _literalToken(literalToken) 
+    LiteralExpressionSyntax::LiteralExpressionSyntax(std::unique_ptr<SyntaxToken> literalToken)
+        : _literalToken(std::move(literalToken)) 
     {
         _value = _literalToken->_value;
     }
 
-    LiteralExpressionSyntax::LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken, const object_t& value)
-        : _literalToken(literalToken), _value(value)
+    LiteralExpressionSyntax::LiteralExpressionSyntax(std::unique_ptr<SyntaxToken> literalToken, const object_t& value)
+        : _literalToken(std::move(literalToken)), _value(value)
     {}
     
     SyntaxKind LiteralExpressionSyntax::Kind()
@@ -153,8 +153,8 @@ namespace trylang
         return std::vector<SyntaxNode*>{_literalToken.get()};
     }
 
-    BinaryExpressionSyntax::BinaryExpressionSyntax(std::unique_ptr<ExpressionSyntax> left, const std::shared_ptr<SyntaxToken>& operatorToken, std::unique_ptr<ExpressionSyntax> right)
-        : _left(std::move(left)), _operatorToken(operatorToken), _right(std::move(right)) {}
+    BinaryExpressionSyntax::BinaryExpressionSyntax(std::unique_ptr<ExpressionSyntax> left, std::unique_ptr<SyntaxToken> operatorToken, std::unique_ptr<ExpressionSyntax> right)
+        : _left(std::move(left)), _operatorToken(std::move(operatorToken)), _right(std::move(right)) {}
 
     SyntaxKind BinaryExpressionSyntax::Kind()
     {
@@ -166,8 +166,8 @@ namespace trylang
         return std::vector<SyntaxNode*>{ _left.get(), _operatorToken.get(), _right.get()};
     }
 
-    UnaryExpressionSyntax::UnaryExpressionSyntax(const std::shared_ptr<SyntaxToken>& operatorToken, std::unique_ptr<ExpressionSyntax> operand)
-        : _operatorToken(operatorToken), _operand(std::move(operand)) {}
+    UnaryExpressionSyntax::UnaryExpressionSyntax(std::unique_ptr<SyntaxToken> operatorToken, std::unique_ptr<ExpressionSyntax> operand)
+        : _operatorToken(std::move(operatorToken)), _operand(std::move(operand)) {}
 
     SyntaxKind UnaryExpressionSyntax::Kind()
     {
@@ -179,8 +179,8 @@ namespace trylang
         return std::vector<SyntaxNode*>{_operatorToken.get(), _operand.get()};
     }
 
-    ParenthesizedExpressionSyntax::ParenthesizedExpressionSyntax(const std::shared_ptr<SyntaxToken>& openParenthesisToken, std::unique_ptr<ExpressionSyntax> expression, const std::shared_ptr<SyntaxToken>& closeParenthesisToken)
-        : _openParenthesisToken(openParenthesisToken), _expression(std::move(expression)), _closeParenthesisToken(closeParenthesisToken) {}
+    ParenthesizedExpressionSyntax::ParenthesizedExpressionSyntax(std::unique_ptr<SyntaxToken> openParenthesisToken, std::unique_ptr<ExpressionSyntax> expression, std::unique_ptr<SyntaxToken> closeParenthesisToken)
+        : _openParenthesisToken(std::move(openParenthesisToken)), _expression(std::move(expression)), _closeParenthesisToken(std::move(closeParenthesisToken)) {}
 
     SyntaxKind ParenthesizedExpressionSyntax::Kind()
     {
@@ -192,8 +192,8 @@ namespace trylang
         return std::vector<SyntaxNode*>{_openParenthesisToken.get(), _expression.get(), _closeParenthesisToken.get()};
     }
 
-    SyntaxToken::SyntaxToken(SyntaxKind kind, int position, std::string&& text, const object_t& value)
-            : _kind(kind), _position(position), _text(std::move(text)), _value(value)
+    SyntaxToken::SyntaxToken(SyntaxKind kind, int line, std::string&& text, object_t&& value)
+            : _kind(kind), _line(line), _text(std::move(text)), _value(value)
         {}
 
     /**********************************************************************************************/
@@ -222,26 +222,26 @@ namespace trylang
         return out;
     }
 
-    ElseClauseSyntax::ElseClauseSyntax(const std::shared_ptr<SyntaxToken> &elseKeyword, std::unique_ptr<StatementSyntax> elseStatement)
-        : _elseKeyword(elseKeyword), _elseStatement(std::move(elseStatement))
+    ElseStatementSyntax::ElseStatementSyntax(std::unique_ptr<SyntaxToken> elseKeyword, std::unique_ptr<StatementSyntax> elseStatement)
+        : _elseKeyword(std::move(elseKeyword)), _elseStatement(std::move(elseStatement))
     {
 
     }
 
-    SyntaxKind ElseClauseSyntax::Kind()
+    SyntaxKind ElseStatementSyntax::Kind()
     {
         return SyntaxKind::ElseStatement;
     }
 
-    std::vector<SyntaxNode *> ElseClauseSyntax::GetChildren()
+    std::vector<SyntaxNode *> ElseStatementSyntax::GetChildren()
     {
         return std::vector<SyntaxNode *>{_elseKeyword.get(), _elseStatement.get()};
     }
 
-    IfStatementSyntax::IfStatementSyntax(const std::shared_ptr<SyntaxToken> &ifKeyword,
+    IfStatementSyntax::IfStatementSyntax(std::unique_ptr<SyntaxToken> ifKeyword,
                                          std::unique_ptr<ExpressionSyntax> condition,
                                          std::unique_ptr<StatementSyntax> thenStatement,
-                                         std::unique_ptr<StatementSyntax> elseClause) : _ifKeyword(ifKeyword), _condition(std::move(condition)), _thenStatement(std::move(thenStatement)), _elseClause(std::move(elseClause))
+                                         std::unique_ptr<StatementSyntax> elseClause) : _ifKeyword(std::move(ifKeyword)), _condition(std::move(condition)), _thenStatement(std::move(thenStatement)), _elseClause(std::move(elseClause))
     {
 
     }
@@ -256,9 +256,9 @@ namespace trylang
         return {_ifKeyword.get(), _condition.get(), _thenStatement.get(), _elseClause.get()};
     }
 
-    WhileStatementSyntax::WhileStatementSyntax(const std::shared_ptr<SyntaxToken> &whileKeyword,
+    WhileStatementSyntax::WhileStatementSyntax(std::unique_ptr<SyntaxToken> whileKeyword,
                                                std::unique_ptr<ExpressionSyntax> condition,
-                                               std::unique_ptr<StatementSyntax> body) : _whileKeyword(whileKeyword), _condition(std::move(condition)), _body(std::move(body))
+                                               std::unique_ptr<StatementSyntax> body) : _whileKeyword(std::move(whileKeyword)), _condition(std::move(condition)), _body(std::move(body))
     {
 
     }
@@ -273,13 +273,13 @@ namespace trylang
         return {_whileKeyword.get(), _condition.get(), _body.get()};
     }
 
-    ForStatementSyntax::ForStatementSyntax(const std::shared_ptr<SyntaxToken> &keyword,
-                                           const std::shared_ptr<SyntaxToken> &identifierToken,
-                                           const std::shared_ptr<SyntaxToken> &equalsToken,
+    ForStatementSyntax::ForStatementSyntax(std::unique_ptr<SyntaxToken> keyword,
+                                           std::unique_ptr<SyntaxToken> identifierToken,
+                                           std::unique_ptr<SyntaxToken> equalsToken,
                                            std::unique_ptr<ExpressionSyntax> lowerBound,
-                                           const std::shared_ptr<SyntaxToken> &toKeyword,
+                                           std::unique_ptr<SyntaxToken> toKeyword,
                                            std::unique_ptr<ExpressionSyntax> upperBound,
-                                           std::unique_ptr<StatementSyntax> body) : _keyword(keyword), _identifier(identifierToken), _equalsToken(equalsToken), _lowerBound(std::move(lowerBound)), _toKeyword(toKeyword) ,_upperBound(std::move(upperBound)), _body(std::move(body))
+                                           std::unique_ptr<StatementSyntax> body) : _keyword(std::move(keyword)), _identifier(std::move(identifierToken)), _equalsToken(std::move(equalsToken)), _lowerBound(std::move(lowerBound)), _toKeyword(std::move(toKeyword)) ,_upperBound(std::move(upperBound)), _body(std::move(body))
     {
 
     }
@@ -291,7 +291,7 @@ namespace trylang
 
     std::vector<SyntaxNode *> ForStatementSyntax::GetChildren()
     {
-        return {_keyword.get(), _identifier.get(), _equalsToken.get(), _lowerBound.get(), _upperBound.get()};
+        return {_keyword.get(), _identifier.get(), _equalsToken.get(), _lowerBound.get(),_toKeyword.get(), _upperBound.get()};
     }
 
     SyntaxKind CallExpressionSyntax::Kind()
@@ -315,16 +315,16 @@ namespace trylang
         return children;
     }
 
-    CallExpressionSyntax::CallExpressionSyntax(const std::shared_ptr<SyntaxToken> &identifier,
-                                               const std::shared_ptr<SyntaxToken>& openParenthesis,
+    CallExpressionSyntax::CallExpressionSyntax(std::unique_ptr<SyntaxToken> identifier,
+                                               std::unique_ptr<SyntaxToken> openParenthesis,
                                                std::vector<std::unique_ptr<ExpressionSyntax>> arguments,
-                                               const std::shared_ptr<SyntaxToken>& closeParenthesis) : _identifier(identifier), _openParenthesis(openParenthesis), _arguments(std::move(arguments)), _closeParenthesis(closeParenthesis)
+                                               std::unique_ptr<SyntaxToken> closeParenthesis) : _identifier(std::move(identifier)), _openParenthesis(std::move(openParenthesis)), _arguments(std::move(arguments)), _closeParenthesis(std::move(closeParenthesis))
     {
 
     }
 
-    TypeClauseSyntax::TypeClauseSyntax(const std::shared_ptr<SyntaxToken> &colonToken,
-                                       const std::shared_ptr<SyntaxToken> &identifierToken): _colonToken(colonToken), _identifierToken(identifierToken)
+    TypeClauseSyntax::TypeClauseSyntax(std::unique_ptr<SyntaxToken> colonToken,
+                                       std::unique_ptr<SyntaxToken> identifierToken): _colonToken(std::move(colonToken)), _identifierToken(std::move(identifierToken))
     {
 
     }
@@ -339,30 +339,15 @@ namespace trylang
         return {_colonToken.get(), _identifierToken.get()};
     }
 
-    GlobalStatement::GlobalStatement(std::unique_ptr<StatementSyntax> statement) : _statement(std::move(statement))
-    {
-
-    }
-
-    SyntaxKind GlobalStatement::Kind()
-    {
-        return SyntaxKind::GlobalStatement;
-    }
-
-    std::vector<SyntaxNode *> GlobalStatement::GetChildren()
-    {
-        return {_statement.get()};
-    }
-
-    ParameterSyntax::ParameterSyntax(const std::shared_ptr<SyntaxToken> &identifier,
-                                     std::unique_ptr<TypeClauseSyntax> type) : _identifier(identifier), _type(std::move(type))
+    ParameterSyntax::ParameterSyntax(std::unique_ptr<SyntaxToken> identifier,
+                                     std::unique_ptr<TypeClauseSyntax> type) : _identifier(std::move(identifier)), _type(std::move(type))
     {
 
     }
 
     SyntaxKind ParameterSyntax::Kind()
     {
-        return SyntaxKind::Parameter;
+        return SyntaxKind::ParameterExpression;
     }
 
     std::vector<SyntaxNode *> ParameterSyntax::GetChildren()
@@ -370,23 +355,23 @@ namespace trylang
         return {_identifier.get(), _type.get()};
     }
 
-    FunctionDeclarationSyntax::FunctionDeclarationSyntax(const std::shared_ptr<SyntaxToken> &functionKeyword,
-                                                         const std::shared_ptr<SyntaxToken> &identifier,
-                                                         const std::shared_ptr<SyntaxToken> &openParenthesisToken,
+    FunctionDeclarationStatementSyntax::FunctionDeclarationStatementSyntax(std::unique_ptr<SyntaxToken> functionKeyword,
+                                                         std::unique_ptr<SyntaxToken> identifier,
+                                                         std::unique_ptr<SyntaxToken> openParenthesisToken,
                                                          std::vector<std::unique_ptr<ParameterSyntax>> parameters,
-                                                         const std::shared_ptr<SyntaxToken> &closeParenthesisToken,
+                                                         std::unique_ptr<SyntaxToken> closeParenthesisToken,
                                                          std::unique_ptr<TypeClauseSyntax> typeClause,
-                                                         std::unique_ptr<StatementSyntax> body) : _functionKeyword(functionKeyword), _identifier(identifier), _openParenthesisToken(openParenthesisToken), _parameters(std::move(parameters)), _closeParenthesisToken(closeParenthesisToken), _typeClause(std::move(typeClause)), _body(std::move(body))
+                                                         std::unique_ptr<StatementSyntax> body) : _functionKeyword(std::move(functionKeyword)), _identifier(std::move(identifier)), _openParenthesisToken(std::move(openParenthesisToken)), _parameters(std::move(parameters)), _closeParenthesisToken(std::move(closeParenthesisToken)), _typeClause(std::move(typeClause)), _body(std::move(body))
     {
 
     }
 
-    SyntaxKind FunctionDeclarationSyntax::Kind()
+    SyntaxKind FunctionDeclarationStatementSyntax::Kind()
     {
-        return SyntaxKind::FunctionDeclaration;
+        return SyntaxKind::FunctionDeclarationStatement;
     }
 
-    std::vector<SyntaxNode *> FunctionDeclarationSyntax::GetChildren()
+    std::vector<SyntaxNode *> FunctionDeclarationStatementSyntax::GetChildren()
     {
         std::vector<SyntaxNode*> children(5 + _parameters.size());
         children.push_back(_functionKeyword.get());
@@ -403,7 +388,7 @@ namespace trylang
         return children; // RVO
     }
 
-    BreakStatementSyntax::BreakStatementSyntax(const std::shared_ptr<SyntaxToken> &breakKeyword): _breakKeyword(breakKeyword)
+    BreakStatementSyntax::BreakStatementSyntax(std::unique_ptr<SyntaxToken> breakKeyword): _breakKeyword(std::move(breakKeyword))
     {
 
     }
@@ -418,7 +403,7 @@ namespace trylang
         return {_breakKeyword.get()};
     }
 
-    ContinueStatementSyntax::ContinueStatementSyntax(const std::shared_ptr<SyntaxToken> &continueKeyword): _continueKeyword(continueKeyword)
+    ContinueStatementSyntax::ContinueStatementSyntax(std::unique_ptr<SyntaxToken> continueKeyword): _continueKeyword(std::move(continueKeyword))
     {
 
     }

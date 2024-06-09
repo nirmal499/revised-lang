@@ -1,5 +1,6 @@
 #pragma once
 
+#include <codeanalysis/BoundExpressionNode.hpp>
 #include <memory>
 #include <codeanalysis/Types.hpp>
 #include <unordered_map>
@@ -20,6 +21,14 @@ namespace trylang
     struct BoundWhileStatement;
     struct BoundForStatement;
 
+    struct BoundLiteralExpression;
+    struct BoundVariableExpression;
+    struct BoundAssignmentExpression;
+    struct BoundUnaryExpression;
+    struct BoundCallExpression;
+    struct BoundConversionExpression;
+    struct BoundBinaryExpression;
+
     struct Evaluator
     {
 
@@ -36,14 +45,23 @@ namespace trylang
         object_t EvaluateStatement(BoundBlockStatement* body);
 
         object_t EvaluateExpression(BoundExpressionNode* node);
-//        void EvaluateStatement(BoundStatementNode* node);
+        object_t EvaluateLiteralExpression(BoundLiteralExpression* node);
+        object_t EvaluateVariableExpression(BoundVariableExpression *node);
+        object_t EvaluateAssignmentExpression(BoundAssignmentExpression* node);
+        object_t EvaluateUnaryExpression(BoundUnaryExpression* node);
+        object_t EvaluateCallExpression(BoundCallExpression* node);
+        object_t EvaluateConversionExpression(BoundConversionExpression* node);
+        object_t EvaluateBinaryExpression(BoundBinaryExpression* node);
 
-//        void EvaluateBlockStatement(BoundBlockStatement *node);
+
+        // void EvaluateStatement(BoundStatementNode* node);
+        // void EvaluateBlockStatement(BoundBlockStatement *node);
+
         void EvaluateExpressionStatement(BoundExpressionStatement* node);
         void EvaluateVariableDeclaration(BoundVariableDeclaration *node);
 
-//        void EvaluateIfStatement(BoundIfStatement *node);
-//        void EvaluateWhileStatement(BoundWhileStatement *node);
-//        void EvaluateForStatement(BoundForStatement *node);
+        // void EvaluateIfStatement(BoundIfStatement *node);
+        // void EvaluateWhileStatement(BoundWhileStatement *node);
+        // void EvaluateForStatement(BoundForStatement *node);
     };
 }

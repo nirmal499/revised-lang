@@ -13,7 +13,6 @@ set(EXECUTABLE_NAME "executable")
 add_executable(${EXECUTABLE_NAME}
     app/main.cpp
 
-    src/SyntaxTree.cpp
     src/Evaluator.cpp
     src/Lexer.cpp
     src/Parser.cpp

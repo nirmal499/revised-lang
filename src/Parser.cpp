@@ -1,119 +1,153 @@
+#include <codeanalysis/SyntaxKind.hpp>
 #include <codeanalysis/Parser.hpp>
 #include <codeanalysis/ExpressionSyntax.hpp>
 #include <codeanalysis/Lexer.hpp>
 #include <codeanalysis/SyntaxTree.hpp>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <vector>
 
 namespace trylang
 {
+    std::stringstream Parser::_buffer; /* Definition */
     std::string Parser::Errors()
     {
         return _buffer.str();
     }
-    
-    Parser::Parser(std::string text)
+
+    bool Parser::IsAtEnd()
     {
-        _position = 0;
-
-        Lexer lexer(std::move(text));
-
-        auto token = lexer.NextTokenize();
-        while(token->_kind != SyntaxKind::EndOfFileToken)
-        {
-            if(token->_kind != SyntaxKind::WhitespaceToken && token->_kind != SyntaxKind::BadToken)
-            {
-                _tokens.emplace_back(std::move(token)); /* unique_ptr are getting converted into shared_ptr */
-            }
-
-            token = lexer.NextTokenize();
-        }
-        /* Here token->_kind is SyntaxKind::EndOfFileToken. Add that to the vector */
-        _tokens.emplace_back(std::move(token));
-        _tokens_size = _tokens.size();
-
-        _buffer << lexer.Errors();
+        return this->Peek(0)->Kind() == SyntaxKind::EndOfFileToken;
     }
 
-    std::shared_ptr<SyntaxToken> Parser::Peek(int offset)
+    Parser::Parser(std::vector<std::unique_ptr<SyntaxToken>>&& tokens) : _tokens(std::move(tokens))
     {
-        int index = _position + offset;
+        _tokens_size = _tokens.size();
+        _buffer.str("");
+        _current = 0;
+        _statements = std::vector<std::unique_ptr<StatementSyntax>>();
+    }
+
+    std::unique_ptr<CompilationUnitSyntax> Parser::AST(std::vector<std::unique_ptr<SyntaxToken>>&& tokens)
+    {
+        Parser parser(std::move(tokens));
+
+        std::unique_ptr<CompilationUnitSyntax> compilationSyntax = parser.Parse();
+        
+        if(!Parser::Errors().empty())
+        {
+            std::cout << "Parsing Errors Reported:\n";
+            std::cout << "\n" << Parser::Errors() << "\n";
+            return nullptr;
+        }
+
+        return compilationSyntax;
+    }
+
+    SyntaxToken* Parser::Peek(int offset)
+    {
+        int index = _current + offset;
         if(index >= _tokens_size)
         {
-            return _tokens[_tokens_size - 1];
+            return _tokens[_tokens_size - 1].get();
         }
 
-        return _tokens[index];
+        return _tokens[index].get();
     }
 
-    std::shared_ptr<SyntaxToken> Parser::Current()
+    SyntaxToken* Parser::Current()
     {
         return this->Peek(0);
     }
 
-    std::shared_ptr<SyntaxToken> Parser::NextToken()
+    std::unique_ptr<SyntaxToken> Parser::Advance()
     {
-        const std::shared_ptr<SyntaxToken>& current = this->Current();
-        _position++;
-        return current;
+        _current++;
+        return std::move(_tokens.at(_current - 1));
     }
 
-    std::shared_ptr<SyntaxToken> Parser::MatchToken(SyntaxKind kind)
+    std::unique_ptr<SyntaxToken> Parser::Consume(SyntaxKind kind, std::string message)
     {
-        if(this->Current()->_kind == kind)
+        if(this->Check(kind))
         {
-            return this->NextToken();
+            return this->Advance();
         }
 
-        _buffer << "ERROR: Unexpected token <" << this->Current()->Kind() <<">, expected <" << kind << ">\n"; /* cout is overloaded SyntaxKind */
-        // return std::make_shared<SyntaxToken>(kind, this->Current()->_position, "", std::nullopt);
+        this->Error(this->Current(), message);
 
-        throw std::logic_error("ERROR: Unexpected token <" + trylang::__syntaxStringMap[this->Current()->_kind] + ">, expected <" + trylang::__syntaxStringMap[kind] + ">");
+        return nullptr; // Unreachable
     }
 
-
-    std::unique_ptr<CompilationUnitSyntax> Parser::ParseCompilationUnit()
+    void Parser::Error(SyntaxToken* token, std::string message)
     {
-        auto members = this->ParseMembers();
-
-        /* After Parsing we are confirming that the end token is SyntaxKind::EndOfFileToken token*/
-        std::shared_ptr<SyntaxToken> endOfFileToken = this->MatchToken(SyntaxKind::EndOfFileToken);
-
-        return std::make_unique<CompilationUnitSyntax>(std::move(members), endOfFileToken);
-    }
-
-    std::vector<std::unique_ptr<MemberSyntax>> Parser::ParseMembers()
-    {
-        std::vector<std::unique_ptr<MemberSyntax>> members;
-
-        while(this->Current()->Kind() != SyntaxKind::EndOfFileToken)
+        if(token->Kind() == SyntaxKind::EndOfFileToken)
         {
-            auto member = this->ParseMember();
-            members.emplace_back(std::move(member));
+            this->GenerateError(token->_line, " at end: " + message + " | Instead got " + trylang::__syntaxStringMap[this->Current()->Kind()]);
+        }
+        else
+        {
+            this->GenerateError(token->_line, " at '" + token->_text + "' " + message + " | Instead got " + trylang::__syntaxStringMap[this->Current()->Kind()]);
         }
 
-        return members;
+        throw std::runtime_error("Throwing Exception In Parsing.");
     }
 
-    std::unique_ptr<MemberSyntax> Parser::ParseMember()
+    void Parser::GenerateError(int line, std::string message)
     {
-        if(this->Current()->Kind() == SyntaxKind::FunctionKeyword)
+        _buffer << "[line " << line << "] Error : " << message << "\n";
+    }
+
+    bool Parser::Check(SyntaxKind kind)
+    {
+        if(this->IsAtEnd())
         {
-            return this->ParseFunctionDeclaration();
+            return false;
         }
 
-        return this->ParseGlobalStatement();
+        return this->Peek(0)->Kind() == kind;
     }
 
-    std::unique_ptr<MemberSyntax> Parser::ParseFunctionDeclaration()
+    std::unique_ptr<CompilationUnitSyntax> Parser::Parse()
     {
-        auto functionKeyword = this->MatchToken(SyntaxKind::FunctionKeyword);
-        auto identifier = this->MatchToken(SyntaxKind::IdentifierToken);
-        auto openParenthesis = this->MatchToken(SyntaxKind::OpenParenthesisToken);
+        while(!this->IsAtEnd())
+        {
+            _statements.emplace_back(this->ParseDeclaration());
+        }
+
+        return std::make_unique<CompilationUnitSyntax>(std::move(_statements));
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseDeclaration()
+    {
+        try
+        {
+            if(this->Current()->Kind() == SyntaxKind::FunctionKeyword)
+            {
+                return this->ParseFunctionDeclarationStatement();
+            }
+
+            return this->ParseStatement();
+        }
+        catch(const std::exception& e)
+        {
+            /* Skip the statement which caused the exception */
+            this->SynchronizeAfterAnExpectionForInvalidTokenMatch();
+            return nullptr;
+        }
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseFunctionDeclarationStatement()
+    {
+        auto functionKeyword = this->Consume(SyntaxKind::FunctionKeyword, "Expected 'function' keyword");
+        auto identifier = this->Consume(SyntaxKind::IdentifierToken, "Expected a function name");
+        auto openParenthesis = this->Consume(SyntaxKind::OpenParenthesisToken, "Expected a '('");
         auto parameters = this->ParseParameterList();
-        auto closeParenthesis = this->MatchToken(SyntaxKind::CloseParenthesisToken);
+        auto closeParenthesis = this->Consume(SyntaxKind::CloseParenthesisToken, "Expected a ')'");
         auto typeClause = this->ParseOptionalTypeClause(); /* return type of the function */
         auto body = this->ParseBlockStatement();
 
-        return std::make_unique<FunctionDeclarationSyntax>(functionKeyword, identifier, openParenthesis, std::move(parameters), closeParenthesis, std::move(typeClause), std::move(body));
+        return std::make_unique<FunctionDeclarationStatementSyntax>(std::move(functionKeyword), std::move(identifier), std::move(openParenthesis), std::move(parameters), std::move(closeParenthesis), std::move(typeClause), std::move(body));
     }
 
     std::vector<std::unique_ptr<ParameterSyntax>> Parser::ParseParameterList()
@@ -127,7 +161,7 @@ namespace trylang
 
             if(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken)
             {
-                auto commaToken = this->MatchToken(SyntaxKind::CommaToken);
+                auto commaToken = this->Consume(SyntaxKind::CommaToken, "Expected a ','.");
                 // parameters.emplace_back(std::move(commaToken));
             }
         }
@@ -137,59 +171,88 @@ namespace trylang
 
     std::unique_ptr<ParameterSyntax> Parser::ParseParameter()
     {
-        auto identifier = this->MatchToken(SyntaxKind::IdentifierToken);
+        auto identifier = this->Consume(SyntaxKind::IdentifierToken, "Expected a parameter name");
         auto typeClause = this->ParseTypeClause(); /* typeClause is not optional */
-        return std::make_unique<ParameterSyntax>(identifier, std::move(typeClause));
+        return std::make_unique<ParameterSyntax>(std::move(identifier), std::move(typeClause));
     }
 
-    std::unique_ptr<MemberSyntax> Parser::ParseGlobalStatement()
+    std::unique_ptr<StatementSyntax> Parser::ParseVariableDeclarationStatement()
     {
-        auto statement = this->ParseStatement();
-        return std::make_unique<GlobalStatement>(std::move(statement));
+        auto expected = this->Current()->Kind() == SyntaxKind::VarKeyword ? SyntaxKind::VarKeyword : SyntaxKind::LetKeyword;
+        auto keyword = this->Consume(expected, "Expected 'var' or 'let'.");
+        auto identifier = this->Consume(SyntaxKind::IdentifierToken, "Expected a variable name.");
+        auto typeClause = this->ParseOptionalTypeClause();
+        auto equalsToken = this->Consume(SyntaxKind::EqualsToken, "Expected a '='.");
+        auto initializer = this->ParseExpression();
+
+        (void)this->Consume(SyntaxKind::SemicolonToken, "Expected a ';'.");
+
+        return std::make_unique<VariableDeclarationStatementSyntax>(std::move(keyword), std::move(identifier), std::move(typeClause) ,std::move(equalsToken), std::move(initializer));
+    }
+
+    std::unique_ptr<TypeClauseSyntax> Parser::ParseOptionalTypeClause()
+    {
+        if(this->Current()->Kind() != SyntaxKind::ColonToken)
+        {
+            return nullptr;
+        }
+        return this->ParseTypeClause();
+    }
+
+    std::unique_ptr<TypeClauseSyntax> Parser::ParseTypeClause()
+    {
+        auto colonToken = this->Consume(SyntaxKind::ColonToken, "Expected ':' here.");
+        auto identifierToken = this->Consume(SyntaxKind::IdentifierToken, "Expected a type name.");
+
+        return std::make_unique<TypeClauseSyntax>(std::move(colonToken), std::move(identifierToken));
+    }
+
+    void Parser::SynchronizeAfterAnExpectionForInvalidTokenMatch()
+    {
+        _current++; /* Advance to NextToken */
+        while(this->Current()->Kind() != SyntaxKind::EndOfFileToken)
+        {
+            if(this->Current()->Kind() == SyntaxKind::SemicolonToken)
+            {
+                /* 
+                    We have reached the end of the statement which caused an exception. 
+                    So we return inorder to parse the other statements after this error statements
+                */
+                return;
+            }
+
+            _current++; /* Advance to NextToken */
+        }
     }
 
     std::unique_ptr<StatementSyntax> Parser::ParseStatement()
     {
-        if(this->Current()->Kind() == SyntaxKind::OpenBraceToken)
+        switch (this->Current()->Kind())
         {
-            return this->ParseBlockStatement();
-        }
-        else if(this->Current()->Kind() == SyntaxKind::VarKeyword || this->Current()->Kind() == SyntaxKind::LetKeyword)
-        {
-            return this->ParseVariableDeclaration();
-        }
-        else if(this->Current()->Kind() == SyntaxKind::IfKeyword)
-        {
-            return this->ParseIfStatement();
-        }
-        else if(this->Current()->Kind() == SyntaxKind::WhileKeyword)
-        {
-            return this->ParseWhileStatement();
-        }
-        else if(this->Current()->Kind() == SyntaxKind::ForKeyword)
-        {
-            return this->ParseForStatement();
-        }
-        else if(this->Current()->Kind() == SyntaxKind::BreakKeyword)
-        {
-            return this->ParseBreakStatement();
-        }
-        else if(this->Current()->Kind() == SyntaxKind::ContinueKeyword)
-        {
-            return this->ParseContinueStatement();
-        }
+            case SyntaxKind::OpenBraceToken: return this->ParseBlockStatement(); break;
+            case SyntaxKind::IfKeyword: return this->ParseIfStatement(); break;
+            case SyntaxKind::WhileKeyword: return this->ParseWhileStatement(); break;
+            case SyntaxKind::ForKeyword: return this->ParseForStatement(); break;
+            case SyntaxKind::BreakKeyword: return this->ParseBreakStatement(); break;
+            case SyntaxKind::ContinueKeyword: return this->ParseContinueStatement(); break;
+            case SyntaxKind::VarKeyword:
+            case SyntaxKind::LetKeyword:
+                return this->ParseVariableDeclarationStatement(); break;
 
-        return this->ParseExpressionStatement();
+            default: return this->ParseExpressionStatement(); break;
+        }
     }
 
     std::unique_ptr<StatementSyntax> Parser::ParseIfStatement()
     {
-        auto keyword = this->MatchToken(SyntaxKind::IfKeyword);
+        auto keyword = this->Consume(SyntaxKind::IfKeyword, "Expected 'If' keyword.");
+        (void)this->Consume(SyntaxKind::OpenParenthesisToken, "Expected a '('.");
         auto condition = this->ParseExpression();
-        auto statement = this->ParseStatement();
+        (void)this->Consume(SyntaxKind::CloseParenthesisToken, "Expected a ')'.");
+        auto statement = this->ParseStatement(); /* {} */
         auto elseClause = this->ParseElseClause();
 
-        return std::make_unique<IfStatementSyntax>(keyword, std::move(condition), std::move(statement), std::move(elseClause));
+        return std::make_unique<IfStatementSyntax>(std::move(keyword), std::move(condition), std::move(statement), std::move(elseClause));
     }
 
     std::unique_ptr<StatementSyntax> Parser::ParseElseClause()
@@ -199,30 +262,18 @@ namespace trylang
             return nullptr;
         }
 
-        auto keyword = this->NextToken();
+        auto keyword = this->Consume(SyntaxKind::ElseKeyword, "Expected 'else' keyword.");
         auto statement = this->ParseStatement();
 
-        return std::make_unique<ElseClauseSyntax>(keyword, std::move(statement));
+        return std::make_unique<ElseStatementSyntax>(std::move(keyword), std::move(statement));
     }
 
-
-    std::unique_ptr<StatementSyntax> Parser::ParseVariableDeclaration()
-    {
-        auto expected = this->Current()->Kind() == SyntaxKind::VarKeyword ? SyntaxKind::VarKeyword : SyntaxKind::LetKeyword;
-        auto keyword = this->MatchToken(expected);
-        auto identifier = this->MatchToken(SyntaxKind::IdentifierToken);
-        auto typeClause = this->ParseOptionalTypeClause();
-        auto equalsToken = this->MatchToken(SyntaxKind::EqualsToken);
-        auto initializer = this->ParseExpression();
-
-        return std::make_unique<VariableDeclarationSyntax>(keyword, identifier, std::move(typeClause) ,equalsToken, std::move(initializer));
-    }
 
     std::unique_ptr<StatementSyntax> Parser::ParseBlockStatement()
     {
         std::vector<std::unique_ptr<StatementSyntax>> statements;
 
-        auto openBraceToken = this->MatchToken(SyntaxKind::OpenBraceToken);
+        auto openBraceToken = this->Consume(SyntaxKind::OpenBraceToken, "Expected '('.");
 
         /* !(this->Current()->Kind() == SyntaxKind::EndOfFileToken || this->Current()->Kind() == SyntaxKind::CloseBraceToken) */
         while(this->Current()->Kind() != SyntaxKind::EndOfFileToken && this->Current()->Kind() != SyntaxKind::CloseBraceToken)
@@ -231,14 +282,15 @@ namespace trylang
             statements.emplace_back(std::move(statement));
         }
 
-        auto closeBraceToken = this->MatchToken(SyntaxKind::CloseBraceToken);
+        auto closeBraceToken = this->Consume(SyntaxKind::CloseBraceToken, "Expected ')'.");
 
-        return std::make_unique<BlockStatementSyntax>(openBraceToken, std::move(statements), closeBraceToken);
+        return std::make_unique<BlockStatementSyntax>(std::move(openBraceToken), std::move(statements), std::move(closeBraceToken));
     }
 
     std::unique_ptr<StatementSyntax> Parser::ParseExpressionStatement()
     {
         auto expression = this->ParseExpression();
+        (void)this->Consume(SyntaxKind::SemicolonToken, "Expected a ';'.");
         return std::make_unique<ExpressionStatementSyntax>(std::move(expression));
     }
 
@@ -252,47 +304,207 @@ namespace trylang
     {
         if(this->Peek(0)->Kind() == SyntaxKind::IdentifierToken && this->Peek(1)->Kind() == SyntaxKind::EqualsToken)
         {
-            auto identifierToken = this->NextToken();
-            auto operatorToken = this->NextToken();
+            auto identifierToken = this->Advance();
+            auto operatorToken = this->Advance();
             auto right = this->ParseAssignmentExpression();
 
-            return std::make_unique<AssignmentExpressionSyntax>(identifierToken, operatorToken, std::move(right));
+            return std::make_unique<AssignmentExpressionSyntax>(std::move(identifierToken), std::move(operatorToken), std::move(right));
         }
 
-        return this->ParseBinaryExpression();
+        return this->ParseLogicalOrExpression();
     }
 
-    std::unique_ptr<ExpressionSyntax> Parser::ParseBinaryExpression(int parentPrecedance)
+    std::unique_ptr<ExpressionSyntax> Parser::ParseLogicalOrExpression()
     {
-        std::unique_ptr<ExpressionSyntax> left;
+        auto expr = this->ParseLogicalAndExpression();
 
-        auto unaryOperatorPrecedance = this->GetUnaryOperatorPrecedance(this->Current()->Kind());
-        if(unaryOperatorPrecedance != 0 && unaryOperatorPrecedance >= parentPrecedance)
+        while(this->Current()->Kind() == SyntaxKind::PipePipeToken)
         {
-            auto operatorToken = this->NextToken();
-            auto operand = this->ParseBinaryExpression();
-            left = std::make_unique<UnaryExpressionSyntax>(operatorToken, std::move(operand));
+            auto op = this->Advance();
+            auto right = this->ParseLogicalAndExpression();
+
+            expr = std::make_unique<BinaryExpressionSyntax>(std::move(expr), std::move(op), std::move(right));
+        }
+
+        return expr;
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParseLogicalAndExpression()
+    {
+        auto expr = this->ParseEqualityExpression();
+
+        while(this->Current()->Kind() == SyntaxKind::AmpersandAmpersandToken)
+        {
+            auto op = this->Advance();
+            auto right = this->ParseEqualityExpression();
+
+            expr = std::make_unique<BinaryExpressionSyntax>(std::move(expr), std::move(op), std::move(right));
+        }
+
+        return expr;
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParseEqualityExpression()
+    {
+        auto expr = this->ParseComparisonExpression();
+        
+        while(this->Current()->Kind() == SyntaxKind::BangsEqualsToken || this->Current()->Kind() == SyntaxKind::EqualsEqualsToken)
+        {
+            auto op = this->Advance();
+            auto right = this->ParseComparisonExpression();
+
+            expr = std::make_unique<BinaryExpressionSyntax>(std::move(expr), std::move(op), std::move(right));
+        }
+
+        return expr;
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParseComparisonExpression()
+    {
+        auto expr = this->ParseTermExpression();
+        
+        while(this->Current()->Kind() == SyntaxKind::GreaterThanToken || this->Current()->Kind() == SyntaxKind::GreaterThanEqualsToken || this->Current()->Kind() == SyntaxKind::LessThanToken || this->Current()->Kind() == SyntaxKind::LessThanEqualsToken)
+        {
+            auto op = this->Advance();
+            auto right = this->ParseTermExpression();
+
+            expr = std::make_unique<BinaryExpressionSyntax>(std::move(expr), std::move(op), std::move(right));
+        }
+
+        return expr;
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParseTermExpression()
+    {
+        auto expr = this->ParseFactorExpression();
+        
+        while(this->Current()->Kind() == SyntaxKind::PlusToken || this->Current()->Kind() == SyntaxKind::MinusToken)
+        {
+            auto op = this->Advance();
+            auto right = this->ParseFactorExpression();
+
+            expr = std::make_unique<BinaryExpressionSyntax>(std::move(expr), std::move(op), std::move(right));
+        }
+
+        return expr;
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParseFactorExpression()
+    {
+        auto expr = this->ParseUnaryExpression();
+        
+        while(this->Current()->Kind() == SyntaxKind::StarToken || this->Current()->Kind() == SyntaxKind::SlashToken)
+        {
+            auto op = this->Advance();
+            auto right = this->ParseUnaryExpression();
+
+            expr = std::make_unique<BinaryExpressionSyntax>(std::move(expr), std::move(op), std::move(right));
+        }
+
+        return expr;
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParseUnaryExpression()
+    {
+        if(this->Current()->Kind() == SyntaxKind::BangToken || this->Current()->Kind() == SyntaxKind::PlusToken || this->Current()->Kind() == SyntaxKind::MinusToken)
+        {
+            auto op = this->Advance();
+            auto right = this->ParseUnaryExpression();
+
+            return std::make_unique<UnaryExpressionSyntax>(std::move(op), std::move(right));
+        }
+
+        return this->ParsePrimaryExpression();
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParseCallExpression()
+    {
+        auto identifierToken = this->Advance();
+        auto openParenthesis = this->Consume(SyntaxKind::OpenParenthesisToken, "Expected '('.");
+
+        std::vector<std::unique_ptr<ExpressionSyntax>> arguments;
+        
+        while(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken && this->Current()->Kind() != SyntaxKind::EndOfFileToken)
+        {
+            auto expression = this->ParseExpression();
+            arguments.emplace_back(std::move(expression));
+
+            if(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken)
+            {
+                auto commaToken = this->Consume(SyntaxKind::CommaToken, "Expected ','.");
+                /* arguments.emplace_back(std::move(commaToken)); */
+            }
+        }
+
+        auto closeParenthesis = this->Consume(SyntaxKind::CloseParenthesisToken, "Expected ')'.");
+
+        return std::make_unique<CallExpressionSyntax>(std::move(identifierToken), std::move(openParenthesis), std::move(arguments), std::move(closeParenthesis));
+        
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParsePrimaryExpression()
+    {
+        switch (this->Current()->Kind())
+        {
+            case SyntaxKind::OpenParenthesisToken:
+                return this->ParseParenthesizedExpression();
+                break;
+            case SyntaxKind::IdentifierToken:
+                if(this->Peek(1)->Kind() == SyntaxKind::OpenParenthesisToken)
+                {
+                    return this->ParseCallExpression();
+                }
+                else
+                {
+                    return this->ParseNameExpression();
+                }
+                break;
+            case SyntaxKind::TrueKeyword:
+            case SyntaxKind::FalseKeyword:
+            case SyntaxKind::StringToken:
+            default:
+                return this->ParseLiteralExpression();
+                break;
+        }
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParseParenthesizedExpression()
+    {
+        auto openParenthesisToken = this->Advance();
+        auto expression = this->ParseExpression();
+        auto closeParenthesisToken = this->Consume(SyntaxKind::CloseParenthesisToken, "Expected ')'.");
+
+        return std::make_unique<ParenthesizedExpressionSyntax>(std::move(openParenthesisToken), std::move(expression), std::move(closeParenthesisToken));
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParseNameExpression()
+    {
+        auto identifierToken = this->Advance();
+        return std::make_unique<NameExpressionSyntax>(std::move(identifierToken));
+    }
+
+    std::unique_ptr<ExpressionSyntax> Parser::ParseLiteralExpression()
+    {
+        if(this->Current()->Kind() == SyntaxKind::TrueKeyword || this->Current()->Kind() == SyntaxKind::FalseKeyword)
+        {
+            auto keywordToken = this->Advance();
+            auto value = keywordToken->Kind() == SyntaxKind::TrueKeyword;
+            return std::make_unique<LiteralExpressionSyntax>(std::move(keywordToken), value);
+        }
+        else if(this->Current()->Kind() == SyntaxKind::StringToken)
+        {
+            auto stringToken = this->Advance();
+            return std::make_unique<LiteralExpressionSyntax>(std::move(stringToken));
         }
         else
         {
-            left = this->ParsePrimaryExpression();
+            auto numberToken = this->Consume(SyntaxKind::NumberToken, "Expected a number.");
+            return std::make_unique<LiteralExpressionSyntax>(std::move(numberToken));
         }
-
-        while(true)
-        {
-            auto precedance = this->GetBinaryOperatorPrecedance(this->Current()->Kind());
-            if(precedance == 0 || precedance <= parentPrecedance)
-            {
-                break;
-            }
-            auto operatorToken = this->NextToken();
-            auto right = this->ParseBinaryExpression(precedance);
-            left = std::make_unique<BinaryExpressionSyntax>(std::move(left), operatorToken, std::move(right));
-        }
-
-        return left;
     }
 
+    /*
+    
     int Parser::GetUnaryOperatorPrecedance(SyntaxKind kind)
     {
         switch (kind)
@@ -334,119 +546,47 @@ namespace trylang
             return 0;
         }
     }
-
-    std::unique_ptr<ExpressionSyntax> Parser::ParsePrimaryExpression()
-    {
-
-        if(this->Current()->_kind == SyntaxKind::OpenParenthesisToken)
-        {
-            auto openParenthesisToken = this->NextToken();
-            auto expression = this->ParseExpression();
-            auto closeParenthesisToken = this->MatchToken(SyntaxKind::CloseParenthesisToken);
-
-            return std::make_unique<ParenthesizedExpressionSyntax>(openParenthesisToken, std::move(expression), closeParenthesisToken);
-        }
-        else if(
-            this->Current()->Kind() == SyntaxKind::TrueKeyword ||
-            this->Current()->Kind() == SyntaxKind::FalseKeyword
-        )
-        {
-            auto keywordToken = this->NextToken();
-            auto value = keywordToken->Kind() == SyntaxKind::TrueKeyword;
-            return std::make_unique<LiteralExpressionSyntax>(keywordToken, value);
-        }
-        else if(this->Current()->Kind() == SyntaxKind::IdentifierToken)
-        {
-            if(this->Peek(1)->Kind() == SyntaxKind::OpenParenthesisToken)
-            {
-                auto identifierToken = this->NextToken();
-                auto openParenthesis = this->MatchToken(SyntaxKind::OpenParenthesisToken);
-
-                std::vector<std::unique_ptr<ExpressionSyntax>> arguments;
-                while(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken && this->Current()->Kind() != SyntaxKind::EndOfFileToken)
-                {
-                    auto expression = this->ParseExpression();
-                    arguments.emplace_back(std::move(expression));
-
-                    if(this->Current()->Kind() != SyntaxKind::CloseParenthesisToken)
-                    {
-                        auto commaToken = this->MatchToken(SyntaxKind::CommaToken);
-                        // arguments.emplace_back(std::move(commaToken));
-                    }
-                }
-                auto closeParenthesis = this->MatchToken(SyntaxKind::CloseParenthesisToken);
-
-                return std::make_unique<CallExpressionSyntax>(identifierToken, openParenthesis, std::move(arguments), closeParenthesis);
-            }
-            else
-            {
-                auto identifierToken = this->NextToken();
-                return std::make_unique<NameExpressionSyntax>(identifierToken);
-            }
-        }
-        else if(this->Current()->Kind() == SyntaxKind::StringToken)
-        {
-            auto stringToken = this->NextToken();
-            return std::make_unique<LiteralExpressionSyntax>(std::move(stringToken));
-        }
-
-        std::shared_ptr<SyntaxToken> numberToken = this->MatchToken(SyntaxKind::NumberToken);
-        return std::make_unique<LiteralExpressionSyntax>(numberToken);
-    }
+    */
 
     std::unique_ptr<StatementSyntax> Parser::ParseWhileStatement()
     {
-        auto keyword = this->MatchToken(SyntaxKind::WhileKeyword);
+        auto keyword = this->Advance();
+        (void)this->Consume(SyntaxKind::OpenParenthesisToken, "Expected a '('.");
         auto condition = this->ParseExpression();
+        (void)this->Consume(SyntaxKind::CloseParenthesisToken, "Expected a ')'.");
         auto body = this->ParseStatement();
 
-        return std::make_unique<WhileStatementSyntax>(keyword, std::move(condition), std::move(body));
+        return std::make_unique<WhileStatementSyntax>(std::move(keyword), std::move(condition), std::move(body));
 
     }
 
     std::unique_ptr<StatementSyntax> Parser::ParseForStatement()
     {
-        auto keyword = this->MatchToken(SyntaxKind::ForKeyword);
-        auto identifier = this->MatchToken(SyntaxKind::IdentifierToken);
-        auto equalsToken = this->MatchToken(SyntaxKind::EqualsToken);
+        auto keyword = this->Advance();
+        auto identifier = this->Consume(SyntaxKind::IdentifierToken, "Expected an variable name.");
+        auto equalsToken = this->Consume(SyntaxKind::EqualsToken, "Expected an '='.");
 
         auto lowerBound = this->ParseExpression();
 
-        auto toKeyword = this->MatchToken(SyntaxKind::ToKeyword);
+        auto toKeyword = this->Consume(SyntaxKind::ToKeyword, "Expected a 'to' keyword.");
 
         auto upperBound = this->ParseExpression();
         auto body = this->ParseStatement();
 
-        return std::make_unique<ForStatementSyntax>(keyword, identifier, equalsToken, std::move(lowerBound), toKeyword,std::move(upperBound), std::move(body));
-    }
-
-    std::unique_ptr<TypeClauseSyntax> Parser::ParseOptionalTypeClause()
-    {
-        if(this->Current()->Kind() != SyntaxKind::ColonToken)
-        {
-            return nullptr;
-        }
-
-        return this->ParseTypeClause();
-    }
-
-    std::unique_ptr<TypeClauseSyntax> Parser::ParseTypeClause()
-    {
-        auto colonToken = this->MatchToken(SyntaxKind::ColonToken);
-        auto identifierToken = this->MatchToken(SyntaxKind::IdentifierToken);
-
-        return std::make_unique<TypeClauseSyntax>(colonToken, identifierToken);
+        return std::make_unique<ForStatementSyntax>(std::move(keyword), std::move(identifier), std::move(equalsToken), std::move(lowerBound), std::move(toKeyword),std::move(upperBound), std::move(body));
     }
 
     std::unique_ptr<StatementSyntax> Parser::ParseBreakStatement()
     {
-        auto keyword = this->MatchToken(SyntaxKind::BreakKeyword);
-        return std::make_unique<BreakStatementSyntax>(keyword);
+        auto keyword = this->Advance();
+        (void)this->Consume(SyntaxKind::SemicolonToken, "Expected a ';'.");
+        return std::make_unique<BreakStatementSyntax>(std::move(keyword));
     }
 
     std::unique_ptr<StatementSyntax> Parser::ParseContinueStatement()
     {
-        auto keyword = this->MatchToken(SyntaxKind::ContinueKeyword);
-        return std::make_unique<ContinueStatementSyntax>(keyword);
+        auto keyword = this->Advance();
+        (void)this->Consume(SyntaxKind::SemicolonToken, "Expected a ';'.");
+        return std::make_unique<ContinueStatementSyntax>(std::move(keyword));
     }
 }

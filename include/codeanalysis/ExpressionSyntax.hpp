@@ -1,5 +1,6 @@
 #pragma once
 
+#include <codeanalysis/Lexer.hpp>
 #include <vector>
 #include <codeanalysis/SyntaxKind.hpp>
 #include <codeanalysis/Types.hpp>
@@ -21,11 +22,11 @@ namespace trylang
     struct SyntaxToken : SyntaxNode
     {
         SyntaxKind _kind;
-        int _position;
+        int _line;
         std::string _text;
         object_t _value;
 
-        SyntaxToken(SyntaxKind kind, int position, std::string&& text, const object_t& value);
+        SyntaxToken(SyntaxKind kind, int line, std::string&& text, object_t&& value);
 
         SyntaxToken(const SyntaxToken&) = delete;
         SyntaxToken& operator=(const SyntaxToken&) = delete;
@@ -41,110 +42,6 @@ namespace trylang
         friend std::ostream& operator<<(std::ostream& out, const SyntaxToken& token);
     };
 
-    struct BoolConvertVisitor
-    {
-        bool operator()(int number)
-        {
-            if(number == 0)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        bool operator()(const std::string& str)
-        {
-            if(str.empty())
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        bool operator()(bool boolValue)
-        {
-            return boolValue;
-        }
-    };
-
-    struct IntConvertVisitor
-    {
-        int operator()(int number)
-        {
-           return number;
-        }
-
-        int operator()(const std::string& str)
-        {
-            int value;
-
-            try
-            {
-                value = std::stoi(str);
-
-            }catch (const std::exception& e)
-            {
-                /*throw std::logic_error("Invalid String value provided for int conversion");*/
-                value = -1;
-            }
-
-            return value;
-        }
-
-        int operator()(bool boolValue)
-        {
-            if(boolValue)
-            {
-                return 1;
-            }
-
-            return 0;
-        }
-    };
-
-    struct StringConvertVisitor
-    {
-        std::string operator()(int number)
-        {
-            return std::to_string(number);
-        }
-
-        std::string operator()(const std::string& str)
-        {
-            return str;
-        }
-
-        std::string operator()(bool boolValue)
-        {
-            if(boolValue)
-            {
-                return "true";
-            }
-
-            return "false";
-        }
-    };
-
-    struct PrintVisitor
-    {
-        void operator()(int number)
-        {
-            std::cout << " " << number;
-        }
-
-        void operator()(bool boolValue)
-        {
-            std::cout << std::boolalpha << boolValue;
-        }
-
-        void operator()(const std::string& str)
-        {
-            std::cout << str;
-        }
-    };
-
     /* Abstract Class */
     struct ExpressionSyntax : public SyntaxNode
     {
@@ -157,57 +54,43 @@ namespace trylang
         ~StatementSyntax() override = default;
     };
 
-    struct MemberSyntax : public SyntaxNode
-    {
-        ~MemberSyntax() override = default;
-    };
-
-    struct GlobalStatement : public MemberSyntax
-    {
-        std::unique_ptr<StatementSyntax> _statement;
-
-        explicit GlobalStatement(std::unique_ptr<StatementSyntax> statement);
-        SyntaxKind Kind() override;
-        std::vector<SyntaxNode*> GetChildren() override;
-    };
-
     struct TypeClauseSyntax : public SyntaxNode
     {
-        std::shared_ptr<SyntaxToken> _colonToken;
-        std::shared_ptr<SyntaxToken> _identifierToken;
+        std::unique_ptr<SyntaxToken> _colonToken;
+        std::unique_ptr<SyntaxToken> _identifierToken;
 
-        TypeClauseSyntax(const std::shared_ptr<SyntaxToken>& colonToken, const std::shared_ptr<SyntaxToken>& identifierToken);
+        TypeClauseSyntax(std::unique_ptr<SyntaxToken> colonToken, std::unique_ptr<SyntaxToken> identifierToken);
         SyntaxKind Kind() override;
         std::vector<SyntaxNode*> GetChildren() override;
     };
 
     struct ParameterSyntax : public SyntaxNode
     {
-        std::shared_ptr<SyntaxToken> _identifier;
+        std::unique_ptr<SyntaxToken> _identifier;
         std::unique_ptr<TypeClauseSyntax> _type;
 
-        ParameterSyntax(const std::shared_ptr<SyntaxToken>& identifier, std::unique_ptr<TypeClauseSyntax> type);
+        ParameterSyntax(std::unique_ptr<SyntaxToken> identifier, std::unique_ptr<TypeClauseSyntax> type);
         SyntaxKind Kind() override;
         std::vector<SyntaxNode*> GetChildren() override;
 
     };
 
-    struct FunctionDeclarationSyntax : public MemberSyntax
+    struct FunctionDeclarationStatementSyntax : public StatementSyntax
     {
-        std::shared_ptr<SyntaxToken> _functionKeyword;
-        std::shared_ptr<SyntaxToken> _identifier;
-        std::shared_ptr<SyntaxToken> _openParenthesisToken;
+        std::unique_ptr<SyntaxToken> _functionKeyword;
+        std::unique_ptr<SyntaxToken> _identifier;
+        std::unique_ptr<SyntaxToken> _openParenthesisToken;
         std::vector<std::unique_ptr<ParameterSyntax>> _parameters;
-        std::shared_ptr<SyntaxToken> _closeParenthesisToken;
+        std::unique_ptr<SyntaxToken> _closeParenthesisToken;
         std::unique_ptr<TypeClauseSyntax> _typeClause;
         std::unique_ptr<StatementSyntax> _body;
 
-        FunctionDeclarationSyntax(
-                const std::shared_ptr<SyntaxToken>& functionKeyword,
-                const std::shared_ptr<SyntaxToken>& identifier,
-                const std::shared_ptr<SyntaxToken>& openParenthesisToken,
+        FunctionDeclarationStatementSyntax(
+                std::unique_ptr<SyntaxToken> functionKeyword,
+                std::unique_ptr<SyntaxToken> identifier,
+                std::unique_ptr<SyntaxToken> openParenthesisToken,
                 std::vector<std::unique_ptr<ParameterSyntax>> parameters,
-                const std::shared_ptr<SyntaxToken>& closeParenthesisToken,
+                std::unique_ptr<SyntaxToken> closeParenthesisToken,
                 std::unique_ptr<TypeClauseSyntax> typeClause,
                 std::unique_ptr<StatementSyntax> body
         );
@@ -216,12 +99,33 @@ namespace trylang
         std::vector<SyntaxNode*> GetChildren() override;
     };
 
+    struct VariableDeclarationStatementSyntax : public StatementSyntax
+    {
+        std::unique_ptr<SyntaxToken> _keyword;
+        std::unique_ptr<SyntaxToken> _identifier; /* identifierToken */
+        std::unique_ptr<TypeClauseSyntax> _typeClause = nullptr;
+        std::unique_ptr<SyntaxToken> _equalsToken;
+        std::unique_ptr<ExpressionSyntax> _expression;
+
+
+        VariableDeclarationStatementSyntax(
+                    std::unique_ptr<SyntaxToken> keyword,
+                    std::unique_ptr<SyntaxToken> identifier,
+                    std::unique_ptr<TypeClauseSyntax> typeClause,
+                    std::unique_ptr<SyntaxToken> equalsToken,
+                    std::unique_ptr<ExpressionSyntax> expression
+                );
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct CompilationUnitSyntax : public SyntaxNode
     {
-        std::vector<std::unique_ptr<MemberSyntax>> _members; /* This includes both GlobalStatementSyntax and FunctionDeclarationSyntax */
-        std::shared_ptr<SyntaxToken> _endOfFileToken;
+        std::vector<std::unique_ptr<StatementSyntax>> _statements; /* This includes both VarDeclarationStatementSyntax and FunctionDeclarationStatementSyntax */
 
-        CompilationUnitSyntax(std::vector<std::unique_ptr<MemberSyntax>> members, const std::shared_ptr<SyntaxToken>& endOfFileToken);
+        CompilationUnitSyntax(std::vector<std::unique_ptr<StatementSyntax>> statements);
 
         SyntaxKind Kind() override;
         std::vector<SyntaxNode*> GetChildren() override;
@@ -229,36 +133,14 @@ namespace trylang
 
     struct BlockStatementSyntax: public StatementSyntax
     {
-        std::shared_ptr<SyntaxToken> _openBraceToken;
+        std::unique_ptr<SyntaxToken> _openBraceToken;
         std::vector<std::unique_ptr<StatementSyntax>> _statements;
-        std::shared_ptr<SyntaxToken> _closeBraceToken;
+        std::unique_ptr<SyntaxToken> _closeBraceToken;
 
         BlockStatementSyntax(
-                    const std::shared_ptr<SyntaxToken>& openBraceToken,
+                    std::unique_ptr<SyntaxToken> openBraceToken,
                     std::vector<std::unique_ptr<StatementSyntax>> statements ,
-                    const std::shared_ptr<SyntaxToken>& closeBraceToken);
-
-        SyntaxKind Kind() override;
-
-        std::vector<SyntaxNode*> GetChildren() override;
-    };
-
-    struct VariableDeclarationSyntax : public StatementSyntax
-    {
-        std::shared_ptr<SyntaxToken> _keyword;
-        std::shared_ptr<SyntaxToken> _identifier; /* identifierToken */
-        std::unique_ptr<TypeClauseSyntax> _typeClause = nullptr;
-        std::shared_ptr<SyntaxToken> _equalsToken;
-        std::unique_ptr<ExpressionSyntax> _expression;
-
-
-        VariableDeclarationSyntax(
-                    const std::shared_ptr<SyntaxToken>& keyword,
-                    const std::shared_ptr<SyntaxToken>& identifier,
-                    std::unique_ptr<TypeClauseSyntax> typeClause,
-                    const std::shared_ptr<SyntaxToken>& equalsToken,
-                    std::unique_ptr<ExpressionSyntax> expression
-                    );
+                    std::unique_ptr<SyntaxToken> closeBraceToken);
 
         SyntaxKind Kind() override;
 
@@ -275,12 +157,12 @@ namespace trylang
         std::vector<SyntaxNode*> GetChildren() override;
     };
 
-    struct ElseClauseSyntax: public StatementSyntax
+    struct ElseStatementSyntax: public StatementSyntax
     {
-        std::shared_ptr<SyntaxToken> _elseKeyword;
+        std::unique_ptr<SyntaxToken> _elseKeyword;
         std::unique_ptr<StatementSyntax> _elseStatement;
 
-        ElseClauseSyntax(const std::shared_ptr<SyntaxToken>& elseKeyword, std::unique_ptr<StatementSyntax> elseStatement);
+        ElseStatementSyntax(std::unique_ptr<SyntaxToken> elseKeyword, std::unique_ptr<StatementSyntax> elseStatement);
 
         SyntaxKind Kind() override;
 
@@ -290,13 +172,13 @@ namespace trylang
 
     struct IfStatementSyntax : public StatementSyntax
     {
-        std::shared_ptr<SyntaxToken> _ifKeyword;
+        std::unique_ptr<SyntaxToken> _ifKeyword;
         std::unique_ptr<ExpressionSyntax> _condition;
         std::unique_ptr<StatementSyntax> _thenStatement;
         std::unique_ptr<StatementSyntax> _elseClause = nullptr;
 
         IfStatementSyntax(
-                const std::shared_ptr<SyntaxToken>& ifKeyword,
+                std::unique_ptr<SyntaxToken> ifKeyword,
                 std::unique_ptr<ExpressionSyntax> condition,
                 std::unique_ptr<StatementSyntax> thenStatement,
                 std::unique_ptr<StatementSyntax> elseClause
@@ -309,12 +191,12 @@ namespace trylang
 
     struct WhileStatementSyntax : public StatementSyntax
     {
-        std::shared_ptr<SyntaxToken> _whileKeyword;
+        std::unique_ptr<SyntaxToken> _whileKeyword;
         std::unique_ptr<ExpressionSyntax> _condition;
         std::unique_ptr<StatementSyntax> _body;
 
         WhileStatementSyntax(
-                const std::shared_ptr<SyntaxToken>& whileKeyword,
+                std::unique_ptr<SyntaxToken> whileKeyword,
                 std::unique_ptr<ExpressionSyntax> condition,
                 std::unique_ptr<StatementSyntax> body
         );
@@ -326,9 +208,9 @@ namespace trylang
 
     struct BreakStatementSyntax : public StatementSyntax
     {
-        std::shared_ptr<SyntaxToken> _breakKeyword;
+        std::unique_ptr<SyntaxToken> _breakKeyword;
 
-        explicit BreakStatementSyntax(const std::shared_ptr<SyntaxToken>& breakKeyword);
+        explicit BreakStatementSyntax(std::unique_ptr<SyntaxToken> breakKeyword);
 
         SyntaxKind Kind() override;
 
@@ -337,9 +219,9 @@ namespace trylang
 
     struct ContinueStatementSyntax : public StatementSyntax
     {
-        std::shared_ptr<SyntaxToken> _continueKeyword;
+        std::unique_ptr<SyntaxToken> _continueKeyword;
 
-        explicit ContinueStatementSyntax(const std::shared_ptr<SyntaxToken>& continueKeyword);
+        explicit ContinueStatementSyntax(std::unique_ptr<SyntaxToken> continueKeyword);
 
         SyntaxKind Kind() override;
 
@@ -348,20 +230,20 @@ namespace trylang
 
     struct ForStatementSyntax : public StatementSyntax
     {
-        std::shared_ptr<SyntaxToken> _keyword;
-        std::shared_ptr<SyntaxToken> _identifier;
-        std::shared_ptr<SyntaxToken> _equalsToken;
+        std::unique_ptr<SyntaxToken> _keyword;
+        std::unique_ptr<SyntaxToken> _identifier;
+        std::unique_ptr<SyntaxToken> _equalsToken;
         std::unique_ptr<ExpressionSyntax>_lowerBound;
-        std::shared_ptr<SyntaxToken> _toKeyword;
+        std::unique_ptr<SyntaxToken> _toKeyword;
         std::unique_ptr<ExpressionSyntax> _upperBound;
         std::unique_ptr<StatementSyntax> _body;
 
         ForStatementSyntax(
-                const std::shared_ptr<SyntaxToken>& keyword,
-                const std::shared_ptr<SyntaxToken>& identifierToken,
-                const std::shared_ptr<SyntaxToken>& equalsToken,
+                std::unique_ptr<SyntaxToken> keyword,
+                std::unique_ptr<SyntaxToken> identifierToken,
+                std::unique_ptr<SyntaxToken> equalsToken,
                 std::unique_ptr<ExpressionSyntax> lowerBound,
-                const std::shared_ptr<SyntaxToken>& toKeyword,
+                std::unique_ptr<SyntaxToken> toKeyword,
                 std::unique_ptr<ExpressionSyntax> upperBound,
                 std::unique_ptr<StatementSyntax> body
         );
@@ -374,15 +256,15 @@ namespace trylang
 
     struct CallExpressionSyntax: public ExpressionSyntax
     {
-        std::shared_ptr<SyntaxToken> _identifier; /* name of the function during calling function */
-        std::shared_ptr<SyntaxToken> _openParenthesis;
-        std::shared_ptr<SyntaxToken> _closeParenthesis;
+        std::unique_ptr<SyntaxToken> _identifier; /* name of the function during calling function */
+        std::unique_ptr<SyntaxToken> _openParenthesis;
+        std::unique_ptr<SyntaxToken> _closeParenthesis;
         std::vector<std::unique_ptr<ExpressionSyntax>> _arguments;
 
-        CallExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifier,
-                             const std::shared_ptr<SyntaxToken>& openParenthesis,
+        CallExpressionSyntax(std::unique_ptr<SyntaxToken> identifier,
+                             std::unique_ptr<SyntaxToken> openParenthesis,
                              std::vector<std::unique_ptr<ExpressionSyntax>> arguments,
-                             const std::shared_ptr<SyntaxToken>& closeParenthesis);
+                             std::unique_ptr<SyntaxToken> closeParenthesis);
 
         SyntaxKind Kind() override;
 
@@ -391,9 +273,9 @@ namespace trylang
 
     struct NameExpressionSyntax : public ExpressionSyntax
     {
-        std::shared_ptr<SyntaxToken> _identifierToken;
+        std::unique_ptr<SyntaxToken> _identifierToken;
         
-        explicit NameExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifierToken);
+        explicit NameExpressionSyntax(std::unique_ptr<SyntaxToken> identifierToken);
 
         SyntaxKind Kind() override;
 
@@ -403,11 +285,11 @@ namespace trylang
     struct AssignmentExpressionSyntax : public ExpressionSyntax
     {
 
-        std::shared_ptr<SyntaxToken> _identifierToken;
-        std::shared_ptr<SyntaxToken> _equalsToken;
+        std::unique_ptr<SyntaxToken> _identifierToken;
+        std::unique_ptr<SyntaxToken> _equalsToken;
         std::unique_ptr<ExpressionSyntax> _expression;
 
-        AssignmentExpressionSyntax(const std::shared_ptr<SyntaxToken>& identifierToken, const std::shared_ptr<SyntaxToken>& equalsToken, std::unique_ptr<ExpressionSyntax> expression);
+        AssignmentExpressionSyntax(std::unique_ptr<SyntaxToken> identifierToken, std::unique_ptr<SyntaxToken> equalsToken, std::unique_ptr<ExpressionSyntax> expression);
 
         SyntaxKind Kind() override;
 
@@ -416,11 +298,11 @@ namespace trylang
 
     struct LiteralExpressionSyntax : public ExpressionSyntax
     {
-        std::shared_ptr<SyntaxToken> _literalToken;
+        std::unique_ptr<SyntaxToken> _literalToken;
         object_t _value;
         
-        explicit LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken);
-        LiteralExpressionSyntax(const std::shared_ptr<SyntaxToken>& literalToken, const object_t& value);
+        explicit LiteralExpressionSyntax(std::unique_ptr<SyntaxToken> literalToken);
+        LiteralExpressionSyntax(std::unique_ptr<SyntaxToken> literalToken, const object_t& value);
         
         SyntaxKind Kind() override;
 
@@ -430,11 +312,11 @@ namespace trylang
     struct BinaryExpressionSyntax : public ExpressionSyntax
     {
 
-        std::shared_ptr<SyntaxToken> _operatorToken;
+        std::unique_ptr<SyntaxToken> _operatorToken;
         std::unique_ptr<ExpressionSyntax> _left;
         std::unique_ptr<ExpressionSyntax> _right;
 
-        BinaryExpressionSyntax(std::unique_ptr<ExpressionSyntax> left, const std::shared_ptr<SyntaxToken>& operatorToken, std::unique_ptr<ExpressionSyntax> right);
+        BinaryExpressionSyntax(std::unique_ptr<ExpressionSyntax> left, std::unique_ptr<SyntaxToken> operatorToken, std::unique_ptr<ExpressionSyntax> right);
 
         SyntaxKind Kind() override;
 
@@ -444,10 +326,10 @@ namespace trylang
     struct UnaryExpressionSyntax : public ExpressionSyntax
     {
 
-        std::shared_ptr<SyntaxToken> _operatorToken;
+        std::unique_ptr<SyntaxToken> _operatorToken;
         std::unique_ptr<ExpressionSyntax> _operand;
 
-        UnaryExpressionSyntax(const std::shared_ptr<SyntaxToken>& operatorToken, std::unique_ptr<ExpressionSyntax> operand);
+        UnaryExpressionSyntax(std::unique_ptr<SyntaxToken> operatorToken, std::unique_ptr<ExpressionSyntax> operand);
 
         SyntaxKind Kind() override;
 
@@ -457,11 +339,11 @@ namespace trylang
     struct ParenthesizedExpressionSyntax : public ExpressionSyntax
     {
 
-        std::shared_ptr<SyntaxToken> _openParenthesisToken;
+        std::unique_ptr<SyntaxToken> _openParenthesisToken;
         std::unique_ptr<ExpressionSyntax> _expression;
-        std::shared_ptr<SyntaxToken> _closeParenthesisToken;
+        std::unique_ptr<SyntaxToken> _closeParenthesisToken;
 
-        ParenthesizedExpressionSyntax(const std::shared_ptr<SyntaxToken>& openParenthesisToken, std::unique_ptr<ExpressionSyntax> expression, const std::shared_ptr<SyntaxToken>& closeParenthesisToken);
+        ParenthesizedExpressionSyntax(std::unique_ptr<SyntaxToken> openParenthesisToken, std::unique_ptr<ExpressionSyntax> expression, std::unique_ptr<SyntaxToken> closeParenthesisToken);
 
         SyntaxKind Kind() override;
 
