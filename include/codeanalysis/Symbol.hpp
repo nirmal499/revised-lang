@@ -134,4 +134,5 @@ namespace trylang
         std::size_t operator()(const FunctionSymbol& var) const;
     };
 
+    std::string GenerateRandomText(size_t length);
 }

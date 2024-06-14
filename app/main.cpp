@@ -6,6 +6,7 @@
 #include <codeanalysis/Evaluator.hpp>
 #include <codeanalysis/ExpressionSyntax.hpp>
 #include <codeanalysis/BoundScope.hpp>
+#include <codeanalysis/BoundNodePrinter.hpp>
 #include <fstream>
 #include <memory>
 #include <vector>
@@ -13,8 +14,6 @@
 #define FILE_PATH "/home/nbaskey/Desktop/nirmal/projects/compiler/source_file/"
 
 void Run3();
-
-trylang::variable_map_t g_variable_map;
 
 int main()
 {
@@ -151,7 +150,7 @@ void Run3()
 {
     std::string errors;
 
-    std::ifstream infile(FILE_PATH "main5.txt");
+    std::ifstream infile(FILE_PATH "main7.txt");
     if(!infile.is_open())
     {
         throw std::runtime_error("Not able to open file");
@@ -180,7 +179,13 @@ void Run3()
     }
     else
     {
-        trylang::Evaluator evaluator(std::move(program), g_variable_map);
+        trylang::PrettyPrintSyntaxNodes(compilationUnitSyntax.get());
+        trylang::PrettyPrintBoundNodes((program->_statement.get()));
+        trylang::NodePrinter::Write(program->_statement.get());
+
+        // return;
+
+        trylang::Evaluator evaluator(std::move(program));
         trylang::object_t result = evaluator.Evaluate();
         if(result.has_value())
         {

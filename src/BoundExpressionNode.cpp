@@ -292,9 +292,10 @@ namespace trylang
 
     BoundForStatement::BoundForStatement(const std::shared_ptr<VariableSymbol>& variable, std::unique_ptr<BoundExpressionNode> lowerBound,
                                          std::unique_ptr<BoundExpressionNode> upperBound,
+                                         const std::shared_ptr<VariableSymbol>& variableForUpperBoundToBeUsedDuringRewritingForIntoWhile,
                                          std::unique_ptr<BoundStatementNode> body,
                                          std::pair<LabelSymbol, LabelSymbol> loopLabel
-                                         ) : _variable(variable), _lowerBound(std::move(lowerBound)), _upperBound(std::move(upperBound)), _body(std::move(body)), _loopLabel(std::move(loopLabel))
+                                         ) : _variable(variable), _lowerBound(std::move(lowerBound)), _upperBound(std::move(upperBound)), _body(std::move(body)), _loopLabel(std::move(loopLabel)), _variableForUpperBoundToBeUsedDuringRewritingForIntoWhile(variableForUpperBoundToBeUsedDuringRewritingForIntoWhile)
     {
 
     }

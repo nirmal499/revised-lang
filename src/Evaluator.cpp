@@ -5,14 +5,18 @@
 #include <codeanalysis/BoundExpressionNode.hpp>
 #include <codeanalysis/SyntaxKind.hpp>
 #include <codeanalysis/BoundScope.hpp>
+#include <codeanalysis/Environment.hpp>
+#include <memory>
+#include <stdexcept>
 #include <variant>
 
 namespace trylang
 {
-    Evaluator::Evaluator(std::unique_ptr<BoundProgram> program, variable_map_t &variables)
-        : _program(std::move(program)) ,_globals(variables)
-    {}
-
+    Evaluator::Evaluator(std::unique_ptr<BoundProgram> program)
+        : _program(std::move(program))
+    {
+        _env = std::make_shared<Environment>(nullptr);
+    }
 
     object_t Evaluator::Evaluate()
     {
@@ -87,6 +91,14 @@ namespace trylang
             auto* BLSnode = dynamic_cast<BoundLabelStatement*>(s);
             if(BLSnode != nullptr)
             {
+                if(BLSnode->_label._name == "StartBlockLabel")
+                {
+                    _env = std::make_shared<Environment>(_env);
+                }
+                else if(BLSnode->_label._name == "EndBlockLabel")
+                {
+                    _env = _env->_parent;
+                }
                 index++;
                 continue;
             }
@@ -104,7 +116,7 @@ namespace trylang
 
         if(node->_variable->Kind() == SymbolKind::GlobalVariable)
         {
-            _globals[node->_variable->_name] = value;
+            _env->Define(node->_variable->_name, value);
         }
         else
         {
@@ -161,8 +173,16 @@ namespace trylang
     object_t Evaluator::EvaluateVariableExpression(BoundVariableExpression *node)
     {
         if(node->_variable->Kind() == SymbolKind::GlobalVariable)
-        {
-            return _globals.at(node->_variable->_name);
+        {   
+            auto value = _env->LookUpVariable(node->_variable->_name);
+            if(value.has_value())
+            {
+                return *value;
+            }
+            else
+            {
+                throw std::logic_error("'" + node->_variable->_name + "' is not present in the current _env.");
+            }
         }
         else
         {
@@ -181,7 +201,10 @@ namespace trylang
 
         if(node->_variable->Kind() == SymbolKind::GlobalVariable)
         {
-            _globals[node->_variable->_name] = value;
+            if(!_env->Assign(node->_variable->_name, value))
+            {
+                throw std::logic_error( node->_variable->_name + " is not present in the current _env");
+            }
         }
         else
         {

@@ -123,7 +123,7 @@ namespace trylang
 
     struct CompilationUnitSyntax : public SyntaxNode
     {
-        std::vector<std::unique_ptr<StatementSyntax>> _statements; /* This includes both VarDeclarationStatementSyntax and FunctionDeclarationStatementSyntax */
+        std::vector<std::unique_ptr<StatementSyntax>> _statements; /* This includes both StatementSyntax and FunctionDeclarationStatementSyntax */
 
         CompilationUnitSyntax(std::vector<std::unique_ptr<StatementSyntax>> statements);
 

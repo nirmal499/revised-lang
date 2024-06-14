@@ -159,6 +159,7 @@ namespace trylang
         std::shared_ptr<VariableSymbol> _variable;
         std::unique_ptr<BoundExpressionNode>_lowerBound;
         std::unique_ptr<BoundExpressionNode> _upperBound;
+        std::shared_ptr<VariableSymbol> _variableForUpperBoundToBeUsedDuringRewritingForIntoWhile;
         std::unique_ptr<BoundStatementNode> _body;
 
         std::pair<LabelSymbol, LabelSymbol> _loopLabel; /* break and continue Label */
@@ -167,6 +168,7 @@ namespace trylang
                 const std::shared_ptr<VariableSymbol>& variable,
                 std::unique_ptr<BoundExpressionNode> lowerBound,
                 std::unique_ptr<BoundExpressionNode> upperBound,
+                const std::shared_ptr<VariableSymbol>& variableForUpperBoundToBeUsedDuringRewritingForIntoWhile,
                 std::unique_ptr<BoundStatementNode> body,
                 std::pair<LabelSymbol, LabelSymbol> loopLabel
                 );

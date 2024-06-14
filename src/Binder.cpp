@@ -1,16 +1,21 @@
+#include "codeanalysis/Symbol.hpp"
 #include <codeanalysis/Binder.hpp>
 #include <codeanalysis/ExpressionSyntax.hpp>
 #include <codeanalysis/BoundNodeKind.hpp>
 #include <codeanalysis/BoundScope.hpp>
 #include <codeanalysis/BoundExpressionNode.hpp>
 #include <codeanalysis/Conversion.hpp>
+#include <codeanalysis/Lower.hpp>
 #include <algorithm>
 #include <memory>
 #include <sstream>
 #include <stack>
+#include <random>
+#include <stdexcept>
 
 namespace trylang
 {
+
     std::stringstream Binder::_buffer; /* Definition */
     std::string Binder::Errors()
     {
@@ -56,26 +61,26 @@ namespace trylang
         }
 
         auto statement = std::make_unique<BoundBlockStatement>(std::move(statements));
-        auto flattened = Binder::Flatten(std::move(statement));
+        auto flattened = Lower::RewriteAndFlatten(std::move(statement));
         auto errors = Binder::Errors();
 
         auto scope = std::make_shared<BoundScope>(nullptr); /* Global Environment */
 
-        scope->_variables = std::move(binder._scope->_variables);
         scope->_functions = std::move(binder._scope->_functions);
+        scope->_variables = std::move(binder._scope->_variables);
 
         std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>> functionBodies;
         for(const auto& function: scope->_functions)
         {
             if(function.second->_declaration == nullptr)
             {
-                /* These functions are global functions declared by the MAKER */
+                /* These functions are global functions declared by the CREATOR */
                 continue;
             }
 
             Binder binder(scope, function.second.get());
             auto body = binder.BindStatement(function.second->_declaration->_body.get());
-            auto flattenedBody = Binder::Flatten(std::move(body));
+            auto flattenedBody = Lower::RewriteAndFlatten(std::move(body));
             functionBodies[function.first] = std::make_pair(function.second, std::move(flattenedBody));
 
             errors.append(Binder::Errors());
@@ -89,7 +94,7 @@ namespace trylang
         }
         else
         {
-            boundProgram = std::make_unique<BoundProgram>(std::move(scope->_functions), std::move(scope->_variables),std::move(functionBodies), std::move(flattened));
+            boundProgram = std::make_unique<BoundProgram>(std::move(scope->_functions),std::move(functionBodies), std::move(flattened));
         }
 
         return boundProgram;
@@ -146,7 +151,7 @@ namespace trylang
 
         if(!_scope->TryDeclareVariable(variable))
         {
-            _buffer << "Symbol '" << variable->_name << "' already declared\n";
+            _buffer << "Variable '" << variable->_name << "' already declared\n";
         }
 
         return variable;
@@ -169,15 +174,11 @@ namespace trylang
         return type->Name();
     }
 
-
     std::unique_ptr<BoundStatementNode> Binder::BindBlockStatement(BlockStatementSyntax *syntax)
     {
         std::vector<std::unique_ptr<BoundStatementNode>> statements;
 
-        if(_turnOnScopingInBlockStatement)
-        {
-            _scope = std::make_shared<BoundScope>(_scope);
-        }
+        _scope = std::make_shared<BoundScope>(_scope);
 
         for(const auto& statementSyntax: syntax->_statements)
         {
@@ -185,10 +186,7 @@ namespace trylang
             statements.emplace_back(std::move(statement));
         }
 
-        if(_turnOnScopingInBlockStatement)
-        {
-            _scope = _scope->_parent;
-        }
+        _scope = _scope->_parent;
 
         return std::make_unique<BoundBlockStatement>(std::move(statements));
     }
@@ -311,7 +309,7 @@ namespace trylang
 
         if(std::strcmp(boundOperand->Type(), Types::ERROR->Name()) == 0)
         {
-            _buffer << "type " << boundOperand->Type() << " caused issue\n";
+            _buffer << "Type " << boundOperand->Type() << " are unresolved.\n";
             return std::make_unique<BoundErrorExpression>();
         }
 
@@ -333,7 +331,7 @@ namespace trylang
 
         if((std::strcmp(boundLeft->Type(), Types::ERROR->Name()) == 0) || (std::strcmp(boundRight->Type(), Types::ERROR->Name()) == 0))
         {
-            _buffer << "type " << boundLeft->Type() << " and " << boundLeft->Type() << " caused issue\n";
+            _buffer << "Type " << boundLeft->Type() << " and " << boundLeft->Type() << " are unresolved.\n";
             return std::make_unique<BoundErrorExpression>();
         }
 
@@ -348,46 +346,10 @@ namespace trylang
         return std::make_unique<BoundBinaryExpression>(std::move(boundLeft), boundOperatorKind, std::move(boundRight));
     }
 
-    LabelSymbol Binder::GenerateLabel()
-    {
-        auto name = "Label{" + std::to_string(++_labelCountForIfStatement) + "}";
-        LabelSymbol label(name);
-        return label;
-    }
-
     std::unique_ptr<BoundStatementNode> Binder::BindIfStatement(trylang::IfStatementSyntax *syntax)
     {
-        /**
-         * if <condition>
-         *      <then>
-         *
-         * ----------------------------------------->
-         *
-         * gotoIfFalse <condition> end
-         * <then>
-         * end:
-         *
-         *
-         * ================================================================================
-         * if <condition>
-         *      <then>
-         * else
-         *      <else>
-         *
-         * ----------------------------------------->
-         *
-         * gotoIfFalse <condition> else
-         * <then>
-         * goto end
-         * else:
-         * <else>
-         * end:
-         *
-         * **/
-
         auto condition = this->BindExpression(syntax->_condition.get(), Types::BOOL->Name());
         auto statement = this->BindStatement(syntax->_thenStatement.get());
-
         std::unique_ptr<BoundStatementNode> elseStatement = nullptr;
         if(syntax->_elseClause != nullptr)
         {
@@ -395,70 +357,7 @@ namespace trylang
             elseStatement = this->BindStatement(elseClause->_elseStatement.get());
         }
 
-        if(elseStatement == nullptr)
-        {
-            /**
-            * if <condition>
-            *      <then>
-            *
-            * ----------------------------------------->
-            *
-            * gotoIfFalse <condition> end
-            * <then>
-            * end:
-
-            * **/
-            auto endLabel = this->GenerateLabel();
-            auto gotoFalse = std::make_unique<BoundConditionalGotoStatement>(endLabel, std::move(condition), true);
-            auto endLabelStatement = std::make_unique<BoundLabelStatement>(endLabel);
-
-            std::vector<std::unique_ptr<BoundStatementNode>> statements_1;
-            statements_1.emplace_back(std::move(gotoFalse));
-            statements_1.emplace_back(std::move(statement));
-            statements_1.emplace_back(std::move(endLabelStatement));
-
-            auto result = std::make_unique<BoundBlockStatement>(std::move(statements_1));
-
-            return result;
-        }
-        else
-        {
-            /**
-            * if <condition>
-            *      <then>
-            * else
-            *      <else>
-            *
-            * ----------------------------------------->
-            *
-            * gotoIfFalse <condition> else
-            * <then>
-            * goto end
-            * else:
-            * <else>
-            * end:
-            *
-            * **/
-
-            auto elseLabel = this->GenerateLabel();
-            auto endLabel = this->GenerateLabel();
-            auto gotoFalse = std::make_unique<BoundConditionalGotoStatement>(elseLabel, std::move(condition), true);
-            auto gotoEndStatement = std::make_unique<BoundGotoStatement>(endLabel);
-            auto endLabelStatement = std::make_unique<BoundLabelStatement>(endLabel);
-            auto elseLabelStatement = std::make_unique<BoundLabelStatement>(elseLabel);
-
-            std::vector<std::unique_ptr<BoundStatementNode>> statements_1;
-            statements_1.emplace_back(std::move(gotoFalse));
-            statements_1.emplace_back(std::move(statement));
-            statements_1.emplace_back(std::move(gotoEndStatement));
-            statements_1.emplace_back(std::move(elseLabelStatement));
-            statements_1.emplace_back(std::move(elseStatement));
-            statements_1.emplace_back(std::move(endLabelStatement));
-
-            auto result = std::make_unique<BoundBlockStatement>(std::move(statements_1));
-
-            return result;
-        }
+        return std::make_unique<BoundIfStatement>(std::move(condition), std::move(statement), std::move(elseStatement));
     }
 
     std::pair<std::unique_ptr<BoundStatementNode>, std::pair<LabelSymbol, LabelSymbol>> Binder::BindLoopBody(StatementSyntax* body)
@@ -478,190 +377,26 @@ namespace trylang
 
     std::unique_ptr<BoundStatementNode> Binder::BindWhileStatement(WhileStatementSyntax *syntax)
     {
-        /**
-         * while <condition>
-         *      <body>
-         *
-         * ------------------------------------------------->
-         * goto check
-         * continue:
-         * <body>
-         * check:
-         *      gotoIfTrue <condition> continue
-         * break:
-         * */
         auto condition = this->BindExpression(syntax->_condition.get(), Types::BOOL->Name());
         auto [boundedBody, loopLabel] = this->BindLoopBody(syntax->_body.get());
 
-        auto continueLabel = loopLabel.second;
-        auto checkLabel = this->GenerateLabel();
-        auto breakLabel = loopLabel.first;
-
-        auto gotoCheck = std::make_unique<BoundGotoStatement>(checkLabel);
-        auto continueLabelStatement = std::make_unique<BoundLabelStatement>(continueLabel);
-        auto checkLabelStatement = std::make_unique<BoundLabelStatement>(checkLabel);
-        auto gotoTrue = std::make_unique<BoundConditionalGotoStatement>(continueLabel, std::move(condition), false);
-        auto endLabelStatement = std::make_unique<BoundLabelStatement>(breakLabel);
-
-        std::vector<std::unique_ptr<BoundStatementNode>> statements_1;
-        statements_1.emplace_back(std::move(gotoCheck));
-        statements_1.emplace_back(std::move(continueLabelStatement));
-        statements_1.emplace_back(std::move(boundedBody));
-        statements_1.emplace_back(std::move(checkLabelStatement));
-        statements_1.emplace_back(std::move(gotoTrue));
-        statements_1.emplace_back(std::move(endLabelStatement));
-
-        auto result = std::make_unique<BoundBlockStatement>(std::move(statements_1));
-
-        return result;
-    }
-
-    std::unique_ptr<BoundStatementNode> Binder::BindWhileStatement(BoundWhileStatement *node)
-    {
-        /**
-         * while <condition>
-         *      <body>
-         *
-         * ------------------------------------------------->
-         * goto check
-         * continue:
-         * <body>
-         * check:
-         *      gotoIfTrue <condition> continue;
-         * break:
-         * */
-
-        auto continueLabel = node->_loopLabel.second;
-        auto checkLabel = this->GenerateLabel();
-        auto breakLabel = node->_loopLabel.first;
-
-        auto gotoCheck = std::make_unique<BoundGotoStatement>(checkLabel);
-        auto continueLabelStatement = std::make_unique<BoundLabelStatement>(continueLabel);
-        auto checkLabelStatement = std::make_unique<BoundLabelStatement>(checkLabel);
-        auto gotoTrue = std::make_unique<BoundConditionalGotoStatement>(continueLabel, std::move(node->_condition), false);
-        auto breakLabelStatement = std::make_unique<BoundLabelStatement>(breakLabel);
-
-        std::vector<std::unique_ptr<BoundStatementNode>> statements_1;
-        statements_1.emplace_back(std::move(gotoCheck));
-        statements_1.emplace_back(std::move(continueLabelStatement));
-        statements_1.emplace_back(std::move(node->_body));
-        statements_1.emplace_back(std::move(checkLabelStatement));
-        statements_1.emplace_back(std::move(gotoTrue));
-        statements_1.emplace_back(std::move(breakLabelStatement));
-
-        auto result = std::make_unique<BoundBlockStatement>(std::move(statements_1));
-
-        return result;
+        return std::make_unique<BoundWhileStatement>(std::move(condition), std::move(boundedBody), std::move(loopLabel));
     }
 
     std::unique_ptr<BoundStatementNode> Binder::BindForStatement(ForStatementSyntax *syntax)
     {
-        /**
-         *
-         * for <var> = <lower> to <upper>
-         *      <body>
-         *
-         * ----------------------------------------------------------------->
-         *
-         * {
-         *      var <var> = <lower>
-         *      let upperBound = <upper>
-         *      while (<var> <= upperBound)
-         *      {
-         *          <body>
-         *          continue:
-         *          <var> = <var> + 1
-         *      }
-         * }
-         *
-         * */
-
         auto lowerBound = this->BindExpression(syntax->_lowerBound.get(), Types::INT->Name());
         auto upperBound = this->BindExpression(syntax->_upperBound.get(), Types::INT->Name());
 
         _scope = std::make_shared<BoundScope>(_scope);
 
         auto variable = this->BindVariable(syntax->_identifier->_text, true, Types::INT->Name());
-
-        _turnOnScopingInBlockStatement = false;
+        auto upperBoundSymbol = this->BindVariable("upperBound" + GenerateRandomText(3), true, Types::INT->Name());
         auto [boundedBody, loopLabel] = this->BindLoopBody(syntax->_body.get());
-        _turnOnScopingInBlockStatement = true;
-
-        auto upperBoundSymbol = this->BindVariable("upperBound", true, Types::INT->Name());
 
         _scope = _scope->_parent;
 
-        auto variableDeclaration = std::make_unique<BoundVariableDeclaration>(variable, std::move(lowerBound));
-        auto upperBoundVariableDeclaration = std::make_unique<BoundVariableDeclaration>(upperBoundSymbol, std::move(upperBound));
-
-        auto condition = std::make_unique<BoundBinaryExpression>(
-                std::make_unique<BoundVariableExpression>(variable),
-                BoundBinaryOperator::Bind(SyntaxKind::LessThanEqualsToken, Types::INT->Name(), Types::INT->Name()),
-                std::make_unique<BoundVariableExpression>(upperBoundSymbol)
-        );
-        auto continueLabelStatement = std::make_unique<BoundLabelStatement>(loopLabel.second);
-        auto increment = std::make_unique<BoundExpressionStatement>(
-                std::make_unique<BoundAssignmentExpression>(
-                        variable,
-                        std::make_unique<BoundBinaryExpression>(
-                                std::make_unique<BoundVariableExpression>(variable),
-                                BoundBinaryOperator::Bind(SyntaxKind::PlusToken, Types::INT->Name(),Types::INT->Name()),
-                                std::make_unique<BoundLiteralExpression>(1))
-                ));
-
-        /** This has to be done instead of doing std::make_unique<BoundBlockStatement>({std::move(body), std::move(increment)}) because BoundBlockStatement is explicit */
-        std::vector<std::unique_ptr<BoundStatementNode>> statements_1(3);
-        statements_1.emplace_back(std::move(boundedBody));
-        statements_1.emplace_back(std::move(continueLabelStatement));
-        statements_1.emplace_back(std::move(increment));
-
-        auto whileBody = std::make_unique<BoundBlockStatement>(std::move(statements_1));
-
-        loopLabel.second = LabelSymbol("continue");
-        auto whileStatement = std::make_unique<BoundWhileStatement>(std::move(condition), std::move(whileBody), std::move(loopLabel));
-
-        auto loweredWhileStatement = this->BindWhileStatement(whileStatement.get());
-
-        std::vector<std::unique_ptr<BoundStatementNode>> statements_2(3);
-        statements_2.emplace_back(std::move(variableDeclaration));
-        statements_2.emplace_back(std::move(upperBoundVariableDeclaration));
-        statements_2.emplace_back(std::move(loweredWhileStatement));
-
-        auto result = std::make_unique<BoundBlockStatement>(std::move(statements_2));
-
-        return result;
-    }
-
-    /* All the BoundBlockStatement will be removed and flattened into their BoundStatementNode */
-    std::unique_ptr<BoundBlockStatement> Binder::Flatten(std::unique_ptr<BoundStatementNode> statement)
-    {
-        std::vector<std::unique_ptr<BoundStatementNode>> statements;
-        std::stack<std::unique_ptr<BoundStatementNode>> m_stack;
-
-        m_stack.push(std::move(statement));
-
-        while(!m_stack.empty())
-        {
-            auto current = std::move(m_stack.top());
-            m_stack.pop();
-
-            auto* BBnode = dynamic_cast<BoundBlockStatement*>(current.get());
-            if(BBnode != nullptr)
-            {
-                for(const auto& stmt: BBnode->_statements){}
-                for(auto it = BBnode->_statements.rbegin(); it != BBnode->_statements.rend(); ++it)
-                {
-                    m_stack.push(std::move(*it));
-                }
-            }
-            else
-            {
-                statements.emplace_back(std::move(current));
-            }
-        }
-
-        return std::make_unique<BoundBlockStatement>(std::move(statements));
-
+        return std::make_unique<BoundForStatement>(variable, std::move(lowerBound), std::move(upperBound), upperBoundSymbol, std::move(boundedBody), std::move(loopLabel));
     }
 
     std::unique_ptr<BoundExpressionNode> Binder::BindConversion(const char* type, ExpressionSyntax *syntax, bool allowExplicit)
@@ -821,6 +556,4 @@ namespace trylang
     {
         return std::make_unique<BoundExpressionStatement>(std::make_unique<BoundErrorExpression>());
     }
-
-
 }

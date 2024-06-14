@@ -10,7 +10,9 @@ namespace trylang
         SyntaxToken* data = dynamic_cast<SyntaxToken*>(node);
         if(data != nullptr && data->_value.has_value())
         {
+            std::cout << " (";
             std::visit(PrintVisitor{}, *(data->_value));
+            std::cout << ")";
         }
 
         std::cout << "\n";
@@ -291,7 +293,7 @@ namespace trylang
 
     std::vector<SyntaxNode *> ForStatementSyntax::GetChildren()
     {
-        return {_keyword.get(), _identifier.get(), _equalsToken.get(), _lowerBound.get(),_toKeyword.get(), _upperBound.get()};
+        return {_keyword.get(), _identifier.get(), _equalsToken.get(), _lowerBound.get(),_toKeyword.get(), _upperBound.get(), _body.get()};
     }
 
     SyntaxKind CallExpressionSyntax::Kind()

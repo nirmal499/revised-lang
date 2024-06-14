@@ -15,7 +15,7 @@ namespace trylang
         std::unordered_map<std::string, std::shared_ptr<VariableSymbol>> _variables;
         std::unordered_map<std::string, std::shared_ptr<FunctionSymbol>> _functions;
 
-        explicit  BoundScope(const std::shared_ptr<BoundScope>& parent)
+        explicit BoundScope(const std::shared_ptr<BoundScope>& parent)
          : _parent(parent)
         {}
 
@@ -78,38 +78,17 @@ namespace trylang
         }
     };
 
-    // struct BoundGlobalScope
-    // {
-    //     std::string _errors;
-    //     std::unordered_map<std::string, std::shared_ptr<FunctionSymbol>> _functions;
-    //     std::unordered_map<std::string, std::shared_ptr<VariableSymbol>> _variables;
-    //     std::unique_ptr<BoundBlockStatement> _statement;
-
-    //     BoundGlobalScope(
-    //             std::string errors,
-    //             std::unordered_map<std::string, std::shared_ptr<FunctionSymbol>>&& functions,
-    //             std::unordered_map<std::string, std::shared_ptr<VariableSymbol>>&& variables,
-    //             std::unique_ptr<BoundBlockStatement> statement)
-    //             :   _errors(std::move(errors)),
-    //                 _functions(std::move(functions)),
-    //                 _variables(std::move(variables)),
-    //                 _statement(std::move(statement))
-    //     {}
-    // };
-
     struct BoundProgram
     {
         std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>> _functionBodies;
         std::unordered_map<std::string, std::shared_ptr<FunctionSymbol>> _functions;
-        std::unordered_map<std::string, std::shared_ptr<VariableSymbol>> _variables;
         std::unique_ptr<BoundBlockStatement> _statement;
 
         BoundProgram(
                     std::unordered_map<std::string, std::shared_ptr<FunctionSymbol>>&& functions,
-                    std::unordered_map<std::string, std::shared_ptr<VariableSymbol>>&& variables,
                     std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>> functionBodies,
                     std::unique_ptr<BoundBlockStatement> statement
-                ) : _functionBodies(std::move(functionBodies)), _functions(std::move(functions)), _variables(std::move(variables)), _statement(std::move(statement))
+                ) : _functionBodies(std::move(functionBodies)), _functions(std::move(functions)), _statement(std::move(statement))
         {
         }
         

@@ -21,7 +21,7 @@ add_executable(${EXECUTABLE_NAME}
     src/BoundNodePrinter.cpp
     src/BoundExpressionNode.cpp
     src/Symbol.cpp
-
+    src/Lower.cpp
 
 )
 

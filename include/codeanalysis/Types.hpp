@@ -2,7 +2,6 @@
 
 #include <optional>
 #include <variant>
-#include <codeanalysis/Symbol.hpp>
 #include <unordered_map>
 #include <iostream>
 
@@ -116,7 +115,7 @@ namespace trylang
     {
         void operator()(int number)
         {
-            std::cout << " " << number;
+            std::cout << number;
         }
 
         void operator()(bool boolValue)

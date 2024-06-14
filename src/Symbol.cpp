@@ -1,5 +1,6 @@
 #include <codeanalysis/Symbol.hpp>
 #include <codeanalysis/ExpressionSyntax.hpp>
+#include <random>
 
 namespace trylang
 {
@@ -82,5 +83,22 @@ namespace trylang
     SymbolKind GlobalVariableSymbol::Kind()
     {
         return SymbolKind::GlobalVariable;
+    }
+
+    std::string GenerateRandomText(size_t length)
+    {
+        const std::string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        std::default_random_engine generator(std::random_device{}());
+        std::uniform_int_distribution<size_t> distribution(0, characters.size() - 1);
+
+        std::string randomText;
+        randomText.reserve(length);
+
+        for (size_t i = 0; i < length; ++i)
+        {
+            randomText += characters[distribution(generator)];
+        }
+
+        return randomText;
     }
 }

@@ -54,7 +54,6 @@ namespace trylang
         int _labelCountForBreakAndContinueStatement = 0;
 
         explicit Binder(const std::shared_ptr<BoundScope>& parent, FunctionSymbol* _function);
-        static std::shared_ptr<BoundGlobalScope> BindGlobalScope(CompilationUnitSyntax* syntax);
         static std::unique_ptr<BoundProgram> BindProgram(CompilationUnitSyntax* syntaxTree);
 
         static std::stringstream _buffer;

@@ -29,17 +29,18 @@ namespace trylang
     struct BoundConversionExpression;
     struct BoundBinaryExpression;
 
+    struct Environment;
+
     struct Evaluator
     {
-
-        variable_map_t& _globals;
-        std::stack<variable_map_t> _locals;
+        std::stack<variable_map_t> _locals; /* For Recursive function calls */
+        std::shared_ptr<Environment> _env = nullptr;
 
         std::unique_ptr<BoundProgram> _program;
 
         object_t _lastValue;
 
-        Evaluator(std::unique_ptr<BoundProgram> program,variable_map_t& variables);
+        Evaluator(std::unique_ptr<BoundProgram> program);
 
         object_t Evaluate();
         object_t EvaluateStatement(BoundBlockStatement* body);
