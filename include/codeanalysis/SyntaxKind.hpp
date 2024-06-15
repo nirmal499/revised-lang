@@ -51,6 +51,7 @@ namespace trylang
         FunctionKeyword,
         BreakKeyword,
         ContinueKeyword,
+        ReturnKeyword,
 
         /* Expressions */
         LiteralExpression,
@@ -71,6 +72,7 @@ namespace trylang
         ForStatement,
         BreakStatement,
         ContinueStatement,
+        ReturnStatement,
 
         ParameterExpression,
         FunctionDeclarationStatement,
@@ -121,6 +123,7 @@ namespace trylang
         {SyntaxKind::FunctionKeyword, "FunctionKeyword"},
         {SyntaxKind::BreakKeyword, "BreakKeyword"},
         {SyntaxKind::ContinueKeyword, "ContinueKeyword"},
+        {SyntaxKind::ReturnKeyword, "ReturnKeyword"},
 
         {SyntaxKind::LiteralExpression, "LiteralExpression"},
         {SyntaxKind::BinaryExpression, "BinaryExpression"},
@@ -140,6 +143,7 @@ namespace trylang
         {SyntaxKind::ForStatement, "ForStatement"},
         {SyntaxKind::BreakStatement, "BreakStatement"},
         {SyntaxKind::ContinueStatement, "ContinueStatement"},
+        {SyntaxKind::ReturnStatement, "ReturnStatement"},
 
         {SyntaxKind::FunctionDeclarationStatement, "FunctionDeclarationStatement"},
         {SyntaxKind::ParameterExpression, "ParameterExpression"},

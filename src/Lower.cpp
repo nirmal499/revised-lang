@@ -73,6 +73,8 @@ namespace trylang
                 return RewriteConditionalGotoStatement(std::move(node));
             case BoundNodeKind::ExpressionStatement:
                 return RewriteExpressionStatement(std::move(node));
+            case BoundNodeKind::ReturnStatement:
+                return RewriteReturnStatement(std::move(node));
             default:
                 throw std::logic_error("Unexpected syntax " + __boundNodeStringMap[node->Kind()]);
         }
@@ -333,6 +335,12 @@ namespace trylang
     std::unique_ptr<BoundStatementNode> Lower::RewriteConditionalGotoStatement(std::unique_ptr<BoundStatementNode> node)
     {
         auto* stmt = static_cast<BoundConditionalGotoStatement*>(node.get());
+        return node;
+    }
+
+    std::unique_ptr<BoundStatementNode> Lower::RewriteReturnStatement(std::unique_ptr<BoundStatementNode> node)
+    {
+        auto* stmt = static_cast<BoundReturnStatement*>(node.get());
         return node;
     }
 

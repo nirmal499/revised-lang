@@ -420,4 +420,20 @@ namespace trylang
     {
         return {_expression.get()};
     }
+
+    BoundReturnStatement::BoundReturnStatement(std::unique_ptr<BoundExpressionNode> expression)
+        : _expression(std::move(expression))
+    {
+        
+    }
+
+    BoundNodeKind BoundReturnStatement::Kind()
+    {
+        return BoundNodeKind::ReturnStatement;
+    }
+
+    std::vector<BoundNode*> BoundReturnStatement::GetChildren()
+    {
+        return {_expression.get()};    
+    }
 }

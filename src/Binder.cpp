@@ -7,6 +7,7 @@
 #include <codeanalysis/Conversion.hpp>
 #include <codeanalysis/Lower.hpp>
 #include <algorithm>
+#include <cstring>
 #include <memory>
 #include <sstream>
 #include <stack>
@@ -120,6 +121,8 @@ namespace trylang
                 return this->BindBreakStatement(static_cast<BreakStatementSyntax*>(syntax));
             case SyntaxKind::ContinueStatement:
                 return this->BindContinueStatement(static_cast<ContinueStatementSyntax*>(syntax));
+            case SyntaxKind::ReturnStatement:
+                return this->BindReturnStatement(static_cast<ReturnStatementSyntax*>(syntax));
             default:
                 throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
         }
@@ -515,11 +518,13 @@ namespace trylang
             returnType = Types::VOID->Name();
         }
 
-        if(std::strcmp(returnType, Types::VOID->Name()) != 0)
-        {
-            /* we have a non void returnType */
-            _buffer << "Functions with return values are not supported\n";
-        }
+        /*
+            if(std::strcmp(returnType, Types::VOID->Name()) != 0)
+            {
+                // we have a non void returnType
+                _buffer << "Functions with return values are not supported\n";
+            }
+        */
 
         auto function = std::make_shared<FunctionSymbol>(syntax->_identifier->_text, std::move(parameters), returnType, syntax);
         if(!_scope->TryDeclareFunction(function))
@@ -550,6 +555,38 @@ namespace trylang
 
         auto continueLabel = _loopStack.top().second;
         return std::make_unique<BoundGotoStatement>(continueLabel);
+    }
+
+    std::unique_ptr<BoundStatementNode> Binder::BindReturnStatement(ReturnStatementSyntax *syntax)
+    {
+        auto expression = syntax->_expression == nullptr ? nullptr : this->BindExpression(syntax->_expression.get());
+        if(_function == nullptr)
+        {
+            _buffer << "Invalid Return Statement\n";
+        }
+        else
+        {
+            if(strcmp(_function->_type, Types::VOID->Name()) == 0)
+            {
+                /* function is having return type as void{DEFAULT ONE} */
+                if(expression != nullptr)
+                {
+                    _buffer << "Invalid Return Expression\n";
+                }
+            }
+            else
+            {
+                if(expression == nullptr)
+                {
+                    _buffer << "Missing Return Statement\n";
+                }
+                else
+                {
+                    expression = this->BindConversion(_function->_type, std::move(expression));
+                }
+            }
+        }
+        return std::make_unique<BoundReturnStatement>(std::move(expression));
     }
 
     std::unique_ptr<BoundStatementNode> Binder::BindErrorStatement()

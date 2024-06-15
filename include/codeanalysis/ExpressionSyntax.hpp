@@ -228,6 +228,18 @@ namespace trylang
         std::vector<SyntaxNode*> GetChildren() override;
     };
 
+    struct ReturnStatementSyntax : public StatementSyntax
+    {
+        std::unique_ptr<SyntaxToken> _returnKeyword;
+        std::unique_ptr<ExpressionSyntax> _expression = nullptr;
+
+        ReturnStatementSyntax(std::unique_ptr<SyntaxToken> returnKeyword, std::unique_ptr<ExpressionSyntax> expression);
+
+        SyntaxKind Kind() override;
+
+        std::vector<SyntaxNode*> GetChildren() override;
+    };
+
     struct ForStatementSyntax : public StatementSyntax
     {
         std::unique_ptr<SyntaxToken> _keyword;

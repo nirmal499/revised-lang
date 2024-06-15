@@ -54,6 +54,7 @@ namespace trylang
         std::unique_ptr<StatementSyntax> ParseForStatement();
         std::unique_ptr<StatementSyntax> ParseBreakStatement();
         std::unique_ptr<StatementSyntax> ParseContinueStatement();
+        std::unique_ptr<StatementSyntax> ParseReturnStatement();
 
         std::unique_ptr<StatementSyntax> ParseDeclaration();
 

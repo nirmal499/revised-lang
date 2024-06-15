@@ -119,6 +119,16 @@ namespace trylang
     };
     /*********************************************************************************************************************/
 
+    struct BoundReturnStatement : public BoundStatementNode
+    {
+        std::unique_ptr<BoundExpressionNode> _expression;
+
+        explicit BoundReturnStatement(std::unique_ptr<BoundExpressionNode> expression);
+
+        BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
+    };
+
     struct BoundExpressionStatement : public BoundStatementNode
     {
         std::unique_ptr<BoundExpressionNode> _expression;

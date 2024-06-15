@@ -32,6 +32,7 @@ namespace trylang
     struct ForStatementSyntax;
     struct BreakStatementSyntax;
     struct ContinueStatementSyntax;
+    struct ReturnStatementSyntax;
 
     struct BoundExpressionNode;
     struct BoundStatementNode;
@@ -80,6 +81,7 @@ namespace trylang
         std::unique_ptr<BoundStatementNode> BindForStatement(ForStatementSyntax *syntax);
         std::unique_ptr<BoundStatementNode> BindBreakStatement(BreakStatementSyntax *syntax);
         std::unique_ptr<BoundStatementNode> BindContinueStatement(ContinueStatementSyntax *syntax);
+        std::unique_ptr<BoundStatementNode> BindReturnStatement(ReturnStatementSyntax *syntax);
         std::unique_ptr<BoundStatementNode> BindErrorStatement();
         std::pair<std::unique_ptr<BoundStatementNode>, std::pair<LabelSymbol, LabelSymbol>> BindLoopBody(StatementSyntax* body);
 

@@ -235,6 +235,7 @@ namespace trylang
             case SyntaxKind::ForKeyword: return this->ParseForStatement(); break;
             case SyntaxKind::BreakKeyword: return this->ParseBreakStatement(); break;
             case SyntaxKind::ContinueKeyword: return this->ParseContinueStatement(); break;
+            case SyntaxKind::ReturnKeyword: return this->ParseReturnStatement(); break;
             case SyntaxKind::VarKeyword:
             case SyntaxKind::LetKeyword:
                 return this->ParseVariableDeclarationStatement(); break;
@@ -588,5 +589,17 @@ namespace trylang
         auto keyword = this->Advance();
         (void)this->Consume(SyntaxKind::SemicolonToken, "Expected a ';'.");
         return std::make_unique<ContinueStatementSyntax>(std::move(keyword));
+    }
+
+    std::unique_ptr<StatementSyntax> Parser::ParseReturnStatement()
+    {
+        auto keyword = this->Advance();
+        std::unique_ptr<ExpressionSyntax> expression = nullptr;
+        if(!this->Check(SyntaxKind::SemicolonToken))
+        {
+            expression = this->ParseExpression();
+        }
+        (void)this->Consume(SyntaxKind::SemicolonToken, "Expected a ';'.");
+        return std::make_unique<ReturnStatementSyntax>(std::move(keyword), std::move(expression));
     }
 }

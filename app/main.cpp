@@ -150,7 +150,7 @@ void Run3()
 {
     std::string errors;
 
-    std::ifstream infile(FILE_PATH "main7.txt");
+    std::ifstream infile(FILE_PATH "main9.txt");
     if(!infile.is_open())
     {
         throw std::runtime_error("Not able to open file");

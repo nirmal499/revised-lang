@@ -419,4 +419,21 @@ namespace trylang
     {
         return {_continueKeyword.get()};
     }
+
+    ReturnStatementSyntax::ReturnStatementSyntax(std::unique_ptr<SyntaxToken> returnKeyword, std::unique_ptr<ExpressionSyntax> expression)
+        : _returnKeyword(std::move(returnKeyword)),
+          _expression(std::move(expression))
+    {
+        
+    }
+
+    SyntaxKind ReturnStatementSyntax::Kind()
+    {
+        return SyntaxKind::ReturnStatement;
+    }
+
+    std::vector<SyntaxNode*> ReturnStatementSyntax::GetChildren()
+    {
+        return {_returnKeyword.get(), _expression.get()};
+    }
 }

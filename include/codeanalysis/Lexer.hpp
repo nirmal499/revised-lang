@@ -37,6 +37,7 @@ namespace trylang
             {"function", SyntaxKind::FunctionKeyword},
             {"break", SyntaxKind::BreakKeyword},
             {"continue", SyntaxKind::ContinueKeyword},
+            {"return", SyntaxKind::ReturnKeyword},
         };
 
         static std::string Errors();

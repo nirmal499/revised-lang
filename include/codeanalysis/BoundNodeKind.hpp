@@ -33,6 +33,7 @@ namespace trylang
         GotoStatement,
         ConditionalGotoStatement,
         LabelStatement,
+        ReturnStatement,
 
         Identity,
         Negation,
@@ -72,6 +73,7 @@ namespace trylang
         {BoundNodeKind::GotoStatement, "GotoStatement"},
         {BoundNodeKind::ConditionalGotoStatement, "ConditionalGotoStatement"},
         {BoundNodeKind::LabelStatement, "LabelStatement"},
+        {BoundNodeKind::ReturnStatement, "ReturnStatement"},
 
         {BoundNodeKind::Identity, "Identity"},
         {BoundNodeKind::Negation, "Negation"},

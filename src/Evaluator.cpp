@@ -103,6 +103,21 @@ namespace trylang
                 continue;
             }
 
+            auto* BRSnode = dynamic_cast<BoundReturnStatement*>(s);
+            if(BRSnode != nullptr)
+            {
+                if(BRSnode->_expression == nullptr)
+                {
+                    _lastValue = 0; /* Default return value in case of "return;" */
+                }
+                else
+                {
+                    _lastValue = this->EvaluateExpression(BRSnode->_expression.get());
+                }
+
+                return _lastValue;
+            }
+
             throw std::logic_error("Unexpected node " + trylang::__boundNodeStringMap[s->Kind()]);
         }
 
