@@ -3,6 +3,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <memory>
+#include <codeanalysis/Symbol.hpp>
 
 namespace trylang
 {
@@ -23,6 +26,7 @@ namespace trylang
     struct BoundForStatement;
     struct BoundGotoStatement;
     struct BoundConditionalGotoStatement;
+    struct BoundReturnStatement;
     struct BoundLabelStatement;
 
     struct BoundStatementNode;
@@ -33,6 +37,7 @@ namespace trylang
         static std::vector<std::string> _indentation;
         void WriteTo(BoundNode* node);
         static void Write(trylang::BoundNode *node);
+        static void WriteFunctions(const std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>>& node);
         // void WriteNestedStatement(BoundStatementNode* node);
 
         void WriteLiteralExpression(BoundLiteralExpression* node);
@@ -52,6 +57,7 @@ namespace trylang
         void WriteGotoStatement(BoundGotoStatement* node);
         void WriteConditionalGotoStatement(BoundConditionalGotoStatement* node);
         void WriteLabelStatement(BoundLabelStatement* node);
+        void WriteReturnStatement(BoundReturnStatement* node);
     };
 
 

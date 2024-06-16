@@ -22,6 +22,16 @@ namespace trylang
         }
 
     }
+
+    void PrettyPrintBoundNodesForFunctionBodies(const std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>>& functionBodies, std::string indent)
+    {
+        for(const auto& functionBody: functionBodies)
+        {
+            std::cout << "\n:::::::::::::::::::::::::::::::::::::" + functionBody.first + "::::::::::::::::::::::::::::::::::::::::\n";
+            PrettyPrintBoundNodes(functionBody.second.second.get());
+        }
+    }
+
     std::array<std::unique_ptr<BoundUnaryOperator>, 3> _boundUnaryOperatorArray = {
             std::make_unique<BoundUnaryOperator>(SyntaxKind::BangToken, BoundNodeKind::LogicalNegation, Types::BOOL->Name(),Types::BOOL->Name()),
             std::make_unique<BoundUnaryOperator>(SyntaxKind::PlusToken, BoundNodeKind::Identity, Types::INT->Name(),Types::INT->Name()),

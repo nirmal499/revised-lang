@@ -20,8 +20,6 @@ namespace trylang
         virtual ~BoundNode() = default;
     };
 
-    void PrettyPrintBoundNodes(BoundNode* node, std::string indent = "");
-
     struct BoundUnaryOperator : public BoundNode
     {
         SyntaxKind _syntaxKind;
@@ -290,4 +288,8 @@ namespace trylang
         BoundNodeKind Kind() override;
         std::vector<BoundNode*> GetChildren() override;
     };
+
+    void PrettyPrintBoundNodes(BoundNode* node, std::string indent = "");
+    void PrettyPrintBoundNodesForFunctionBodies(const std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>>& functionBodies, std::string indent = "");
+
 }

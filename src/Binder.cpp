@@ -13,6 +13,7 @@
 #include <stack>
 #include <random>
 #include <stdexcept>
+#include <string>
 
 namespace trylang
 {
@@ -82,6 +83,16 @@ namespace trylang
             Binder binder(scope, function.second.get());
             auto body = binder.BindStatement(function.second->_declaration->_body.get());
             auto flattenedBody = Lower::RewriteAndFlatten(std::move(body));
+
+            if(flattenedBody->_statements.at(flattenedBody->_statements.size() - 2)->Kind() != BoundNodeKind::ReturnStatement)
+            {   
+                /* 
+                    The Reason for doing "(flattenedBody->_statements.size() - 2)" is that in flattenedBody->_statement, 
+                    the last statement is LabelStatement 
+                */
+                _buffer << "Function last statement must be a return statement\n";
+            }
+
             functionBodies[function.first] = std::make_pair(function.second, std::move(flattenedBody));
 
             errors.append(Binder::Errors());
@@ -198,9 +209,9 @@ namespace trylang
     {
         /**
          *
-         * let name = print("Name") ---> will throw error
+         * let name = print("Name") ---> will not throw error because every function will return something and if return type is not provided then by default it will return "int" {0}
          * */
-        auto expression = this->BindExpression(syntax->_expression.get(), /* canBeVoid */ true);
+        auto expression = this->BindExpression(syntax->_expression.get());
         return std::make_unique<BoundExpressionStatement>(std::move(expression));
     }
 
@@ -212,19 +223,19 @@ namespace trylang
         return result;
     }
 
-    std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax *syntax, bool canBeVoid)
-    {
-        auto result = this->BindExpressionInternal(syntax);
-        if(!canBeVoid && (std::strcmp(result->Type(), Types::VOID->Name()) == 0))
-        {
-            _buffer << "Expression Must have a value\n";
-            return std::make_unique<BoundErrorExpression>();
-        }
+    // std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax *syntax, bool canBeVoid)
+    // {
+    //     auto result = this->BindExpressionInternal(syntax);
+    //     if(!canBeVoid && (std::strcmp(result->Type(), Types::VOID->Name()) == 0))
+    //     {
+    //         _buffer << "Expression Must have a value\n";
+    //         return std::make_unique<BoundErrorExpression>();
+    //     }
 
-        return result;
-    }
+    //     return result;
+    // }
 
-    std::unique_ptr<BoundExpressionNode> Binder::BindExpressionInternal(ExpressionSyntax* syntax)
+    std::unique_ptr<BoundExpressionNode> Binder::BindExpression(ExpressionSyntax* syntax)
     {
         switch (syntax->Kind())
         {
@@ -515,16 +526,9 @@ namespace trylang
         auto returnType = this->BindTypeClause(syntax->_typeClause.get());
         if(returnType == nullptr)
         {
-            returnType = Types::VOID->Name();
+            /* INT is the by default return type if not provided */
+            returnType = Types::INT->Name();
         }
-
-        /*
-            if(std::strcmp(returnType, Types::VOID->Name()) != 0)
-            {
-                // we have a non void returnType
-                _buffer << "Functions with return values are not supported\n";
-            }
-        */
 
         auto function = std::make_shared<FunctionSymbol>(syntax->_identifier->_text, std::move(parameters), returnType, syntax);
         if(!_scope->TryDeclareFunction(function))
@@ -566,25 +570,26 @@ namespace trylang
         }
         else
         {
-            if(strcmp(_function->_type, Types::VOID->Name()) == 0)
-            {
-                /* function is having return type as void{DEFAULT ONE} */
-                if(expression != nullptr)
-                {
-                    _buffer << "Invalid Return Expression\n";
-                }
-            }
-            else
-            {
-                if(expression == nullptr)
-                {
-                    _buffer << "Missing Return Statement\n";
-                }
-                else
-                {
-                    expression = this->BindConversion(_function->_type, std::move(expression));
-                }
-            }
+            // if(strcmp(_function->_type, Types::VOID->Name()) == 0)
+            // {
+            //     /* function is having return type as void{DEFAULT ONE} */
+            //     if(expression != nullptr)
+            //     {
+            //         _buffer << "Invalid Return Expression\n";
+            //     }
+            // }
+            // else
+            // {
+            //     if(expression == nullptr)
+            //     {
+            //         _buffer << "Missing Return Statement\n";
+            //     }
+            //     else
+            //     {
+            //         expression = this->BindConversion(_function->_type, std::move(expression));
+            //     }
+            // }
+            expression = this->BindConversion(_function->_type, std::move(expression));
         }
         return std::make_unique<BoundReturnStatement>(std::move(expression));
     }

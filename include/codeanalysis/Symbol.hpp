@@ -101,7 +101,7 @@ namespace trylang
     namespace BUILT_IN_FUNCTIONS
     {
         inline std::unordered_map<std::string, std::shared_ptr<FunctionSymbol>> MAP = {
-                {"print", std::make_shared<FunctionSymbol>("print",std::vector<ParameterSymbol>{ParameterSymbol("text", true,Types::STRING->Name())},Types::VOID->Name())},
+                {"print", std::make_shared<FunctionSymbol>("print",std::vector<ParameterSymbol>{ParameterSymbol("text", true,Types::STRING->Name())},Types::INT->Name())},
                 {"input", std::make_shared<FunctionSymbol>("input", std::vector<ParameterSymbol>{}, Types::STRING->Name())}
         };
     }

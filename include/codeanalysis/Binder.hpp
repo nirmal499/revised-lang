@@ -62,8 +62,8 @@ namespace trylang
 
         std::stack<std::pair<LabelSymbol, LabelSymbol>> _loopStack; /* One for BreakLabel and other for ContinueLabel */
 
-        std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax, bool canBeVoid = false);
-        std::unique_ptr<BoundExpressionNode> BindExpressionInternal(ExpressionSyntax* syntax);
+        // std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax, bool canBeVoid = false);
+        std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax);
         std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax, const char* targetType);
         std::unique_ptr<BoundExpressionNode> BindConversion(const char* type, ExpressionSyntax *syntax, bool allowExplicit = false);
         std::unique_ptr<BoundExpressionNode> BindConversion(const char* type, std::unique_ptr<BoundExpressionNode> expression, bool allowExplicit = false);

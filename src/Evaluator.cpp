@@ -277,7 +277,7 @@ namespace trylang
             const auto& message = std::get<std::string>(*evaluated_first_argument_value);
             std::cout << message << "\n";
 
-            return std::nullopt;
+            return static_cast<int>(message.size());
         }
         else
         {

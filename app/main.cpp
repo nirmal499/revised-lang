@@ -150,7 +150,7 @@ void Run3()
 {
     std::string errors;
 
-    std::ifstream infile(FILE_PATH "main9.txt");
+    std::ifstream infile(FILE_PATH "main10.txt");
     if(!infile.is_open())
     {
         throw std::runtime_error("Not able to open file");
@@ -179,9 +179,16 @@ void Run3()
     }
     else
     {
+        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::SyntaxTree::::::::::::::::::::::::::::::::::::::::::\n";
         trylang::PrettyPrintSyntaxNodes(compilationUnitSyntax.get());
+        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For WHOLE:::::::::::::::::::::::::::::::::::::::::::\n";
         trylang::PrettyPrintBoundNodes((program->_statement.get()));
+        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
+        trylang::PrettyPrintBoundNodesForFunctionBodies(program->_functionBodies);
+        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::WHOLE:::::::::::::::::::::::::::::::::::::::::::::::\n";
         trylang::NodePrinter::Write(program->_statement.get());
+        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
+        trylang::NodePrinter::WriteFunctions(program->_functionBodies);
 
         // return;
 

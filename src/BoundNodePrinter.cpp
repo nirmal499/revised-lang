@@ -18,6 +18,21 @@ namespace trylang
         std::cout << _buffer.str();
     }
 
+    void NodePrinter::WriteFunctions(const std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>>& functionBodies)
+    {
+        NodePrinter np;
+
+        for(const auto& functionBody: functionBodies)
+        {
+            _buffer.str("");
+            _indentation.clear();
+
+            std::cout << "\n:::::::::::::::::::::::::::::::::::::" + functionBody.first + "::::::::::::::::::::::::::::::::::::::::\n";
+            np.WriteTo(functionBody.second.second.get());
+            std::cout << _buffer.str();
+        }
+    }
+
     void NodePrinter::WriteTo(trylang::BoundNode *node)
     {
         switch (node->Kind())
@@ -107,6 +122,11 @@ namespace trylang
             case BoundNodeKind::LabelStatement:
             {
                 this->WriteLabelStatement(static_cast<BoundLabelStatement*>(node));
+                break;
+            }
+            case BoundNodeKind::ReturnStatement:
+            {
+                this->WriteReturnStatement(static_cast<BoundReturnStatement*>(node));
                 break;
             }
             default:
@@ -300,6 +320,13 @@ namespace trylang
         {
             _indentation.emplace_back(" ");
         }
+    }
+
+    void NodePrinter::WriteReturnStatement(BoundReturnStatement* node)
+    {
+        _buffer << _indentation << "return ";
+        this->WriteTo(node->_expression.get());
+        _buffer << "\n";
     }
 
 }

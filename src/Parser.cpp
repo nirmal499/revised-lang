@@ -591,14 +591,11 @@ namespace trylang
         return std::make_unique<ContinueStatementSyntax>(std::move(keyword));
     }
 
+    /* Every return statement must have an expression */
     std::unique_ptr<StatementSyntax> Parser::ParseReturnStatement()
     {
         auto keyword = this->Advance();
-        std::unique_ptr<ExpressionSyntax> expression = nullptr;
-        if(!this->Check(SyntaxKind::SemicolonToken))
-        {
-            expression = this->ParseExpression();
-        }
+        std::unique_ptr<ExpressionSyntax> expression = this->ParseExpression();
         (void)this->Consume(SyntaxKind::SemicolonToken, "Expected a ';'.");
         return std::make_unique<ReturnStatementSyntax>(std::move(keyword), std::move(expression));
     }
