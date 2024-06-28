@@ -1,0 +1,26 @@
+function sum1(x: int): string
+{
+    if(x == 7)
+    {
+        return "Nirmal";
+    }
+}
+
+// function sum2(x: int): string
+// {
+// 
+// }
+
+// function sum3(x: int)
+// {
+//  
+// }
+
+// function sum4(x: int)
+// {
+//    return "Nirmal";
+// }
+
+var okay = sum1(3);
+
+print(string(okay));

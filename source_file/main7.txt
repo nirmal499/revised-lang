@@ -1,0 +1,13 @@
+
+var i = 23;
+print(string(i));
+{
+    var i = 34;
+    print(string(i));
+    {
+        var i = 64;
+        print(string(i));
+    }
+    print(string(i));
+}
+print(string(i));

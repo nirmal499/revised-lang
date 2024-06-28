@@ -1,0 +1,31 @@
+// function sum1()
+// {
+//        return;
+// }
+
+// function sum2()
+// {
+//     return 42;
+// }
+
+// function sum3(): string
+// {
+//     return 42;
+// }
+
+// function sum4(): string
+// {
+//     return string(42);
+// }
+
+function sum5(): int
+{
+    return 42;
+}
+
+// function sum6(): int
+// {
+//     return "42";
+// }
+
+// return 10;

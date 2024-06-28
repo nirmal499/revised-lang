@@ -1,0 +1,11 @@
+var x = 10;
+var y = 20;
+
+function sum(x: int, y:int): int
+{
+    return x+y;
+}
+
+var okay = sum(12, 5);
+
+print("Value is " + string(sum(4,5)) + " and okay is " + string(okay));

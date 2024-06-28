@@ -1,0 +1,13 @@
+var a = "global";
+
+function showA()
+{
+    print(a);
+    return 1;
+}
+
+showA();
+
+a = "block";
+
+showA();

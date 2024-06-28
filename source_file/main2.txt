@@ -1,0 +1,17 @@
+function count(number: int)
+{
+    var x = number;
+
+    if(x == 0)
+    {
+        print("Done");
+    }
+    else
+    {
+        count(x - 1);
+        print(string(x));
+        x = 42;
+    }
+}
+
+count(3);

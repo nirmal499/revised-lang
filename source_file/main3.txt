@@ -1,0 +1,9 @@
+
+var i = 0;
+while(i < 16)
+{
+    if(i == 10) continue;
+    print(string(i));
+
+    i = i + 1;
+}
