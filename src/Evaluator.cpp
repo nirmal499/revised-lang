@@ -292,10 +292,10 @@ namespace trylang
 
             _locals.push(locals);
 
-            auto it = _program->_functionBodies.find(node->_function->_name);
-            if(it == _program->_functionBodies.end())
+            auto it = _program->_functionsInfoAndBody.find(node->_function->_name);
+            if(it == _program->_functionsInfoAndBody.end())
             {
-                    throw std::logic_error("Unexpected function " + node->_function->_name); /* Logically this throw may never occur */
+                throw std::logic_error("Unexpected function " + node->_function->_name); /* Logically this throw may never occur */
             }
             auto result = this->EvaluateStatement(it->second.second.get());
 

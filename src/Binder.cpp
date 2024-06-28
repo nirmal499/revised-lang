@@ -98,7 +98,7 @@ namespace trylang
             errors.append(Binder::Errors());
         }
 
-        std::unique_ptr<BoundProgram> boundProgram;
+        std::unique_ptr<BoundProgram> boundProgram = nullptr;
         if(!errors.empty())
         {
             std::cout << "Binding Errors Reported:\n";
@@ -106,7 +106,7 @@ namespace trylang
         }
         else
         {
-            boundProgram = std::make_unique<BoundProgram>(std::move(scope->_functions),std::move(functionBodies), std::move(flattened));
+            boundProgram = std::make_unique<BoundProgram>(std::move(scope->_variables), std::move(functionBodies), std::move(flattened));
         }
 
         return boundProgram;

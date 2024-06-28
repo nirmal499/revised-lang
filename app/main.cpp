@@ -1,3 +1,4 @@
+#include "codeanalysis/Generator.hpp"
 #include <iostream>
 #include <codeanalysis/SyntaxKind.hpp>
 #include <codeanalysis/Lexer.hpp>
@@ -12,6 +13,7 @@
 #include <vector>
 
 #define FILE_PATH "/home/nbaskey/Desktop/nirmal/projects/compiler/source_file/"
+#define IR_FILE_PATH "/home/nbaskey/Desktop/nirmal/projects/compiler/llvm_ir/"
 
 void Run3();
 
@@ -150,7 +152,7 @@ void Run3()
 {
     std::string errors;
 
-    std::ifstream infile(FILE_PATH "main10.txt");
+    std::ifstream infile(FILE_PATH "main4.txt");
     if(!infile.is_open())
     {
         throw std::runtime_error("Not able to open file");
@@ -184,13 +186,15 @@ void Run3()
         std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For WHOLE:::::::::::::::::::::::::::::::::::::::::::\n";
         trylang::PrettyPrintBoundNodes((program->_statement.get()));
         std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
-        trylang::PrettyPrintBoundNodesForFunctionBodies(program->_functionBodies);
+        trylang::PrettyPrintBoundNodesForFunctionBodies(program->_functionsInfoAndBody);
         std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::WHOLE:::::::::::::::::::::::::::::::::::::::::::::::\n";
         trylang::NodePrinter::Write(program->_statement.get());
         std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
-        trylang::NodePrinter::WriteFunctions(program->_functionBodies);
+        trylang::NodePrinter::WriteFunctions(program->_functionsInfoAndBody);
+        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::LLVM IR:::::::::::::::::::::::::::::::::::::::::::\n";
+        trylang::Generator::GenerateProgram(program.get(), IR_FILE_PATH "main1.txt");
 
-        // return;
+        return;
 
         trylang::Evaluator evaluator(std::move(program));
         trylang::object_t result = evaluator.Evaluate();
