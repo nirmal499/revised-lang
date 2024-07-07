@@ -152,7 +152,7 @@ void Run3()
 {
     std::string errors;
 
-    std::ifstream infile(FILE_PATH "main4.txt");
+    std::ifstream infile(FILE_PATH "main12.txt");
     if(!infile.is_open())
     {
         throw std::runtime_error("Not able to open file");
@@ -181,20 +181,20 @@ void Run3()
     }
     else
     {
-        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::SyntaxTree::::::::::::::::::::::::::::::::::::::::::\n";
-        trylang::PrettyPrintSyntaxNodes(compilationUnitSyntax.get());
-        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For WHOLE:::::::::::::::::::::::::::::::::::::::::::\n";
-        trylang::PrettyPrintBoundNodes((program->_statement.get()));
-        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
-        trylang::PrettyPrintBoundNodesForFunctionBodies(program->_functionsInfoAndBody);
+        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::SyntaxTree::::::::::::::::::::::::::::::::::::::::::\n";
+        // trylang::PrettyPrintSyntaxNodes(compilationUnitSyntax.get());
+        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For WHOLE:::::::::::::::::::::::::::::::::::::::::::\n";
+        // trylang::PrettyPrintBoundNodes((program->_statement.get()));
+        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
+        // trylang::PrettyPrintBoundNodesForFunctionBodies(program->_functionsInfoAndBody);
         std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::WHOLE:::::::::::::::::::::::::::::::::::::::::::::::\n";
         trylang::NodePrinter::Write(program->_statement.get());
-        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
-        trylang::NodePrinter::WriteFunctions(program->_functionsInfoAndBody);
-        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::LLVM IR:::::::::::::::::::::::::::::::::::::::::::\n";
-        trylang::Generator::GenerateProgram(program.get(), IR_FILE_PATH "main1.txt");
+        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
+        // trylang::NodePrinter::WriteFunctions(program->_functionsInfoAndBody);
+        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::LLVM IR:::::::::::::::::::::::::::::::::::::::::::\n";
+        // trylang::Generator::GenerateProgram(program.get(), IR_FILE_PATH "main1.txt");
 
-        return;
+        // return;
 
         trylang::Evaluator evaluator(std::move(program));
         trylang::object_t result = evaluator.Evaluate();

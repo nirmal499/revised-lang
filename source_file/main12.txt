@@ -1,0 +1,8 @@
+
+for i = 0 to 5
+{
+    for j = 0 to 5
+    {
+        print("[" + string(i) + "-" +  string(j) + "]");
+    }
+}

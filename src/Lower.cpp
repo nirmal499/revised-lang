@@ -289,7 +289,7 @@ namespace trylang
                 BoundBinaryOperator::Bind(SyntaxKind::LessThanEqualsToken, Types::INT->Name(), Types::INT->Name()),
                 std::make_unique<BoundVariableExpression>(stmt->_variableForUpperBoundToBeUsedDuringRewritingForIntoWhile)
         );
-        auto continueLabelStatement = std::make_unique<BoundLabelStatement>(stmt->_loopLabel.second);
+        // auto continueLabelStatement = std::make_unique<BoundLabelStatement>(stmt->_loopLabel.second);
         auto increment = std::make_unique<BoundExpressionStatement>(
                 std::make_unique<BoundAssignmentExpression>(
                         stmt->_variable,
@@ -302,12 +302,12 @@ namespace trylang
         /** This has to be done instead of doing std::make_unique<BoundBlockStatement>({std::move(body), std::move(increment)}) because BoundBlockStatement is explicit */
         std::vector<std::unique_ptr<BoundStatementNode>> statements_1(3);
         statements_1.emplace_back(std::move(stmt->_body));
-        statements_1.emplace_back(std::move(continueLabelStatement));
+        // statements_1.emplace_back(std::move(continueLabelStatement));
         statements_1.emplace_back(std::move(increment));
 
         auto whileBody = std::make_unique<BoundBlockStatement>(std::move(statements_1));
 
-        stmt->_loopLabel.second = LabelSymbol("continue{" + GenerateRandomText(3) + "}");
+        // stmt->_loopLabel.second = LabelSymbol("continue{" + GenerateRandomText(3) + "}");
         auto whileStatement = std::make_unique<BoundWhileStatement>(std::move(condition), std::move(whileBody), std::move(stmt->_loopLabel));
 
         std::vector<std::unique_ptr<BoundStatementNode>> statements_2(3);
