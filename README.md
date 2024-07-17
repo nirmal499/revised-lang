@@ -55,7 +55,7 @@ var a = "global";
 
 function showA()
 {
-    /* print is the inbuit function */
+    // print is the inbuit function
     print(a);
     return 1;
 }
