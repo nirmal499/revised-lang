@@ -12,16 +12,13 @@
 #include <memory>
 #include <vector>
 
-#define FILE_PATH "/home/nbaskey/Desktop/nirmal/projects/compiler/source_file/"
-#define IR_FILE_PATH "/home/nbaskey/Desktop/nirmal/projects/compiler/llvm_ir/"
+void Run3(const char* file_name);
 
-void Run3();
-
-int main()
+int main(int argc, char* argv[])
 {
     try
     {
-        Run3();
+        Run3(argv[1]);
     }
     catch(const std::exception& e)
     {
@@ -148,11 +145,16 @@ void Run2()
 }
 */
 
-void Run3()
+void Run3(const char* file_name)
 {
     std::string errors;
 
-    std::ifstream infile(FILE_PATH "main12.txt");
+    /* ROOT_PATH is set by the CMake */
+    std::string sourceFilePath = std::string(ROOT_PATH) + "/source_file/" + file_name;
+    std::string llvmFilePath = std::string(ROOT_PATH) + "/llvm_ir/" + file_name;
+    
+
+    std::ifstream infile(sourceFilePath);
     if(!infile.is_open())
     {
         throw std::runtime_error("Not able to open file");
@@ -187,12 +189,12 @@ void Run3()
         // trylang::PrettyPrintBoundNodes((program->_statement.get()));
         // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
         // trylang::PrettyPrintBoundNodesForFunctionBodies(program->_functionsInfoAndBody);
-        std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::WHOLE:::::::::::::::::::::::::::::::::::::::::::::::\n";
-        trylang::NodePrinter::Write(program->_statement.get());
+        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::WHOLE:::::::::::::::::::::::::::::::::::::::::::::::\n";
+        // trylang::NodePrinter::Write(program->_statement.get());
         // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
         // trylang::NodePrinter::WriteFunctions(program->_functionsInfoAndBody);
         // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::LLVM IR:::::::::::::::::::::::::::::::::::::::::::\n";
-        // trylang::Generator::GenerateProgram(program.get(), IR_FILE_PATH "main1.txt");
+        trylang::Generator::GenerateProgram(program.get(), llvmFilePath.c_str());
 
         // return;
 

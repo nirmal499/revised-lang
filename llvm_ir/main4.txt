@@ -12,8 +12,8 @@ declare i8* @fgets(i8*, i32, i8*)
 
 define i32 @showA() {
 entry:
-  %a_ptr = getelementptr [16 x i8], [16 x i8]* @a, i32 0, i32 0
-  %0 = call i32 (i8*, ...) @printf(i8* %a_ptr)
+  %a = load [16 x i8], [16 x i8]* @a, align 1
+  %0 = call i32 (i8*, ...) @printf([16 x i8] %a)
   ret i32 1
 }
 
