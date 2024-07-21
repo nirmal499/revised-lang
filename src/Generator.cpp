@@ -75,8 +75,15 @@ namespace trylang
         auto vartype = this->ExtractType(node->_variable->_type);
         auto varbinding = this->AllocVariable(varname, vartype);
 
-        /* If the variable is defined earlier then it will be overidden */
-        _scope->Define(varname, value);
+        /*
+
+            varDeclStmt := "var" IDENTIFIER type "=" expression ";"
+                ;
+            As you can see in a VariableDeclarationStatement "expression" is not optional. It is required.
+
+            _scope->Define(varname, value);
+            No need for that because we register the create local variable in _scope in this->AllocVariable(...) itself
+        */
 
         _builder->CreateStore(value, varbinding);
     }
@@ -276,7 +283,8 @@ namespace trylang
     {
         llvm::Value* value = this->GenerateExpression(node->_expression.get());
 
-        _scope->Define(node->_variable->_name, value);
+        auto prevValuePtr = _scope->LookUp(node->_variable->_name); /* It throws if "node->_variable->_name" is not present in _scope */
+        _builder->CreateStore(value, prevValuePtr);
 
         return value;
     }
@@ -315,30 +323,139 @@ namespace trylang
         return _builder->CreateCall(fn, args);
     }
 
+    llvm::Value* Generator::IntToBool(llvm::Value* intValue)
+    {
+        /*
+            It returns the memory location{aka Ptr}
+            "Ptr" represents the memory location of the resultant variable "%intToBool" where the result
+            of CreateICmpNE generated IR will be stored.
+        */
+        return _builder->CreateICmpNE(intValue, llvm::ConstantInt::get(intValue->getType(), 0), "intToBool");
+    }
+
+    llvm::Value* Generator::StringToBool(llvm::Value* stringValue)
+    {
+        llvm::Function* strlenFunc = _module->getFunction("strlen");
+        assert(strlenFunc != nullptr);
+
+        llvm::Value* length = _builder->CreateCall(strlenFunc, { stringValue }, "length");
+        return _builder->CreateICmpNE(length, llvm::ConstantInt::get(length->getType(), 0), "stringToBool");
+    }
+
+    llvm::Value* Generator::BoolToBool(llvm::Value* boolValue)
+    {
+        return boolValue;
+    }
+
+    llvm::Value* Generator::IntToInt(llvm::Value* intValue)
+    {
+        return intValue;
+    }
+
+    llvm::Value* Generator::StringToInt(llvm::Value* stringValue)
+    {
+        llvm::Function* atoiFunc = _module->getFunction("atoi");
+        assert(atoiFunc != nullptr);
+
+        return _builder->CreateCall(atoiFunc, { stringValue }, "stringToInt");
+    }
+
+    llvm::Value* Generator::BoolToInt(llvm::Value* boolValue)
+    {   
+        /*
+            CreateZExt :- It is used to extend the bit-width of an integer value to a larger integer type by adding zeros to
+            the higher-order bits.
+
+            If the boolean value is true (which is 1 in binary), the result will be 00000001 in a 32-bit integer. 
+            If the boolean value is false (which is 0 in binary), the result will be 00000000 in a 32-bit integer.
+        */
+        return _builder->CreateZExt(boolValue, llvm::Type::getInt32Ty(*_ctx), "boolToInt");
+    }
+
+    llvm::Value* Generator::IntToString(llvm::Value* intValue)
+    {
+        llvm::Function* itoaFunc = _module->getFunction("itoa");
+        assert(itoaFunc != nullptr);
+        return _builder->CreateCall(itoaFunc, { intValue }, "intToString");
+    }
+
+    llvm::Value* Generator::StringToString(llvm::Value* stringValue)
+    {
+        return stringValue;
+    }
+
+    llvm::Value* Generator::BoolToString(llvm::Value* boolValue)
+    {
+        llvm::Value* trueStr = _globalObjectRecord.at("trueConstantStringVALUE");
+        llvm::Value* falseStr = _globalObjectRecord.at("falseConstantStringVALUE");
+
+        return _builder->CreateSelect(boolValue, trueStr, falseStr, "boolToString");
+    }
+
     llvm::Value* Generator::GenerateConversionExpression(BoundConversionExpression* node)
     {
-        auto value = _evaluator->EvaluateExpression(node);
+        /*
+            No need for this because "node" already contains all information. You don't even have to do _binder->BindExpression(node);
+            auto value = _evaluator->EvaluateExpression(node);
+
+            "node" contains all information. You just have to generate appropriate LLVM IR for each case of conversion.
+        */
+
+        /* Generate LLVM IR for node->_expression */
+        llvm::Value* value = this->GenerateExpression(node->_expression.get());
 
         if(std::strcmp(node->_toType, Types::BOOL->Name()) == 0)
         {
-            /* It returns bool */
-            object_t convertedBoolValue = std::visit(BoolConvertVisitor{}, *value);
-            return std::visit(GetValueVisitor{_builder.get()}, *convertedBoolValue);
+            if(std::strcmp(node->_expression->Type(), Types::BOOL->Name()) == 0)
+            {
+                return this->BoolToBool(value);
+            }
+
+            if(std::strcmp(node->_expression->Type(), Types::INT->Name()) == 0)
+            {
+                return this->IntToBool(value);
+            }
+
+            if(std::strcmp(node->_expression->Type(), Types::STRING->Name()) == 0)
+            {
+                return this->StringToBool(value);
+            }
         }
 
         if(std::strcmp(node->_toType, Types::INT->Name()) == 0)
         {
-            /* It returns int */
-            object_t convertedIntValue = std::visit(IntConvertVisitor{}, *value);
-            return std::visit(GetValueVisitor{_builder.get()}, *convertedIntValue);
+            if(std::strcmp(node->_expression->Type(), Types::BOOL->Name()) == 0)
+            {
+                return this->BoolToInt(value);
+            }
+
+            if(std::strcmp(node->_expression->Type(), Types::INT->Name()) == 0)
+            {
+                return this->IntToInt(value);
+            }
+
+            if(std::strcmp(node->_expression->Type(), Types::STRING->Name()) == 0)
+            {
+                return this->StringToInt(value);
+            }
         }
 
         if(std::strcmp(node->_toType, Types::STRING->Name()) == 0)
         {
-            /* It returns std::string */
-            object_t convertedStringValue = std::visit(StringConvertVisitor{}, *value);
-            return std::visit(GetValueVisitor{_builder.get()}, *convertedStringValue);
+            if(std::strcmp(node->_expression->Type(), Types::BOOL->Name()) == 0)
+            {
+                return this->BoolToString(value);
+            }
 
+            if(std::strcmp(node->_expression->Type(), Types::INT->Name()) == 0)
+            {
+                return this->IntToString(value);
+            }
+
+            if(std::strcmp(node->_expression->Type(), Types::STRING->Name()) == 0)
+            {
+                return this->StringToString(value);
+            }
         }
 
         throw std::logic_error("Unexpected Type " + std::string(node->_toType));
@@ -504,7 +621,7 @@ namespace trylang
 
         auto idx = 0; /* used for setting parameter name */
 
-        auto newScope = std::make_shared<GenScope>(std::unordered_map<std::string, llvm::Value*>{}, _scope);
+        _scope = std::make_shared<GenScope>(std::unordered_map<std::string, llvm::Value*>{}, _scope);
 
         for(auto& arg: _function->args())
         {
@@ -520,6 +637,8 @@ namespace trylang
         }
 
         this->GenerateBlockStatement(functionBody);
+
+        _scope = _scope->_parent;
         
         /* At last we do a default create return IR. It means even if we have a return statement in "statement->body_stmts", we will have two return IR */
         // _builder->CreateRet(_builder->getInt1(true));
@@ -569,7 +688,6 @@ namespace trylang
 
     Generator::Generator(BoundProgram* program)
     {   
-        _evaluator = std::make_unique<Evaluator>(nullptr);
         this->ModuleInitialization();
         this->SetupExternalFunctions();
         this->SetupGlobalEnv(program->_variables);
@@ -588,16 +706,18 @@ namespace trylang
 
     void Generator::SetupExternalFunctions()
     {
+        /******************************************printf**************************************************** */
         /* i8* to substitute for 'char*', 'void*' */
         auto bytePtrTy = _builder->getInt8Ty()->getPointerTo();
-
         /* int printf(const char* format, ...)*/
         _module->getOrInsertFunction("printf", llvm::FunctionType::get(
             /* return type */ _builder->getInt32Ty(),
             /* type of format arg */ bytePtrTy,
             /* vararg? */ true
         ));
-        
+        /********************************************************************************************** */
+
+        /*****************************************fgets***************************************************** */
         auto charPtrTy = _builder->getInt8Ty()->getPointerTo(); /* char* */
         auto intTy = _builder->getInt32Ty();                   /* int */
         auto filePtrTy = _builder->getInt8Ty()->getPointerTo(); /* FILE* */
@@ -607,31 +727,51 @@ namespace trylang
             {charPtrTy, intTy, filePtrTy}, /* Arguments: char*, int, FILE* */
             false                /* Not variadic */
         );
-
         _module->getOrInsertFunction("fgets", fgetsFuncType);
+        /********************************************************************************************** */
+
+        /******************************************strlen**************************************************** */
+        llvm::FunctionType* strlenType = llvm::FunctionType::get(
+            llvm::Type::getInt32Ty(*_ctx), { llvm::Type::getInt8PtrTy(*_ctx) }, false);
+        _module->getOrInsertFunction("strlen", strlenType);
+        /********************************************************************************************** */
+
+        /*******************************************atoi*************************************************** */
+        llvm::FunctionType* atoiType = llvm::FunctionType::get(
+            llvm::Type::getInt32Ty(*_ctx), { llvm::Type::getInt8PtrTy(*_ctx) }, false);
+        _module->getOrInsertFunction("atoi", atoiType);
+        /********************************************************************************************** */
+
+        /*****************************************itoa***************************************************** */
+        llvm::FunctionType* itoaType = llvm::FunctionType::get(
+            llvm::Type::getInt8PtrTy(*_ctx), { llvm::Type::getInt32Ty(*_ctx) }, false);
+        _module->getOrInsertFunction("itoa", atoiType);
+        /********************************************************************************************** */
     }
 
     void Generator::SetupGlobalEnv(const std::unordered_map<std::string, std::shared_ptr<VariableSymbol>>& variables)
     {
 
-        std::unordered_map<std::string, llvm::Value*> global_object = 
+        std::unordered_map<std::string, llvm::Value*> _globalObjectRecord = 
         {
             {"VERSION", _builder->getInt32(648)},
+            {"trueConstantStringVALUE", llvm::ConstantDataArray::getString(*_ctx, "true")},
+            {"falseConstantStringVALUE", llvm::ConstantDataArray::getString(*_ctx, "false")},
         };
 
         for(const auto& item: variables)
         {
             if(std::strcmp(item.second->_type, Types::INT.get()->_typeName) == 0)
             {
-                global_object[item.first] = _builder->getInt32(0);
+                _globalObjectRecord[item.first] = _builder->getInt32(0);
             }
             else if(std::strcmp(item.second->_type, Types::STRING.get()->_typeName) == 0)
             {
-                global_object[item.first] = llvm::ConstantDataArray::getString(*_ctx, "Hello, LLVM IR!");
+                _globalObjectRecord[item.first] = llvm::ConstantDataArray::getString(*_ctx, "Hello, LLVM IR!");
             }
             else if(std::strcmp(item.second->_type, Types::BOOL.get()->_typeName) == 0)
             {
-                global_object[item.first] = _builder->getInt1(false);
+                _globalObjectRecord[item.first] = _builder->getInt1(false);
             }
             else
             {
@@ -640,7 +780,7 @@ namespace trylang
         }
 
         std::unordered_map<std::string, llvm::Value*> global_record{};
-        for(const auto& entry: global_object)
+        for(const auto& entry: _globalObjectRecord)
         {
             global_record[entry.first] = this->CreateGlobalVar(entry.first, static_cast<llvm::Constant*>(entry.second));
         }

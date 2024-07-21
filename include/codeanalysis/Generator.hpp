@@ -46,7 +46,7 @@ namespace trylang
         std::unique_ptr<llvm::IRBuilder<>> _varsBuilder;
         llvm::Function* _function = nullptr;
 
-        std::unique_ptr<Evaluator> _evaluator = nullptr;
+        std::unordered_map<std::string, llvm::Value*> _globalObjectRecord;
 
         std::shared_ptr<GenScope> _scope = nullptr;
         void GenerateStatement(BoundStatementNode* node);
@@ -74,6 +74,20 @@ namespace trylang
         llvm::Value* GenerateConversionExpression(BoundConversionExpression* node);
         llvm::Value* GenerateUnaryExpression(BoundUnaryExpression* node);
         llvm::Value* GenerateBinaryExpression(BoundBinaryExpression* node);
+
+        /* Conversion LLVM IR Generator functions************************ */
+        llvm::Value* IntToBool(llvm::Value* intValue);
+        llvm::Value* StringToBool(llvm::Value* stringValue);
+        llvm::Value* BoolToBool(llvm::Value* boolValue);
+
+        llvm::Value* IntToString(llvm::Value* intValue);
+        llvm::Value* StringToString(llvm::Value* stringValue);
+        llvm::Value* BoolToString(llvm::Value* boolValue);
+
+        llvm::Value* IntToInt(llvm::Value* intValue);
+        llvm::Value* StringToInt(llvm::Value* stringValue);
+        llvm::Value* BoolToInt(llvm::Value* boolValue);
+        /************************************************************** */
 
         static void GenerateProgram(BoundProgram* program, const char* IRfilePath);
         Generator(BoundProgram* program);
