@@ -44,7 +44,7 @@ namespace trylang
         std::unique_ptr<BoundStatementNode> RewriteVariableDeclaration(std::unique_ptr<BoundStatementNode> node);
         std::unique_ptr<BoundStatementNode> RewriteIfStatement(std::unique_ptr<BoundStatementNode> node);
         std::unique_ptr<BoundStatementNode> RewriteWhileStatement(std::unique_ptr<BoundStatementNode> node);
-        std::unique_ptr<BoundStatementNode> RewriteForStatement(std::unique_ptr<BoundStatementNode> node);
+        // std::unique_ptr<BoundStatementNode> RewriteForStatement(std::unique_ptr<BoundStatementNode> node);
         std::unique_ptr<BoundStatementNode> RewriteLabelStatement(std::unique_ptr<BoundStatementNode> node);
         std::unique_ptr<BoundStatementNode> RewriteGotoStatement(std::unique_ptr<BoundStatementNode> node);
         std::unique_ptr<BoundStatementNode> RewriteConditionalGotoStatement(std::unique_ptr<BoundStatementNode> node);

@@ -63,8 +63,8 @@ namespace trylang
                 return RewriteIfStatement(std::move(node));
             case BoundNodeKind::WhileStatement:
                 return RewriteWhileStatement(std::move(node));
-            case BoundNodeKind::ForStatement:
-                return RewriteForStatement(std::move(node));
+            // case BoundNodeKind::ForStatement:
+            //     return RewriteForStatement(std::move(node));
             case BoundNodeKind::LabelStatement:
                 return RewriteLabelStatement(std::move(node));
             case BoundNodeKind::GotoStatement:
@@ -76,7 +76,7 @@ namespace trylang
             case BoundNodeKind::ReturnStatement:
                 return RewriteReturnStatement(std::move(node));
             default:
-                throw std::logic_error("Unexpected syntax " + __boundNodeStringMap[node->Kind()]);
+                throw std::logic_error("Lower: Unexpected syntax " + __boundNodeStringMap[node->Kind()]);
         }
     }
 
@@ -179,6 +179,7 @@ namespace trylang
             * goto end
             * else:
             * <else>
+            * goto end
             * end:
             *
             * **/
@@ -186,16 +187,18 @@ namespace trylang
             auto elseLabel = this->GenerateLabel();
             auto endLabel = this->GenerateLabel();
             auto gotoFalse = std::make_unique<BoundConditionalGotoStatement>(elseLabel, std::move(stmt->_condition), true);
-            auto gotoEndStatement = std::make_unique<BoundGotoStatement>(endLabel);
+            auto gotoEndStatement1 = std::make_unique<BoundGotoStatement>(endLabel);
+            auto gotoEndStatement2 = std::make_unique<BoundGotoStatement>(endLabel);
             auto endLabelStatement = std::make_unique<BoundLabelStatement>(endLabel);
             auto elseLabelStatement = std::make_unique<BoundLabelStatement>(elseLabel);
 
             std::vector<std::unique_ptr<BoundStatementNode>> statements_1;
             statements_1.emplace_back(std::move(gotoFalse));
             statements_1.emplace_back(std::move(stmt->_statement));
-            statements_1.emplace_back(std::move(gotoEndStatement));
+            statements_1.emplace_back(std::move(gotoEndStatement1));
             statements_1.emplace_back(std::move(elseLabelStatement));
             statements_1.emplace_back(std::move(stmt->_elseStatement));
+            statements_1.emplace_back(std::move(gotoEndStatement2));
             statements_1.emplace_back(std::move(endLabelStatement));
 
             auto result = std::make_unique<BoundBlockStatement>(std::move(statements_1));
@@ -257,68 +260,68 @@ namespace trylang
         return this->RewriteStatement(std::move(result));
     }
 
-    std::unique_ptr<BoundStatementNode> Lower::RewriteForStatement(std::unique_ptr<BoundStatementNode> node)
-    {
-        auto* stmt = static_cast<BoundForStatement*>(node.get());
+    // std::unique_ptr<BoundStatementNode> Lower::RewriteForStatement(std::unique_ptr<BoundStatementNode> node)
+    // {
+    //     auto* stmt = static_cast<BoundForStatement*>(node.get());
 
-        /**
-         *
-         * for <var> = <lower> to <upper>
-         *      <body>
-         *
-         * ----------------------------------------------------------------->
-         *
-         * {
-         *      var <var> = <lower>
-         *      let upperBound = <upper>
-         *      while (<var> <= upperBound)
-         *      {
-         *          <body>
-         *          continue:
-         *          <var> = <var> + 1
-         *      }
-         * }
-         *
-         * */
+    //     /**
+    //      *
+    //      * for <var> = <lower> to <upper>
+    //      *      <body>
+    //      *
+    //      * ----------------------------------------------------------------->
+    //      *
+    //      * {
+    //      *      var <var> = <lower>
+    //      *      let upperBound = <upper>
+    //      *      while (<var> <= upperBound)
+    //      *      {
+    //      *          <body>
+    //      *          continue:
+    //      *          <var> = <var> + 1
+    //      *      }
+    //      * }
+    //      *
+    //      * */
 
-        auto variableDeclaration = std::make_unique<BoundVariableDeclaration>(stmt->_variable, std::move(stmt->_lowerBound));
-        auto upperBoundVariableDeclaration = std::make_unique<BoundVariableDeclaration>(stmt->_variableForUpperBoundToBeUsedDuringRewritingForIntoWhile, std::move(stmt->_upperBound));
+    //     auto variableDeclaration = std::make_unique<BoundVariableDeclaration>(stmt->_variable, std::move(stmt->_lowerBound));
+    //     auto upperBoundVariableDeclaration = std::make_unique<BoundVariableDeclaration>(stmt->_variableForUpperBoundToBeUsedDuringRewritingForIntoWhile, std::move(stmt->_upperBound));
 
-        auto condition = std::make_unique<BoundBinaryExpression>(
-                std::make_unique<BoundVariableExpression>(stmt->_variable),
-                BoundBinaryOperator::Bind(SyntaxKind::LessThanEqualsToken, Types::INT->Name(), Types::INT->Name()),
-                std::make_unique<BoundVariableExpression>(stmt->_variableForUpperBoundToBeUsedDuringRewritingForIntoWhile)
-        );
-        // auto continueLabelStatement = std::make_unique<BoundLabelStatement>(stmt->_loopLabel.second);
-        auto increment = std::make_unique<BoundExpressionStatement>(
-                std::make_unique<BoundAssignmentExpression>(
-                        stmt->_variable,
-                        std::make_unique<BoundBinaryExpression>(
-                                std::make_unique<BoundVariableExpression>(stmt->_variable),
-                                BoundBinaryOperator::Bind(SyntaxKind::PlusToken, Types::INT->Name(),Types::INT->Name()),
-                                std::make_unique<BoundLiteralExpression>(1))
-                ));
+    //     auto condition = std::make_unique<BoundBinaryExpression>(
+    //             std::make_unique<BoundVariableExpression>(stmt->_variable),
+    //             BoundBinaryOperator::Bind(SyntaxKind::LessThanEqualsToken, Types::INT->Name(), Types::INT->Name()),
+    //             std::make_unique<BoundVariableExpression>(stmt->_variableForUpperBoundToBeUsedDuringRewritingForIntoWhile)
+    //     );
+    //     auto continueLabelStatement = std::make_unique<BoundLabelStatement>(stmt->_loopLabel.second);
+    //     auto increment = std::make_unique<BoundExpressionStatement>(
+    //             std::make_unique<BoundAssignmentExpression>(
+    //                     stmt->_variable,
+    //                     std::make_unique<BoundBinaryExpression>(
+    //                             std::make_unique<BoundVariableExpression>(stmt->_variable),
+    //                             BoundBinaryOperator::Bind(SyntaxKind::PlusToken, Types::INT->Name(),Types::INT->Name()),
+    //                             std::make_unique<BoundLiteralExpression>(1))
+    //             ));
 
-        /** This has to be done instead of doing std::make_unique<BoundBlockStatement>({std::move(body), std::move(increment)}) because BoundBlockStatement is explicit */
-        std::vector<std::unique_ptr<BoundStatementNode>> statements_1(3);
-        statements_1.emplace_back(std::move(stmt->_body));
-        // statements_1.emplace_back(std::move(continueLabelStatement));
-        statements_1.emplace_back(std::move(increment));
+    //     /** This has to be done instead of doing std::make_unique<BoundBlockStatement>({std::move(body), std::move(increment)}) because BoundBlockStatement is explicit */
+    //     std::vector<std::unique_ptr<BoundStatementNode>> statements_1(3);
+    //     statements_1.emplace_back(std::move(stmt->_body));
+    //     statements_1.emplace_back(std::move(continueLabelStatement));
+    //     statements_1.emplace_back(std::move(increment));
 
-        auto whileBody = std::make_unique<BoundBlockStatement>(std::move(statements_1));
+    //     auto whileBody = std::make_unique<BoundBlockStatement>(std::move(statements_1));
 
-        // stmt->_loopLabel.second = LabelSymbol("continue{" + GenerateRandomText(3) + "}");
-        auto whileStatement = std::make_unique<BoundWhileStatement>(std::move(condition), std::move(whileBody), std::move(stmt->_loopLabel));
+    //     stmt->_loopLabel.second = LabelSymbol("continue{" + GenerateRandomText(3) + "}");
+    //     auto whileStatement = std::make_unique<BoundWhileStatement>(std::move(condition), std::move(whileBody), std::move(stmt->_loopLabel));
 
-        std::vector<std::unique_ptr<BoundStatementNode>> statements_2(3);
-        statements_2.emplace_back(std::move(variableDeclaration));
-        statements_2.emplace_back(std::move(upperBoundVariableDeclaration));
-        statements_2.emplace_back(std::move(whileStatement));
+    //     std::vector<std::unique_ptr<BoundStatementNode>> statements_2(3);
+    //     statements_2.emplace_back(std::move(variableDeclaration));
+    //     statements_2.emplace_back(std::move(upperBoundVariableDeclaration));
+    //     statements_2.emplace_back(std::move(whileStatement));
 
-        auto result = std::make_unique<BoundBlockStatement>(std::move(statements_2));
+    //     auto result = std::make_unique<BoundBlockStatement>(std::move(statements_2));
 
-        return this->RewriteStatement(std::move(result));
-    }
+    //     return this->RewriteStatement(std::move(result));
+    // }
 
     std::unique_ptr<BoundStatementNode> Lower::RewriteLabelStatement(std::unique_ptr<BoundStatementNode> node)
     {
@@ -371,7 +374,7 @@ namespace trylang
             case BoundNodeKind::ConversionExpression:
                 return RewriteConversionExpression(std::move(node));
             default:
-                throw std::logic_error("Unexpected syntax " + __boundNodeStringMap[node->Kind()]);
+                throw std::logic_error("Lower: Unexpected syntax " + __boundNodeStringMap[node->Kind()]);
 
         }
     }
