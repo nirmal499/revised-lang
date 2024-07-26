@@ -1,5 +1,6 @@
 #pragma once
 
+#include "codeanalysis/Types.hpp"
 #include <string>
 #include <typeinfo>
 #include <memory>
@@ -50,7 +51,7 @@ namespace trylang
         inline std::unique_ptr<TypeSymbol> INT = std::make_unique<TypeSymbol>("int");
         inline std::unique_ptr<TypeSymbol> BOOL = std::make_unique<TypeSymbol>("bool");
         inline std::unique_ptr<TypeSymbol> STRING = std::make_unique<TypeSymbol>("string");
-        inline std::unique_ptr<TypeSymbol> VOID = std::make_unique<TypeSymbol>("void");
+        // inline std::unique_ptr<TypeSymbol> VOID = std::make_unique<TypeSymbol>("void");
         inline std::unique_ptr<TypeSymbol> ERROR = std::make_unique<TypeSymbol>("?");
     }
 
@@ -60,7 +61,7 @@ namespace trylang
     struct VariableSymbol : Symbol
     {
         const char* _type = nullptr;
-        bool _isReadOnly = false; /* Variable is declared by let keyword instead of var */
+        bool _isReadOnly = false; /* Variable is declared by var keyword instead of let */
 
         VariableSymbol(std::string name, bool isReadOnly, const char* type) : Symbol(std::move(name)), _type(type), _isReadOnly(isReadOnly){}
         ~VariableSymbol() override = default;
@@ -72,9 +73,13 @@ namespace trylang
         SymbolKind Kind() override;
     };
 
+    /*
+        As we have defined that GlobalVariable cannot be changed. So we can store the value here.
+    */
     struct GlobalVariableSymbol : VariableSymbol
     {
-        GlobalVariableSymbol(std::string name, bool isReadOnly, const char* type): VariableSymbol(std::move(name), isReadOnly, type){}
+        object_t _value;
+        GlobalVariableSymbol(std::string name, bool isReadOnly, const char* type, object_t value): VariableSymbol(std::move(name), isReadOnly, type), _value(std::move(value)){}
         SymbolKind Kind() override;
     };
 
