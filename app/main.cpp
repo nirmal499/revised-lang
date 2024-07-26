@@ -1,4 +1,5 @@
 #include "codeanalysis/Generator.hpp"
+#include <cstring>
 #include <iostream>
 #include <codeanalysis/SyntaxKind.hpp>
 #include <codeanalysis/Lexer.hpp>
@@ -10,15 +11,16 @@
 #include <codeanalysis/BoundNodePrinter.hpp>
 #include <fstream>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
-void Run3(const char* file_name);
+void Run3(char* argv[]);
 
 int main(int argc, char* argv[])
 {
     try
     {
-        Run3(argv[1]);
+        Run3(argv);
     }
     catch(const std::exception& e)
     {
@@ -145,10 +147,26 @@ void Run2()
 }
 */
 
-void Run3(const char* file_name)
+void Run3(char* argv[])
 {
+    const char* file_name = argv[1];
+    const char* flagToGenerateIR = argv[2];
+
+    bool generateIR;
+    if(strcmp(flagToGenerateIR, "ir") == 0)
+    {
+        generateIR = true;
+    }
+    else if(strcmp(flagToGenerateIR, "nonir") == 0)
+    {
+        generateIR = false;
+    }
+    else
+    {
+        throw std::runtime_error("flagToGenerateIR: can contain either 'true' or 'false'.");
+    }
+
     std::string errors;
-    bool generateIR = true;
 
     /* ROOT_PATH is set by the CMake */
     std::string sourceFilePath = std::string(ROOT_PATH) + "/source_file/" + file_name;
