@@ -44,8 +44,9 @@ Make sure to save your file in the **source_file** directory present in the root
 
 To interpret and run Trylang code:
 ```sh
-./run.sh project-run-exe <name_of_your_file_with_no_extension>
+./run.sh project-run-exe <name_of_your_file_with_no_extension> <generateIRFlag>
 ```
+`<generateIRFlag>` can take two values : `ir` value will generate IR, `nonir` will not generateIR, it will evaluate the Trylang code instead of generating IR.
 You will see the evaluted result after you run the above command.
 
 You will find the compiled LLVM IR in **llv_ir** with the same name as you have provided above.
