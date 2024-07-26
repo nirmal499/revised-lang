@@ -1,12 +1,12 @@
-let number = 7;
+let number = 7; // Global Variable
 
 {
-    var i = 0;
+    var i = 0;  // Local Variable
     while(i <= 10)
     {
         if(i / 2 == 0)
         {
-            print(string(i) + " is even, skipping.");
+            print(string(i) + " skipping.");
             i = i + 1;
             continue;
         }
