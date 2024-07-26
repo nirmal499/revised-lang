@@ -446,4 +446,34 @@ namespace trylang
     {
         return {_expression.get()};    
     }
+
+    BoundContinueStatement::BoundContinueStatement()
+    {
+        
+    }
+
+    BoundNodeKind BoundContinueStatement::Kind()
+    {
+        return BoundNodeKind::ContinueStatement;
+    }
+
+    std::vector<BoundNode*> BoundContinueStatement::GetChildren()
+    {
+        return {nullptr};    
+    }
+
+    BoundBreakStatement::BoundBreakStatement()
+    {
+        
+    }
+
+    BoundNodeKind BoundBreakStatement::Kind()
+    {
+        return BoundNodeKind::BreakStatement;
+    }
+
+    std::vector<BoundNode*> BoundBreakStatement::GetChildren()
+    {
+        return {nullptr};    
+    }
 }

@@ -83,6 +83,22 @@ namespace trylang
         std::vector<BoundNode*> GetChildren() override;
     };
 
+    struct BoundContinueStatement : public BoundStatementNode
+    {
+        BoundContinueStatement();
+
+        BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
+    };
+
+    struct BoundBreakStatement : public BoundStatementNode
+    {
+        BoundBreakStatement();
+
+        BoundNodeKind Kind() override;
+        std::vector<BoundNode*> GetChildren() override;
+    };
+
     /*********************************************************************************************************************/
     struct BoundGotoStatement : public BoundStatementNode
     {
