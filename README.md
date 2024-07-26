@@ -9,8 +9,11 @@
 - **Interpretation:** Interprets the entire Trylang code and provides the evaluated result.
 - **Compilation to LLVM IR:** Compile Trylang code to LLVM Intermediate Representation (IR).
 - **Data Types:** Includes support for essential data types such as `int`, `bool`, and `string`. Giving a type is optional.
-- **Const:** Varaible declared with `var` are mutable and variable declared with `let` are not mutable.
+- **Const:** Variable declared with `var` are mutable and variable declared with `let` are not mutable.
 - **Mandatory Return Values:** All functions must have a return value; if not explicitly provided, the default return type is `int`.
+- **Control Flow:** `continue` and `break` statment is provided with `while` loop.
+- **Function:** The last statement of a `function` must be a `return` statment. There is no `void` type. `function` must always return somthing. Incase return type of function is not provided than by default `int` will be used.
+- **Global Variables:**  All variables that are declared not declared inside scope are referred as Global Variables. Global Variables are immutable and should always be declared with Literal value.
 
 ## Getting Started
 
@@ -51,27 +54,52 @@ You will find the compiled LLVM IR in **llv_ir** with the same name as you have 
 
 The below code is saved in **source_file** directory, named as `main4.txt`
 ```
-var a = "global";
+let number = 7; // Global Variable
 
-function showA()
 {
-    // print is the inbuit function
-    print(a);
-    return 1;
+    var i = 0;  // Local Variable
+    while(i <= 10)
+    {
+        if(i / 2 == 0)
+        {
+            print(string(i) + " skipping.");
+            i = i + 1;
+            continue;
+        }
+
+        print("Doing");
+
+        if(i == number)
+        {
+            print("Found the target number " + string(i));
+            break;
+        }
+        else
+        {
+            print(string(i) + " is not the target number.");
+        }
+
+        i = i + 1;
+    }
 }
 
-showA();
-
-a = "block";
-
-showA();
+print("Hello");
 ```
 
-To interpret and run the above Trylang code:
+To evaluate the above Trylang code:
 ```sh
-./run.sh project-run-exe main4
+./run.sh project-run-exe main14 nonir
 ```
 
-You will find the compiled LLVM IR in **llv_ir** directory with file named as `main4.txt`.
+To generate IR for the above Trylang code:
+```sh
+./run.sh project-run-exe main14 ir
+```
+You will find the compiled LLVM IR in **llv_ir** directory with file named as `main14.txt`.
+
+To run the compiled IR:
+```
+lli-14 llvm_ir/main14.txt
+```
 
 **A lot more features will be added in this project {WORK IN PROGRESS}**
