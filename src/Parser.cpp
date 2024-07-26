@@ -145,7 +145,7 @@ namespace trylang
         auto parameters = this->ParseParameterList();
         auto closeParenthesis = this->Consume(SyntaxKind::CloseParenthesisToken, "Expected a ')'");
         auto typeClause = this->ParseOptionalTypeClause(); /* return type of the function */
-        auto body = this->ParseBlockStatement();
+        auto body = this->ParseBlockStatement(true);
 
         return std::make_unique<FunctionDeclarationStatementSyntax>(std::move(functionKeyword), std::move(identifier), std::move(openParenthesis), std::move(parameters), std::move(closeParenthesis), std::move(typeClause), std::move(body));
     }
@@ -270,11 +270,11 @@ namespace trylang
     }
 
 
-    std::unique_ptr<StatementSyntax> Parser::ParseBlockStatement()
+    std::unique_ptr<StatementSyntax> Parser::ParseBlockStatement(bool isFunction)
     {
         std::vector<std::unique_ptr<StatementSyntax>> statements;
 
-        auto openBraceToken = this->Consume(SyntaxKind::OpenBraceToken, "Expected '('.");
+        auto openBraceToken = this->Consume(SyntaxKind::OpenBraceToken, "Expected '{'.");
 
         /* !(this->Current()->Kind() == SyntaxKind::EndOfFileToken || this->Current()->Kind() == SyntaxKind::CloseBraceToken) */
         while(this->Current()->Kind() != SyntaxKind::EndOfFileToken && this->Current()->Kind() != SyntaxKind::CloseBraceToken)
@@ -283,7 +283,12 @@ namespace trylang
             statements.emplace_back(std::move(statement));
         }
 
-        auto closeBraceToken = this->Consume(SyntaxKind::CloseBraceToken, "Expected ')'.");
+        if(isFunction && statements[statements.size() - 1]->Kind() != SyntaxKind::ReturnStatement)
+        {
+            _buffer << "The last statement of a function must be a return statement\n";
+        }
+
+        auto closeBraceToken = this->Consume(SyntaxKind::CloseBraceToken, "Expected '}'.");
 
         return std::make_unique<BlockStatementSyntax>(std::move(openBraceToken), std::move(statements), std::move(closeBraceToken));
     }

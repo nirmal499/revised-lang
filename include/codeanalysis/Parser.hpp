@@ -43,7 +43,7 @@ namespace trylang
         std::unique_ptr<ParameterSyntax> ParseParameter();
 
         std::unique_ptr<StatementSyntax> ParseStatement();
-        std::unique_ptr<StatementSyntax> ParseBlockStatement();
+        std::unique_ptr<StatementSyntax> ParseBlockStatement(bool isFunction = false);
         std::unique_ptr<StatementSyntax> ParseExpressionStatement();
         std::unique_ptr<StatementSyntax> ParseVariableDeclarationStatement();
         std::unique_ptr<TypeClauseSyntax> ParseOptionalTypeClause();
