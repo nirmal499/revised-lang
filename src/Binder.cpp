@@ -24,12 +24,13 @@ namespace trylang
         return _buffer.str();
     }
 
-    Binder::Binder(const std::shared_ptr<BoundScope>& parent, FunctionSymbol* function)
+    Binder::Binder(const std::shared_ptr<BoundScope>& parent, FunctionSymbol* function, bool provideRF)
     {
         _buffer.str("");
 
         _scope = std::make_shared<BoundScope>(parent);
         _function = function;
+        _provideRFCode = provideRF;
 
         if(_function != nullptr)
         {
@@ -44,9 +45,9 @@ namespace trylang
         (void)_scope->TryDeclareFunction(BUILT_IN_FUNCTIONS::MAP.at("input"));
     }
 
-    std::unique_ptr<BoundProgram> Binder::BindProgram(CompilationUnitSyntax* syntaxTree)
+    std::unique_ptr<BoundProgram> Binder::BindProgram(CompilationUnitSyntax* syntaxTree, bool provideRF)
     {
-        Binder binder(nullptr, nullptr);
+        Binder binder(nullptr, nullptr, provideRF);
         std::vector<std::unique_ptr<BoundStatementNode>> statements;
 
         for(const auto& member: syntaxTree->_statements)
@@ -63,53 +64,85 @@ namespace trylang
         }
 
         auto statement = std::make_unique<BoundBlockStatement>(std::move(statements));
-        auto flattened = Lower::RewriteAndFlatten(std::move(statement));
+
         auto errors = Binder::Errors();
 
         auto scope = std::make_shared<BoundScope>(nullptr); /* Global Environment */
-
         scope->_functions = std::move(binder._scope->_functions);
         scope->_variables = std::move(binder._scope->_variables);
 
         std::unordered_map<std::string, std::pair<std::shared_ptr<FunctionSymbol>, std::unique_ptr<BoundBlockStatement>>> functionBodies;
-        for(const auto& function: scope->_functions)
+        
+        if(provideRF)
         {
-            if(function.second->_declaration == nullptr)
+            auto flattened = Lower::RewriteAndFlatten(std::move(statement));
+
+            for(const auto& function: scope->_functions)
             {
-                /* These functions are global functions declared by the CREATOR */
-                continue;
+                if(function.second->_declaration == nullptr)
+                {
+                    /* These functions are global functions declared by the CREATOR */
+                    continue;
+                }
+
+                Binder binder(scope, function.second.get(), provideRF);
+                auto body = binder.BindStatement(function.second->_declaration->_body.get());
+                auto flattenedBody = Lower::RewriteAndFlatten(std::move(body));
+
+                functionBodies[function.first] = std::make_pair(function.second, std::move(flattenedBody));
+
+                errors.append(Binder::Errors());
             }
 
-            Binder binder(scope, function.second.get());
-            auto body = binder.BindStatement(function.second->_declaration->_body.get());
-            auto flattenedBody = Lower::RewriteAndFlatten(std::move(body));
-
-            if(flattenedBody->_statements.at(flattenedBody->_statements.size() - 2)->Kind() != BoundNodeKind::ReturnStatement)
-            {   
-                /* 
-                    The Reason for doing "(flattenedBody->_statements.size() - 2)" is that in flattenedBody->_statement, 
-                    the last statement is LabelStatement 
-                */
-                _buffer << "Function last statement must be a return statement\n";
+            std::unique_ptr<BoundProgram> boundProgram = nullptr;
+            if(!errors.empty())
+            {
+                std::cout << "Binding Errors Reported:\n";
+                std::cout << "\n" << errors << "\n";
+            }
+            else
+            {
+                boundProgram = std::make_unique<BoundProgram>(std::move(scope->_variables), std::move(functionBodies), std::move(flattened));
             }
 
-            functionBodies[function.first] = std::make_pair(function.second, std::move(flattenedBody));
+            return boundProgram;
 
-            errors.append(Binder::Errors());
-        }
-
-        std::unique_ptr<BoundProgram> boundProgram = nullptr;
-        if(!errors.empty())
-        {
-            std::cout << "Binding Errors Reported:\n";
-            std::cout << "\n" << errors << "\n";
         }
         else
         {
-            boundProgram = std::make_unique<BoundProgram>(std::move(scope->_variables), std::move(functionBodies), std::move(flattened));
-        }
+            for(const auto& function: scope->_functions)
+            {
+                if(function.second->_declaration == nullptr)
+                {
+                    /* These functions are global functions declared by the CREATOR */
+                    continue;
+                }
 
-        return boundProgram;
+                Binder binder(scope, function.second.get(),provideRF);
+                auto body = binder.BindStatement(function.second->_declaration->_body.get());
+                std::vector<std::unique_ptr<BoundStatementNode>> statements(1);
+                statements.emplace_back(std::move(body));
+
+                auto bodyStmt = std::make_unique<BoundBlockStatement>(std::move(statements));
+
+                functionBodies[function.first] = std::make_pair(function.second, std::move(bodyStmt));
+
+                errors.append(Binder::Errors());
+            }
+
+            std::unique_ptr<BoundProgram> boundProgram = nullptr;
+            if(!errors.empty())
+            {
+                std::cout << "Binding Errors Reported:\n";
+                std::cout << "\n" << errors << "\n";
+            }
+            else
+            {
+                boundProgram = std::make_unique<BoundProgram>(std::move(scope->_variables), std::move(functionBodies), std::move(statement));
+            }
+
+            return boundProgram;
+        }
     }
 
     std::unique_ptr<BoundStatementNode> Binder::BindStatement(StatementSyntax* syntax)
@@ -135,28 +168,63 @@ namespace trylang
             case SyntaxKind::ReturnStatement:
                 return this->BindReturnStatement(static_cast<ReturnStatementSyntax*>(syntax));
             default:
-                throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
+                throw std::logic_error("Binder: Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
         }
     }
 
     std::unique_ptr<BoundStatementNode> Binder::BindVariableDeclaration(VariableDeclarationStatementSyntax *syntax)
     {
         auto isReadOnly = syntax->_keyword->Kind() == SyntaxKind::LetKeyword;
+        if(_scope->_parent == nullptr && !isReadOnly)
+        {
+            /*
+                If we are in the top level environemnt {aka global environment}
+                then we are only allowed to declare const variable {only let keyword is allowed}.
+            */
+            _buffer << "Declare '" << syntax->_identifier->_text << "' in let keyword becoz it is the global environment\n";
+            return this->BindErrorStatement();
+        }
+
         const char* type = this->BindTypeClause(syntax->_typeClause.get());
         auto expression = this->BindExpression(syntax->_expression.get());
+        if(_scope->_parent == nullptr && expression->Kind() != BoundNodeKind::LiteralExpression)
+        {
+            /*
+                If we are in the top level environemnt {aka global environment}
+                then we are only allowed to declare the global variable with compile time value.
+            */
+            _buffer << "Declare '" << syntax->_identifier->_text << "' with compile time value.\n";
+            return this->BindErrorStatement();
+        }
+
         auto variableType = type == nullptr ? expression->Type() : type;
+        
+        std::shared_ptr<VariableSymbol> variable = nullptr;
+        if(_scope->_parent == nullptr && expression->Kind() == BoundNodeKind::LiteralExpression)
+        {
+            variable = this->BindVariable(syntax->_identifier->_text, isReadOnly, variableType, static_cast<LiteralExpressionSyntax*>(syntax->_expression.get())->_value);
+        }
+        else
+        {
+            variable = this->BindVariable(syntax->_identifier->_text, isReadOnly, variableType);
+        }
+        
+        if(variable == nullptr)
+        {
+            return this->BindErrorStatement();
+        }
+
         auto conversionExpression = this->BindConversion(variableType, std::move(expression));
-        auto variable = this->BindVariable(syntax->_identifier->_text, isReadOnly, variableType);
 
         return std::make_unique<BoundVariableDeclaration>(variable, std::move(conversionExpression));
     }
 
-    std::shared_ptr<VariableSymbol> Binder::BindVariable(std::string varName, bool isReadOnly, const char* type)
+    std::shared_ptr<VariableSymbol> Binder::BindVariable(std::string varName, bool isReadOnly, const char* type, object_t globalValue)
     {
         std::shared_ptr<VariableSymbol> variable = nullptr;
-        if(_function == nullptr)
+        if(_scope->_parent == nullptr)
         {
-            variable = std::make_shared<GlobalVariableSymbol>(std::move(varName), isReadOnly, type);
+            variable = std::make_shared<GlobalVariableSymbol>(std::move(varName), isReadOnly, type, std::move(globalValue));
         }
         else
         {
@@ -254,7 +322,7 @@ namespace trylang
             case SyntaxKind::CallExpression:
                 return this->BindCallExpression(static_cast<CallExpressionSyntax*>(syntax));
             default:
-                throw std::logic_error("Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
+                throw std::logic_error("Binder: Unexpected syntax " + __syntaxStringMap[syntax->Kind()]);
         }
     }
 
@@ -405,6 +473,11 @@ namespace trylang
         _scope = std::make_shared<BoundScope>(_scope);
 
         auto variable = this->BindVariable(syntax->_identifier->_text, true, Types::INT->Name());
+        if(variable == nullptr)
+        {
+            return this->BindErrorStatement();
+        }
+
         auto upperBoundSymbol = this->BindVariable("upperBound" + GenerateRandomText(3), true, Types::INT->Name());
         auto [boundedBody, loopLabel] = this->BindLoopBody(syntax->_body.get());
 
@@ -539,26 +612,40 @@ namespace trylang
 
     std::unique_ptr<BoundStatementNode> Binder::BindBreakStatement(BreakStatementSyntax *syntax)
     {
-        if(_loopStack.empty())
+        if(_provideRFCode)
         {
-            _buffer << "The keyword break can only be used inside loops.\n";
-            return this->BindErrorStatement();
-        }
+            if(_loopStack.empty())
+            {
+                _buffer << "The keyword break can only be used inside loops.\n";
+                return this->BindErrorStatement();
+            }
 
-        auto breakLabel = _loopStack.top().first;
-        return std::make_unique<BoundGotoStatement>(breakLabel);
+            auto breakLabel = _loopStack.top().first;
+            return std::make_unique<BoundGotoStatement>(breakLabel);
+        }
+        else
+        {
+            return std::make_unique<BoundBreakStatement>();
+        }
     }
 
     std::unique_ptr<BoundStatementNode> Binder::BindContinueStatement(ContinueStatementSyntax *syntax)
     {
-        if(_loopStack.empty())
+        if(_provideRFCode)
         {
-            _buffer << "The keyword continue can only be used inside loops.\n";
-            return this->BindErrorStatement();
-        }
+            if(_loopStack.empty())
+            {
+                _buffer << "The keyword continue can only be used inside loops.\n";
+                return this->BindErrorStatement();
+            }
 
-        auto continueLabel = _loopStack.top().second;
-        return std::make_unique<BoundGotoStatement>(continueLabel);
+            auto continueLabel = _loopStack.top().second;
+            return std::make_unique<BoundGotoStatement>(continueLabel);
+        }
+        else
+        {
+            return std::make_unique<BoundContinueStatement>();
+        }
     }
 
     std::unique_ptr<BoundStatementNode> Binder::BindReturnStatement(ReturnStatementSyntax *syntax)

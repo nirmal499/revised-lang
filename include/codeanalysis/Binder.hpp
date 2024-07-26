@@ -54,8 +54,10 @@ namespace trylang
         int _labelCountForIfStatement = 0;
         int _labelCountForBreakAndContinueStatement = 0;
 
-        explicit Binder(const std::shared_ptr<BoundScope>& parent, FunctionSymbol* _function);
-        static std::unique_ptr<BoundProgram> BindProgram(CompilationUnitSyntax* syntaxTree);
+        bool _provideRFCode = true;
+
+        explicit Binder(const std::shared_ptr<BoundScope>& parent, FunctionSymbol* _function, bool provideRFCode);
+        static std::unique_ptr<BoundProgram> BindProgram(CompilationUnitSyntax* syntaxTree, bool provideRFCode);
 
         static std::stringstream _buffer;
         static std::string Errors();
@@ -67,7 +69,7 @@ namespace trylang
         std::unique_ptr<BoundExpressionNode> BindExpression(ExpressionSyntax* syntax, const char* targetType);
         std::unique_ptr<BoundExpressionNode> BindConversion(const char* type, ExpressionSyntax *syntax, bool allowExplicit = false);
         std::unique_ptr<BoundExpressionNode> BindConversion(const char* type, std::unique_ptr<BoundExpressionNode> expression, bool allowExplicit = false);
-        std::shared_ptr<VariableSymbol> BindVariable(std::string varName, bool isReadOnly, const char* type);
+        std::shared_ptr<VariableSymbol> BindVariable(std::string varName, bool isReadOnly, const char* type, object_t globalValue = std::nullopt);
 
         std::unique_ptr<BoundStatementNode> BindStatement(StatementSyntax* syntax);
         std::unique_ptr<BoundStatementNode> BindVariableDeclaration(VariableDeclarationStatementSyntax* syntax);
