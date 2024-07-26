@@ -1,14 +1,16 @@
-var a = "global";
+// let a = "global";
+let b = 34;
 
 function showA()
 {
     // print is the inbuit function
-    print(a);
+    // print(a);
+    print("Value is " + string(b));
     return 1;
 }
 
 showA();
 
-a = "block";
+// a = "block";
 
 showA();

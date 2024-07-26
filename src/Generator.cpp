@@ -1,3 +1,4 @@
+#include "codeanalysis/BoundNodeKind.hpp"
 #include "codeanalysis/Evaluator.hpp"
 #include "codeanalysis/GenScope.hpp"
 #include "codeanalysis/Symbol.hpp"
@@ -6,7 +7,10 @@
 #include <codeanalysis/Generator.hpp>
 #include <codeanalysis/BoundScope.hpp>
 #include <codeanalysis/Types.hpp>
+#include <cstddef>
 #include <cstring>
+#include <exception>
+#include <llvm-14/llvm/IR/BasicBlock.h>
 #include <llvm-14/llvm/IR/Value.h>
 #include <memory>
 #include <stack>
@@ -34,20 +38,24 @@ namespace trylang
                 return GenerateIfStatement(static_cast<BoundIfStatement*>(node));
             case BoundNodeKind::WhileStatement:
                 return GenerateWhileStatement(static_cast<BoundWhileStatement*>(node));
-            case BoundNodeKind::ForStatement:
-                return GenerateForStatement(static_cast<BoundForStatement*>(node));
-            case BoundNodeKind::ConditionalGotoStatement:
-                return;
-            case BoundNodeKind::LabelStatement:
-                return;
-            case BoundNodeKind::GotoStatement:
-                return;
+            case BoundNodeKind::ContinueStatement:
+                return GenerateContinueStatement(static_cast<BoundContinueStatement*>(node));
+            case BoundNodeKind::BreakStatement:
+                return GenerateBreakStatement(static_cast<BoundBreakStatement*>(node));
+            // case BoundNodeKind::ForStatement:
+            //     return GenerateForStatement(static_cast<BoundForStatement*>(node));
+            // case BoundNodeKind::ConditionalGotoStatement:
+            //     return GenerateConditionalGotoStatement(static_cast<BoundConditionalGotoStatement*>(node));;
+            // case BoundNodeKind::LabelStatement:
+            //     return GenerateLabelStatement(static_cast<BoundLabelStatement*>(node));;
+            // case BoundNodeKind::GotoStatement:
+            //     return GenerateGotoStatement(static_cast<BoundGotoStatement*>(node));;
             case BoundNodeKind::ExpressionStatement:
                 return GenerateExpressionStatement(static_cast<BoundExpressionStatement*>(node));
             case BoundNodeKind::ReturnStatement:
                 return GenerateReturnStatement(static_cast<BoundReturnStatement*>(node));
             default:
-                throw std::logic_error("Unexpected syntax " + __boundNodeStringMap[node->Kind()]);
+                throw std::logic_error("Generator: Unexpected syntax " + __boundNodeStringMap[node->Kind()]);
         }
     }
 
@@ -67,6 +75,17 @@ namespace trylang
     {
         /* locals are allocated on the stack */
         auto varname = node->_variable->_name;
+
+        llvm::Value* varNameValue = _scope->LookUp(varname, false);
+
+        if(_function->getName() == "main" && varNameValue != nullptr && llvm::isa<llvm::GlobalVariable>(varNameValue))
+        {
+            /*
+                If we are in "main" and the varName is already declared as global variable
+                then we don't need to allocate varName to be a localVariable inside the "main" function
+            */
+            return;
+        }
 
         assert(node->_expression != nullptr);
         llvm::Value* value = this->GenerateExpression(node->_expression.get());
@@ -88,34 +107,188 @@ namespace trylang
         _builder->CreateStore(value, varbinding);
     }
 
+    // void Generator::GenerateLabelStatement(BoundLabelStatement* node)
+    // {
+    //     llvm::BasicBlock* labelBlock = nullptr;
+    //     try
+    //     {
+    //         labelBlock = _labelMap.at(node->_label._name);
+    //     }
+    //     catch(...)
+    //     {
+    //         /* We do not have any BasicBlock yet created with name "node->_label._name" */
+    //         labelBlock = llvm::BasicBlock::Create(*_ctx, node->_label._name, _function);
+    //         _labelMap[node->_label._name] = labelBlock;
+    //     }
+
+    //     _builder->SetInsertPoint(labelBlock);
+    // }
+
+    // void Generator::GenerateGotoStatement(BoundGotoStatement* node)
+    // {
+    //     llvm::BasicBlock* targetLabel = nullptr;
+
+    //     try
+    //     {
+    //         targetLabel = _labelMap.at(node->_label._name); /* It throws id "node->_label" is not present */
+    //     }
+    //     catch(...)
+    //     {
+    //         /* We do not have any BasicBlock yet created with name "node->_label._name" */
+    //         targetLabel = llvm::BasicBlock::Create(*_ctx, node->_label._name, _function);
+    //         _labelMap[node->_label._name] = targetLabel;
+    //     }
+        
+    //     _builder->CreateBr(targetLabel);
+    // }
+
+    // void Generator::GenerateConditionalGotoStatement(BoundConditionalGotoStatement* node)
+    // {
+    //     llvm::Value* cond = this->GenerateExpression(node->_condition.get());
+
+    //     llvm::BasicBlock* targetLabel = nullptr;
+    //     try
+    //     {
+    //         targetLabel = _labelMap.at(node->_label._name); /* It throws id "node->_label" is not present */
+    //     }
+    //     catch(...)
+    //     {
+    //         /* We do not have any BasicBlock yet created with name "node->_label._name" */
+    //         targetLabel = llvm::BasicBlock::Create(*_ctx, node->_label._name, _function);
+    //         _labelMap[node->_label._name] = targetLabel;
+    //     }
+
+    //     llvm::BasicBlock* jumpToThisBlock = nullptr;
+    //     if(node->_linkedLabel.has_value())
+    //     {
+    //         const auto& linkedLabel = *node->_linkedLabel;
+    //         try
+    //         {
+    //             jumpToThisBlock = _labelMap.at(linkedLabel._name); /* It throws id "node->_label" is not present */
+    //         }
+    //         catch(...)
+    //         {
+    //             /* We do not have any BasicBlock yet created with name "linkedLabel._name" */
+    //             jumpToThisBlock = llvm::BasicBlock::Create(*_ctx, linkedLabel._name, _function);
+    //             _labelMap[linkedLabel._name] = jumpToThisBlock;
+    //         }
+    //     }
+
+    //     // Step 3: Determine the continuation block after the conditional branch
+    //     llvm::BasicBlock* continuation = llvm::BasicBlock::Create(*_ctx, "after_conditional", _function);
+
+    //     // Create conditional branch
+    //     if(node->_jumpIfFalse)
+    //     {
+    //         if(node->_linkedLabel.has_value())
+    //         {
+    //             // Jump to targetLabel if condition is false, otherwise continue
+    //             _builder->CreateCondBr(_builder->CreateNot(cond), targetLabel, jumpToThisBlock);
+    //         }
+    //         else
+    //         {
+    //             _builder->CreateCondBr(_builder->CreateNot(cond), targetLabel, continuation);
+    //         }
+            
+    //     }
+    //     else
+    //     {
+    //         if(node->_linkedLabel.has_value())
+    //         {
+    //             _builder->CreateCondBr(cond, targetLabel, jumpToThisBlock);
+    //         }
+    //         else
+    //         {
+    //             // Jump to targetLabel if condition is true, otherwise continue
+    //             _builder->CreateCondBr(cond, targetLabel, continuation);
+    //         }
+    //     }
+
+    //     // Set the insertion point to the continuation block for subsequent instructions
+    //     _builder->SetInsertPoint(continuation);
+    // }
+
+
+    void Generator::GenerateContinueStatement(BoundContinueStatement* node)
+    {
+        if(_loopStack.empty())
+        {
+            throw std::runtime_error("GenerateContinueStatement: _loopStack is empty");
+        }
+
+        auto bodyBasicBlockLabel = _loopStack.top().first; /* Get the "body label BasicBlock" */
+        
+        _builder->CreateBr(bodyBasicBlockLabel);
+    }
+
+    void Generator::GenerateBreakStatement(BoundBreakStatement* node)
+    {
+        if(_loopStack.empty())
+        {
+            throw std::runtime_error("GenerateBreakStatement: _loopStack is empty");
+        }
+
+        auto loopEndBasicBlockLabel = _loopStack.top().second; /* Get the "loopend label BasicBlock" */
+        
+        _builder->CreateBr(loopEndBasicBlockLabel);
+    }
+
+
     void Generator::GenerateIfStatement(BoundIfStatement* node)
     {
         llvm::Value* cond = this->GenerateExpression(node->_condition.get());
 
-        auto thenBlock = llvm::BasicBlock::Create(*_ctx, "then", _function);
-        auto elseBlock = llvm::BasicBlock::Create(*_ctx, "else", nullptr);
-        auto ifEndBlock = llvm::BasicBlock::Create(*_ctx, "ifend", nullptr);
-
-        /* condition branch */
-        _builder->CreateCondBr(cond, thenBlock, elseBlock);
-
-        /* then branch */
-        _builder->SetInsertPoint(thenBlock);
-        this->GenerateStatement(node->_statement.get());
-        _builder->CreateBr(ifEndBlock);
-
-        if(node->_elseStatement != nullptr)
+        if(node->_elseStatement == nullptr)
         {
+            auto thenBlock = llvm::BasicBlock::Create(*_ctx, "then", _function);
+            auto ifEndBlock = llvm::BasicBlock::Create(*_ctx, "ifend", _function);
+
+            /* condition branch */
+            _builder->CreateCondBr(cond, thenBlock, ifEndBlock);
+
+            /* then branch */
+            _builder->SetInsertPoint(thenBlock);
+            this->GenerateStatement(node->_statement.get());
+            if(!_builder->GetInsertBlock()->getTerminator())
+            {
+                _builder->CreateBr(ifEndBlock);
+            }
+            // _builder->CreateBr(ifEndBlock);
+
+            /* if-end block */
+            _builder->SetInsertPoint(ifEndBlock);
+        }
+        else
+        {
+            auto thenBlock = llvm::BasicBlock::Create(*_ctx, "then", _function);
+            auto elseBlock = llvm::BasicBlock::Create(*_ctx, "else", _function);
+            auto ifEndBlock = llvm::BasicBlock::Create(*_ctx, "ifend", _function);
+
+            /* condition branch */
+            _builder->CreateCondBr(cond, thenBlock, elseBlock);
+
+            /* then branch */
+            _builder->SetInsertPoint(thenBlock);
+            this->GenerateStatement(node->_statement.get());
+            if(!_builder->GetInsertBlock()->getTerminator())
+            {
+                _builder->CreateBr(ifEndBlock);
+            }
+            // _builder->CreateBr(ifEndBlock);
+
             /* else branch */
-            _function->getBasicBlockList().push_back(elseBlock); /* Append the block to the function now*/
             _builder->SetInsertPoint(elseBlock);
             this->GenerateStatement(node->_elseStatement.get());
-            _builder->CreateBr(ifEndBlock);
-        }
+            if(!_builder->GetInsertBlock()->getTerminator())
+            {
+                _builder->CreateBr(ifEndBlock);
+            }
+            // _builder->CreateBr(ifEndBlock);
 
-        _function->getBasicBlockList().push_back(ifEndBlock);
-        /* if-end block */
-        _builder->SetInsertPoint(ifEndBlock);
+            /* if-end block */
+            _builder->SetInsertPoint(ifEndBlock);
+
+        }
 
         /*
             Result of the if expression is phi
@@ -144,56 +317,61 @@ namespace trylang
 
         _builder->CreateCondBr(cond, bodyBlock, loopEndBlock);
 
-        /* Body */
+        /* *******************************************Body************************************************ */
         _function->getBasicBlockList().push_back(bodyBlock);
         _builder->SetInsertPoint(bodyBlock);
+
+        _loopStack.push({bodyBlock, loopEndBlock});
         this->GenerateStatement(node->_body.get());
+        _loopStack.pop();
+
         _builder->CreateBr(condBlock);
+        /* ****************************************************************************************** */
 
         _function->getBasicBlockList().push_back(loopEndBlock);
         _builder->SetInsertPoint(loopEndBlock);
     }
 
-    void Generator::GenerateForStatement(BoundForStatement* node)
-    {
-        auto variableDeclaration = std::make_unique<BoundVariableDeclaration>(node->_variable, std::move(node->_lowerBound));
-        auto upperBoundVariableDeclaration = std::make_unique<BoundVariableDeclaration>(node->_variableForUpperBoundToBeUsedDuringRewritingForIntoWhile, std::move(node->_upperBound));
+    // void Generator::GenerateForStatement(BoundForStatement* node)
+    // {
+    //     auto variableDeclaration = std::make_unique<BoundVariableDeclaration>(node->_variable, std::move(node->_lowerBound));
+    //     auto upperBoundVariableDeclaration = std::make_unique<BoundVariableDeclaration>(node->_variableForUpperBoundToBeUsedDuringRewritingForIntoWhile, std::move(node->_upperBound));
 
-        auto condition = std::make_unique<BoundBinaryExpression>(
-                std::make_unique<BoundVariableExpression>(node->_variable),
-                BoundBinaryOperator::Bind(SyntaxKind::LessThanEqualsToken, Types::INT->Name(), Types::INT->Name()),
-                std::make_unique<BoundVariableExpression>(node->_variableForUpperBoundToBeUsedDuringRewritingForIntoWhile)
-        );
-        // auto continueLabelStatement = std::make_unique<BoundLabelStatement>(node->_loopLabel.second);
-        auto increment = std::make_unique<BoundExpressionStatement>(
-                std::make_unique<BoundAssignmentExpression>(
-                        node->_variable,
-                        std::make_unique<BoundBinaryExpression>(
-                                std::make_unique<BoundVariableExpression>(node->_variable),
-                                BoundBinaryOperator::Bind(SyntaxKind::PlusToken, Types::INT->Name(),Types::INT->Name()),
-                                std::make_unique<BoundLiteralExpression>(1))
-                ));
+    //     auto condition = std::make_unique<BoundBinaryExpression>(
+    //             std::make_unique<BoundVariableExpression>(node->_variable),
+    //             BoundBinaryOperator::Bind(SyntaxKind::LessThanEqualsToken, Types::INT->Name(), Types::INT->Name()),
+    //             std::make_unique<BoundVariableExpression>(node->_variableForUpperBoundToBeUsedDuringRewritingForIntoWhile)
+    //     );
+    //     // auto continueLabelStatement = std::make_unique<BoundLabelStatement>(node->_loopLabel.second);
+    //     auto increment = std::make_unique<BoundExpressionStatement>(
+    //             std::make_unique<BoundAssignmentExpression>(
+    //                     node->_variable,
+    //                     std::make_unique<BoundBinaryExpression>(
+    //                             std::make_unique<BoundVariableExpression>(node->_variable),
+    //                             BoundBinaryOperator::Bind(SyntaxKind::PlusToken, Types::INT->Name(),Types::INT->Name()),
+    //                             std::make_unique<BoundLiteralExpression>(1))
+    //             ));
 
-        /** This has to be done instead of doing std::make_unique<BoundBlockStatement>({std::move(body), std::move(increment)}) because BoundBlockStatement is explicit */
-        std::vector<std::unique_ptr<BoundStatementNode>> statements_1(3);
-        statements_1.emplace_back(std::move(node->_body));
-        // statements_1.emplace_back(std::move(continueLabelStatement));
-        statements_1.emplace_back(std::move(increment));
+    //     /** This has to be done instead of doing std::make_unique<BoundBlockStatement>({std::move(body), std::move(increment)}) because BoundBlockStatement is explicit */
+    //     std::vector<std::unique_ptr<BoundStatementNode>> statements_1(3);
+    //     statements_1.emplace_back(std::move(node->_body));
+    //     // statements_1.emplace_back(std::move(continueLabelStatement));
+    //     statements_1.emplace_back(std::move(increment));
 
-        auto whileBody = std::make_unique<BoundBlockStatement>(std::move(statements_1));
+    //     auto whileBody = std::make_unique<BoundBlockStatement>(std::move(statements_1));
 
-        // node->_loopLabel.second = LabelSymbol("continue{" + GenerateRandomText(3) + "}");
-        auto whileStatement = std::make_unique<BoundWhileStatement>(std::move(condition), std::move(whileBody),std::pair<LabelSymbol, LabelSymbol>{});
+    //     // node->_loopLabel.second = LabelSymbol("continue{" + GenerateRandomText(3) + "}");
+    //     auto whileStatement = std::make_unique<BoundWhileStatement>(std::move(condition), std::move(whileBody),std::pair<LabelSymbol, LabelSymbol>{});
 
-        std::vector<std::unique_ptr<BoundStatementNode>> statements_2(3);
-        statements_2.emplace_back(std::move(variableDeclaration));
-        statements_2.emplace_back(std::move(upperBoundVariableDeclaration));
-        statements_2.emplace_back(std::move(whileStatement));
+    //     std::vector<std::unique_ptr<BoundStatementNode>> statements_2(3);
+    //     statements_2.emplace_back(std::move(variableDeclaration));
+    //     statements_2.emplace_back(std::move(upperBoundVariableDeclaration));
+    //     statements_2.emplace_back(std::move(whileStatement));
 
-        auto result = std::make_unique<BoundBlockStatement>(std::move(statements_2));
+    //     auto result = std::make_unique<BoundBlockStatement>(std::move(statements_2));
 
-        this->GenerateStatement(result.get());
-    }
+    //     this->GenerateStatement(result.get());
+    // }
 
 
     void Generator::GenerateReturnStatement(BoundReturnStatement* node)
@@ -231,7 +409,7 @@ namespace trylang
             case BoundNodeKind::ConversionExpression:
                 return GenerateConversionExpression(static_cast<BoundConversionExpression*>(node));
             default:
-                throw std::logic_error("Unexpected syntax " + __boundNodeStringMap[node->Kind()]);
+                throw std::logic_error("Generator: Unexpected syntax " + __boundNodeStringMap[node->Kind()]);
 
         }
     }
@@ -267,11 +445,34 @@ namespace trylang
         /* Global variables */
         if(auto global_var = llvm::dyn_cast<llvm::GlobalVariable>(value))
         {
-            /* We need to load */
-            return _builder->CreateLoad(
-                global_var->getInitializer()->getType(), 
-                global_var, /*load to variable name */ varname.c_str()
-            );
+            /* Check the type of the global variable to decide how to load it */
+            auto type = global_var->getValueType();
+
+            if (type->isArrayTy() && type->getArrayElementType()->isIntegerTy(8))
+            {
+                /* Types::STRING */
+
+                /* If it's a string (array of i8), use GEP to get a pointer to the first element */
+                auto zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*_ctx), 0);
+                llvm::Value* gep = _builder->CreateGEP(
+                    type, /* The type of the value to get element pointer from */
+                    global_var,
+                    {zero, zero}, /* Index to get the first element */
+                    varname.c_str() /*load to variable name */
+                );
+
+                return gep;
+            }
+            else
+            {
+                /* Types::BOOL, Types::INT */
+
+                /* We need to load */
+                return _builder->CreateLoad(
+                    global_var->getInitializer()->getType(), 
+                    global_var, /*load to variable name */ varname.c_str()
+                );
+            }
         }
 
         assert(false); /* We must not reach here becoz we are doing LookUp for function in GenerateCallExpression */
@@ -374,9 +575,24 @@ namespace trylang
 
     llvm::Value* Generator::IntToString(llvm::Value* intValue)
     {
-        llvm::Function* itoaFunc = _module->getFunction("itoa");
-        assert(itoaFunc != nullptr);
-        return _builder->CreateCall(itoaFunc, { intValue }, "intToString");
+        llvm::Function* snprintfFunc = _module->getFunction("snprintf");
+        assert(snprintfFunc != nullptr);
+
+        // Allocate space for the result string
+        llvm::Value* buffer = _builder->CreateAlloca(llvm::Type::getInt8Ty(*_ctx), llvm::ConstantInt::get(llvm::Type::getInt32Ty(*_ctx), 32), "buffer");
+        
+        // Define the format string: "%d" for integers
+        llvm::Value* formatString = _builder->CreateGlobalStringPtr("%d");
+
+        // Define the buffer size
+        llvm::Value* bufferSize = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*_ctx), 32);
+
+        // Call snprintf to format the integer into the buffer
+        llvm::Value* snprintfCall = _builder->CreateCall(snprintfFunc, 
+                                                        { buffer, bufferSize, formatString, intValue }, 
+                                                        "formattedString");
+
+        return buffer;
     }
 
     llvm::Value* Generator::StringToString(llvm::Value* stringValue)
@@ -514,7 +730,51 @@ namespace trylang
                 }
             case BoundNodeKind::Addition:
                 {
-                    return _builder->CreateAdd(left, right, "tmpadd");
+                    if(strcmp(node->_left->Type(), Types::STRING->Name()) == 0)
+                    {
+                        /*
+                            left and right are string
+                        */
+
+                        llvm::Function* strlenFunc = _module->getFunction("strlen");
+                        llvm::Function* mallocFunc = _module->getFunction("malloc");
+                        llvm::Function* strCatFunc = _module->getFunction("strcat");
+                        llvm::Function* strCpyFunc = _module->getFunction("strcpy");
+                        assert(strlenFunc != nullptr && mallocFunc != nullptr && strCatFunc != nullptr && strCpyFunc != nullptr);
+
+                        // Calculate lengths of the left and right strings
+                        llvm::Value* leftLen = _builder->CreateCall(strlenFunc, {left}, "leftLen");
+                        llvm::Value* rightLen = _builder->CreateCall(strlenFunc, {right}, "rightLen");
+
+                        // Total length = leftLen + rightLen + 1 (for null terminator)
+                        llvm::Value* totalLen = _builder->CreateAdd(leftLen, rightLen, "totalLen");
+                        llvm::Value* totalLenWithNull = _builder->CreateAdd(totalLen, llvm::ConstantInt::get(llvm::Type::getInt32Ty(*_ctx), 1), "totalLenWithNull");
+
+                        // Convert total length to i64 type for malloc
+                        llvm::Value* totalLenI64 = _builder->CreateZExt(totalLenWithNull, llvm::Type::getInt64Ty(*_ctx), "totalLenI64");
+
+                        // Allocate memory for the concatenated string
+                        llvm::Value* rawBuffer = _builder->CreateCall(mallocFunc, {totalLenI64}, "rawPtrBuffer");
+
+                        // Cast the i8* (raw pointer) to a desired pointer type, e.g., int32_t* (i32*)
+                        // llvm::Value* typedPtrBuffer = _builder->CreateBitCast(rawBuffer, llvm::PointerType::getUnqual(_builder->getInt32Ty()), "typedPtrBuffer");
+                        /*
+                            No need for bitcast because our raw pointer is already i8*
+                        */
+
+                        // Copy the first string into the buffer
+                        _builder->CreateCall(strCpyFunc, {rawBuffer, left});
+
+                        // Concatenate the second string to the buffer
+                        _builder->CreateCall(strCatFunc, {rawBuffer, right});
+
+
+                        return rawBuffer;
+                    }
+                    else
+                    {
+                        return _builder->CreateAdd(left, right, "tmpadd");
+                    }
                 }
             case BoundNodeKind::Subtraction:
                 {
@@ -742,11 +1002,39 @@ namespace trylang
         _module->getOrInsertFunction("atoi", atoiType);
         /********************************************************************************************** */
 
-        /*****************************************itoa***************************************************** */
-        llvm::FunctionType* itoaType = llvm::FunctionType::get(
-            llvm::Type::getInt8PtrTy(*_ctx), { llvm::Type::getInt32Ty(*_ctx) }, false);
-        _module->getOrInsertFunction("itoa", atoiType);
+        /*****************************************snprintf***************************************************** */
+        // Define the function type for snprintf: int snprintf(char* str, size_t size, const char* format, ...)
+        llvm::FunctionType* snprintfType = llvm::FunctionType::get(
+            _builder->getInt32Ty(),             // Return type: int
+            { _builder->getInt8PtrTy(),         // Argument 1: char* str (destination buffer)
+            _builder->getInt64Ty(),           // Argument 2: size_t size (buffer size)
+            _builder->getInt8PtrTy() },       // Argument 3: const char* format
+            true);                              // IsVarArg: true (because snprintf takes variable arguments)
+
+        _module->getOrInsertFunction("snprintf", snprintfType).getCallee();
         /********************************************************************************************** */
+
+        /******************************************malloc**************************************************** */
+        llvm::FunctionType* mallocType = llvm::FunctionType::get(_builder->getInt8PtrTy(), {_builder->getInt64Ty()}, false);
+        _module->getOrInsertFunction("malloc", mallocType);
+        /********************************************************************************************** */
+
+        /*******************************************strcat*************************************************** */
+        llvm::FunctionType* strcatType = llvm::FunctionType::get(_builder->getInt8PtrTy(), {_builder->getInt8PtrTy(), _builder->getInt8PtrTy()}, false);
+        _module->getOrInsertFunction("strcat", strcatType);
+        /********************************************************************************************** */
+
+        /********************************************strcpy************************************************** */
+        llvm::FunctionType* strcpyType = llvm::FunctionType::get(
+            _builder->getInt8PtrTy(),                     // Return type: char* (pointer to destination string)
+            { _builder->getInt8PtrTy(),              // Argument 1: char* (destination)
+            _builder->getInt8PtrTy() },                     // Argument 2: const char* (source)
+            false);                                   // IsVarArg: false, as strcpy does not take a variable number of arguments
+
+        _module->getOrInsertFunction("strcpy", strcpyType);
+        /********************************************************************************************** */
+
+
     }
 
     void Generator::SetupGlobalEnv(const std::unordered_map<std::string, std::shared_ptr<VariableSymbol>>& variables)
@@ -761,22 +1049,34 @@ namespace trylang
 
         for(const auto& item: variables)
         {
-            if(std::strcmp(item.second->_type, Types::INT.get()->_typeName) == 0)
-            {
-                _globalObjectRecord[item.first] = _builder->getInt32(0);
-            }
-            else if(std::strcmp(item.second->_type, Types::STRING.get()->_typeName) == 0)
-            {
-                _globalObjectRecord[item.first] = llvm::ConstantDataArray::getString(*_ctx, "Hello, LLVM IR!");
-            }
-            else if(std::strcmp(item.second->_type, Types::BOOL.get()->_typeName) == 0)
-            {
-                _globalObjectRecord[item.first] = _builder->getInt1(false);
-            }
-            else
-            {
-                throw std::runtime_error("Invalid Types Encountered!!!");
-            }
+            assert(item.second->Kind() == SymbolKind::GlobalVariable);
+            /*
+                all items in "variables" must be SymbolKind::GlobalVariable
+            */
+            auto* globalVariable = static_cast<GlobalVariableSymbol*>(item.second.get());
+
+            /*
+                "globalVariable->_name" is same as "item.first"
+            */
+
+            // if(std::strcmp(globalVariable->_type, Types::INT.get()->_typeName) == 0)
+            // {
+            //     _globalObjectRecord[item.first] = std::visit(GetValueVisitor{_builder.get()}, *globalVariable->_value);
+            // }
+            // else if(std::strcmp(globalVariable->_type, Types::STRING.get()->_typeName) == 0)
+            // {
+            //     _globalObjectRecord[item.first] = llvm::ConstantDataArray::getString(*_ctx, "Hello, LLVM IR!");
+            // }
+            // else if(std::strcmp(globalVariable->_type, Types::BOOL.get()->_typeName) == 0)
+            // {
+            //     _globalObjectRecord[item.first] = _builder->getInt1(false);
+            // }
+            // else
+            // {
+            //     throw std::runtime_error("Invalid Types Encountered!!!");
+            // }
+
+            _globalObjectRecord[item.first] = std::visit(GetValueVisitor{_builder.get()}, *globalVariable->_value);
         }
 
         std::unordered_map<std::string, llvm::Value*> global_record{};

@@ -1,5 +1,5 @@
 
-var i = 23;
+let i = 23;
 print(string(i));
 {
     var i = 34;

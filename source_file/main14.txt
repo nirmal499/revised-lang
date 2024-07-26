@@ -1,0 +1,30 @@
+let number = 7;
+
+{
+    var i = 0;
+    while(i <= 10)
+    {
+        if(i / 2 == 0)
+        {
+            print(string(i) + " is even, skipping.");
+            i = i + 1;
+            continue;
+        }
+
+        print("Doing");
+
+        if(i == number)
+        {
+            print("Found the target number " + string(i));
+            break;
+        }
+        else
+        {
+            print(string(i) + " is not the target number.");
+        }
+
+        i = i + 1;
+    }
+}
+
+print("Hello");

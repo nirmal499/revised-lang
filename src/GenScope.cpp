@@ -29,10 +29,44 @@ namespace trylang
         return _parent->Resolve(name);
     }
 
-    llvm::Value* GenScope::LookUp(const std::string& name)
+    llvm::Value* GenScope::LookUp(const std::string& name, bool strictCheck)
     {
         /* searches variable in the whole environment chain */
-        return this->Resolve(name)->_record[name];
+
+        if(strictCheck)
+        {
+            /*
+                If strictCheck is true then we will throw incase if the name is not found in _record
+            */
+            try
+            {
+                std::shared_ptr<GenScope> resolvedScope = this->Resolve(name);
+                return resolvedScope->_record[name];
+            }
+            catch(const std::exception& e)
+            {
+                throw e;
+            }
+        }
+        else
+        {
+            /*
+                If strictCheck is false then we will not throw instead of that we will return nullptr
+            */
+            try
+            {
+                std::shared_ptr<GenScope> resolvedScope = this->Resolve(name);
+                return resolvedScope->_record[name];
+            }
+            catch(const std::exception& e)
+            {
+                return nullptr;
+            }
+        }
+        
+
+        /* This is unreachable */
+        return nullptr;
     }
 
     llvm::Value* GenScope::Define(const std::string& name, llvm::Value* value)

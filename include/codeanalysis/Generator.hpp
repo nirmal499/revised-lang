@@ -6,14 +6,14 @@
 #include "codeanalysis/BoundExpressionNode.hpp"
 #include "codeanalysis/GenScope.hpp"
 #include "codeanalysis/Symbol.hpp"
+#include <llvm-14/llvm/IR/BasicBlock.h>
 #include <memory>
+#include <string>
+#include <stack>
+#include <utility>
 
 namespace trylang
 {   
-    struct IfStatementSyntax;
-    struct WhileStatementSyntax;
-    struct ForStatementSyntax;
-
     struct BoundStatementNode;
     struct BoundBlockStatement;
     struct BoundBoundStatement;
@@ -25,6 +25,9 @@ namespace trylang
     struct BoundWhileStatement;
     struct BoundForStatement;
     struct BoundExpressionStatement;
+
+    struct BoundContinueStatement;
+    struct BoundBreakStatement;
 
     struct BoundExpressionNode;
     struct BoundLiteralExpression;
@@ -48,6 +51,9 @@ namespace trylang
 
         std::unordered_map<std::string, llvm::Value*> _globalObjectRecord;
 
+        std::unordered_map<std::string, llvm::BasicBlock*> _labelMap;
+        std::stack<std::pair<llvm::BasicBlock*, llvm::BasicBlock*>> _loopStack; /* One for "body label BasicBlock" and other for "loopend label BasicBlock" */
+
         std::shared_ptr<GenScope> _scope = nullptr;
         void GenerateStatement(BoundStatementNode* node);
 
@@ -56,7 +62,9 @@ namespace trylang
         void GenerateVariableDeclaration(BoundVariableDeclaration* node);
         void GenerateIfStatement(BoundIfStatement* node);
         void GenerateWhileStatement(BoundWhileStatement* node);
-        void GenerateForStatement(BoundForStatement* node);
+        void GenerateContinueStatement(BoundContinueStatement* node);
+        void GenerateBreakStatement(BoundBreakStatement* node);
+        // void GenerateForStatement(BoundForStatement* node);
         // void GenerateLabelStatement(BoundLabelStatement* node);
         // void GenerateGotoStatement(BoundGotoStatement* node);
         // void GenerateConditionalGotoStatement(BoundConditionalGotoStatement* node);
@@ -123,6 +131,10 @@ namespace trylang
         llvm::Value* operator()(const std::string& str)
         {
             return _builder->CreateGlobalStringPtr(str.c_str());  /* i8* {aka char* } */
+            /*
+                It would also work.
+                return llvm::ConstantDataArray::getString(*_ctx, str.c_str());
+            */
         }
 
         llvm::Value* operator()(bool boolValue)

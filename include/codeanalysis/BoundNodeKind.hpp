@@ -35,6 +35,9 @@ namespace trylang
         LabelStatement,
         ReturnStatement,
 
+        BreakStatement,
+        ContinueStatement,
+
         Identity,
         Negation,
         LogicalNegation,
@@ -74,6 +77,9 @@ namespace trylang
         {BoundNodeKind::ConditionalGotoStatement, "ConditionalGotoStatement"},
         {BoundNodeKind::LabelStatement, "LabelStatement"},
         {BoundNodeKind::ReturnStatement, "ReturnStatement"},
+
+        {BoundNodeKind::BreakStatement, "BreakStatement"},
+        {BoundNodeKind::ContinueStatement, "ContinueStatement"},
 
         {BoundNodeKind::Identity, "Identity"},
         {BoundNodeKind::Negation, "Negation"},

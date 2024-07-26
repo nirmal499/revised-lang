@@ -1,0 +1,16 @@
+function showA(a: string)
+{
+    // print is the inbuit function
+    print(a);
+    return 1;
+}
+
+{
+    var a = "global";
+
+    showA(a);
+
+    a = "block";
+
+    showA(a);
+}

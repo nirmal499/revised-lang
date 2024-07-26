@@ -12,7 +12,7 @@ namespace trylang
         GenScope(const std::unordered_map<std::string, llvm::Value*>& record, const std::shared_ptr<GenScope>& parent);
 
         std::shared_ptr<GenScope> Resolve(const std::string& name);
-        llvm::Value* LookUp(const std::string& name);
+        llvm::Value* LookUp(const std::string& namem, bool strictCheck = true);
         llvm::Value* Define(const std::string& name, llvm::Value* value);
 
         std::unordered_map<std::string, llvm::Value*> _record;

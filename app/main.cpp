@@ -148,11 +148,11 @@ void Run2()
 void Run3(const char* file_name)
 {
     std::string errors;
+    bool generateIR = true;
 
     /* ROOT_PATH is set by the CMake */
     std::string sourceFilePath = std::string(ROOT_PATH) + "/source_file/" + file_name;
     std::string llvmFilePath = std::string(ROOT_PATH) + "/llvm_ir/" + file_name;
-    
 
     std::ifstream infile(sourceFilePath);
     if(!infile.is_open())
@@ -175,35 +175,57 @@ void Run3(const char* file_name)
         return;
     }
 
-    auto program = trylang::Binder::BindProgram(compilationUnitSyntax.get());
 
-    if(!program)
+    if(!generateIR)
     {
-        return;
+        auto program = trylang::Binder::BindProgram(compilationUnitSyntax.get(), true);
+
+        if(!program)
+        {
+            return;
+        }
+        else
+        {
+            // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::SyntaxTree::::::::::::::::::::::::::::::::::::::::::\n";
+            // trylang::PrettyPrintSyntaxNodes(compilationUnitSyntax.get());
+            // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For WHOLE:::::::::::::::::::::::::::::::::::::::::::\n";
+            // trylang::PrettyPrintBoundNodes((program->_statement.get()));
+            // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
+            // trylang::PrettyPrintBoundNodesForFunctionBodies(program->_functionsInfoAndBody);
+            // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::WHOLE:::::::::::::::::::::::::::::::::::::::::::::::\n";
+            // trylang::NodePrinter::Write(program->_statement.get());
+            // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
+            // trylang::NodePrinter::WriteFunctions(program->_functionsInfoAndBody);
+
+            // return;
+
+            trylang::Evaluator evaluator(std::move(program));
+            trylang::object_t result = evaluator.Evaluate();
+            if(result.has_value())
+            {
+                std::visit(trylang::PrintVisitor{}, *result);
+            }
+            std::cout << "\n";
+        }
     }
     else
     {
-        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::SyntaxTree::::::::::::::::::::::::::::::::::::::::::\n";
-        // trylang::PrettyPrintSyntaxNodes(compilationUnitSyntax.get());
-        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For WHOLE:::::::::::::::::::::::::::::::::::::::::::\n";
-        // trylang::PrettyPrintBoundNodes((program->_statement.get()));
-        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
-        // trylang::PrettyPrintBoundNodesForFunctionBodies(program->_functionsInfoAndBody);
-        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::WHOLE:::::::::::::::::::::::::::::::::::::::::::::::\n";
-        // trylang::NodePrinter::Write(program->_statement.get());
-        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
-        // trylang::NodePrinter::WriteFunctions(program->_functionsInfoAndBody);
-        // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::LLVM IR:::::::::::::::::::::::::::::::::::::::::::\n";
-        trylang::Generator::GenerateProgram(program.get(), llvmFilePath.c_str());
+        auto program = trylang::Binder::BindProgram(compilationUnitSyntax.get(), false);
 
-        // return;
-
-        trylang::Evaluator evaluator(std::move(program));
-        trylang::object_t result = evaluator.Evaluate();
-        if(result.has_value())
+        if(!program)
         {
-            std::visit(trylang::PrintVisitor{}, *result);
+            return;
         }
-        std::cout << "\n";
+        else
+        {
+            // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::SyntaxTree::::::::::::::::::::::::::::::::::::::::::\n";
+            // trylang::PrettyPrintSyntaxNodes(compilationUnitSyntax.get());
+            // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For WHOLE:::::::::::::::::::::::::::::::::::::::::::\n";
+            // trylang::PrettyPrintBoundNodes((program->_statement.get()));
+            // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::BoundTree For FUNCTIONS:::::::::::::::::::::::::::::::::::::::::::\n";
+            // trylang::PrettyPrintBoundNodesForFunctionBodies(program->_functionsInfoAndBody);
+            // std::cout << ":::::::::::::::::::::::::::::::::::::::::::::::LLVM IR:::::::::::::::::::::::::::::::::::::::::::\n";
+            trylang::Generator::GenerateProgram(program.get(), llvmFilePath.c_str());
+        }
     }
 }
