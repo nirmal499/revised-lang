@@ -4,6 +4,8 @@ function sum1(x: int): string
     {
         return "Nirmal";
     }
+
+    return "Nil";
 }
 
 // function sum2(x: int): string

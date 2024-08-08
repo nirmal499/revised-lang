@@ -1,4 +1,4 @@
-function count(number: int)
+function count1(number: int)
 {
     var x = number;
 
@@ -8,10 +8,30 @@ function count(number: int)
     }
     else
     {
-        count(x - 1);
+        count1(x - 1);
         print(string(x));
         x = 42;
     }
+
+    return 0;
 }
 
-count(3);
+function count2(number: int)
+{
+    var x = number;
+
+    if(x == 0)
+    {
+        print("Done");
+        return 0;
+    }
+
+    count2(x - 1);
+    print(string(x));
+    x = 42;
+
+    return 0;
+}
+
+// count1(3);
+count2(3);

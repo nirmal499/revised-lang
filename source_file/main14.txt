@@ -1,7 +1,13 @@
-let number = 7; // Global Variable
-
+function hi(name: string)
 {
-    var i = 0;  // Local Variable
+    var number = 45; // Local Variable
+    print("All good " + name + " " + string(number));
+    return 1;
+}
+
+let number = 7; // Global Variable
+{
+    var i = 0;  // Global Variable
     while(i <= 10)
     {
         if(i / 2 == 0)
@@ -27,4 +33,4 @@ let number = 7; // Global Variable
     }
 }
 
-print("Hello");
+hi("Nirmal");

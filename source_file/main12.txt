@@ -1,8 +1,13 @@
 
-for i = 0 to 5
+var i = 0;
+while(i <= 5)
 {
-    for j = 0 to 5
+    var j = 0;
+    while(j <= 5)
     {
         print("[" + string(i) + "-" +  string(j) + "]");
+        j = j + 1;
     }
+
+    i = i + 1;
 }

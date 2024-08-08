@@ -3,6 +3,6 @@ function sum(x:int, y:int)
     return x+y;
 }
 
-sum(1,2)
+sum(1,2);
 
 print("Value is " + string(sum(1,2)));
