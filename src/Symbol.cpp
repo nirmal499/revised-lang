@@ -1,5 +1,5 @@
-#include <codeanalysis/Symbol.hpp>
-#include <codeanalysis/ExpressionSyntax.hpp>
+#include <codeanalysis/utils/Symbol.hpp>
+#include <codeanalysis/parser/utils/ExpressionSyntax.hpp>
 #include <random>
 
 namespace trylang

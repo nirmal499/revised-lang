@@ -5,7 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
-#include <codeanalysis/Symbol.hpp>
+#include <codeanalysis/utils/Symbol.hpp>
 
 namespace trylang
 {

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <codeanalysis/Lexer.hpp>
+#include <codeanalysis/lexer/Lexer.hpp>
 #include <vector>
-#include <codeanalysis/SyntaxKind.hpp>
-#include <codeanalysis/Types.hpp>
+#include <codeanalysis/parser/utils/SyntaxKind.hpp>
+#include <codeanalysis/utils/Types.hpp>
 #include <memory>
 #include <string>
 #include <iostream>
@@ -239,32 +239,6 @@ namespace trylang
 
         std::vector<SyntaxNode*> GetChildren() override;
     };
-
-    struct ForStatementSyntax : public StatementSyntax
-    {
-        std::unique_ptr<SyntaxToken> _keyword;
-        std::unique_ptr<SyntaxToken> _identifier;
-        std::unique_ptr<SyntaxToken> _equalsToken;
-        std::unique_ptr<ExpressionSyntax>_lowerBound;
-        std::unique_ptr<SyntaxToken> _toKeyword;
-        std::unique_ptr<ExpressionSyntax> _upperBound;
-        std::unique_ptr<StatementSyntax> _body;
-
-        ForStatementSyntax(
-                std::unique_ptr<SyntaxToken> keyword,
-                std::unique_ptr<SyntaxToken> identifierToken,
-                std::unique_ptr<SyntaxToken> equalsToken,
-                std::unique_ptr<ExpressionSyntax> lowerBound,
-                std::unique_ptr<SyntaxToken> toKeyword,
-                std::unique_ptr<ExpressionSyntax> upperBound,
-                std::unique_ptr<StatementSyntax> body
-        );
-
-        SyntaxKind Kind() override;
-
-        std::vector<SyntaxNode*> GetChildren() override;
-    };
-
 
     struct CallExpressionSyntax: public ExpressionSyntax
     {

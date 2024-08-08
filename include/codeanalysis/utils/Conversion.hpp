@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <codeanalysis/Symbol.hpp>
+#include <codeanalysis/utils/Symbol.hpp>
 #include <cstring>
 
 namespace trylang

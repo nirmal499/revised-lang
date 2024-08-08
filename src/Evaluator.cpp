@@ -1,11 +1,12 @@
-#include "codeanalysis/BoundNodeKind.hpp"
-#include "codeanalysis/Types.hpp"
-#include <codeanalysis/Evaluator.hpp>
-#include <codeanalysis/ExpressionSyntax.hpp>
-#include <codeanalysis/BoundExpressionNode.hpp>
-#include <codeanalysis/SyntaxKind.hpp>
-#include <codeanalysis/BoundScope.hpp>
-#include <codeanalysis/Environment.hpp>
+#include <codeanalysis/binder/utils/BoundNodeKind.hpp>
+#include <codeanalysis/utils/Types.hpp>
+#include <codeanalysis/evaluator/Evaluator.hpp>
+#include <codeanalysis/parser/utils/ExpressionSyntax.hpp>
+#include <codeanalysis/binder/utils/BoundExpressionNode.hpp>
+#include <codeanalysis/parser/utils/SyntaxKind.hpp>
+#include <codeanalysis/binder/BoundScope.hpp>
+#include <codeanalysis/evaluator/Environment.hpp>
+#include <codeanalysis/binder/utils/BoundProgram.hpp>
 #include <memory>
 #include <stdexcept>
 #include <variant>
@@ -129,23 +130,21 @@ namespace trylang
         auto value = this->EvaluateExpression(node->_expression.get());
         _lastValue = value;
 
-        _env->Define(node->_variable->_name, value);
+        if(node->_variable->Kind() == SymbolKind::GlobalVariable)
+        {
+            _env->Define(node->_variable->_name, value);
+        }
+        else
+        {
+            if(_locals.empty())
+            {
+                std::cout << "For : " << node->_variable->_name << "\n";
+                throw std::logic_error("EvaluateVariableDeclaration _locals ie EMPTY");
+            }
 
-        // if(node->_variable->Kind() == SymbolKind::GlobalVariable)
-        // {
-        //     _env->Define(node->_variable->_name, value);
-        // }
-        // else
-        // {
-        //     if(_locals.empty())
-        //     {
-        //         std::cout << "For : " << node->_variable->_name << "\n";
-        //         throw std::logic_error("EvaluateVariableDeclaration _locals ie EMPTY");
-        //     }
-
-        //     auto& locals = _locals.top();
-        //     locals.insert({node->_variable->_name, value}); /* Here insert is IMP */
-        // }
+            auto& locals = _locals.top();
+            locals.insert({node->_variable->_name, value}); /* Here insert is IMP */
+        }
     }
 
     void Evaluator::EvaluateExpressionStatement(BoundExpressionStatement *node)
@@ -191,65 +190,51 @@ namespace trylang
     object_t Evaluator::EvaluateVariableExpression(BoundVariableExpression *node)
     {
         auto value = _env->LookUpVariable(node->_variable->_name);
-        if(value.has_value())
-        {
-            return *value;
+        if(node->_variable->Kind() == SymbolKind::GlobalVariable)
+        {   
+            auto value = _env->LookUpVariable(node->_variable->_name);
+            if(value.has_value())
+            {
+                return *value;
+            }
+            else
+            {
+                throw std::logic_error("'" + node->_variable->_name + "' is not present in the current _env.");
+            }
         }
         else
         {
-            throw std::logic_error("'" + node->_variable->_name + "' is not present in the current _env.");
+            if(_locals.empty())
+            {
+                std::cout << "For : " << node->_variable->_name << "\n";
+                throw std::logic_error("EvaluateVariableExpression _locals is EMPTY");
+            }
+            const auto& locals = _locals.top();
+            return locals.at(node->_variable->_name);
         }
-        
-        // if(node->_variable->Kind() == SymbolKind::GlobalVariable)
-        // {   
-        //     auto value = _env->LookUpVariable(node->_variable->_name);
-        //     if(value.has_value())
-        //     {
-        //         return *value;
-        //     }
-        //     else
-        //     {
-        //         throw std::logic_error("'" + node->_variable->_name + "' is not present in the current _env.");
-        //     }
-        // }
-        // else
-        // {
-        //     if(_locals.empty())
-        //     {
-        //         std::cout << "For : " << node->_variable->_name << "\n";
-        //         throw std::logic_error("EvaluateVariableExpression _locals is EMPTY");
-        //     }
-        //     const auto& locals = _locals.top();
-        //     return locals.at(node->_variable->_name);
-        // }
     }
     
     object_t Evaluator::EvaluateAssignmentExpression(BoundAssignmentExpression* node)
     {
         auto value = this->EvaluateExpression(node->_expression.get());
 
-        if(!_env->Assign(node->_variable->_name, value))
+        if(node->_variable->Kind() == SymbolKind::GlobalVariable)
         {
-            throw std::logic_error( node->_variable->_name + " is not present in the current _env");
+            if(!_env->Assign(node->_variable->_name, value))
+            {
+                throw std::logic_error( node->_variable->_name + " is not present in the current _env");
+            }
         }
+        else
+        {
+            if(_locals.empty())
+            {
+                throw std::logic_error("EvaluateAssignmentExpression _locals ie EMPTY");
+            }
 
-        // if(node->_variable->Kind() == SymbolKind::GlobalVariable)
-        // {
-        //     if(!_env->Assign(node->_variable->_name, value))
-        //     {
-        //         throw std::logic_error( node->_variable->_name + " is not present in the current _env");
-        //     }
-        // }
-        // else
-        // {
-        //     if(_locals.empty())
-        //     {
-        //         throw std::logic_error("EvaluateAssignmentExpression _locals ie EMPTY");
-        //     }
-
-        //     auto& locals = _locals.top();
-        //     locals.at(node->_variable->_name) = value;
-        // }
+            auto& locals = _locals.top();
+            locals.at(node->_variable->_name) = value;
+        }
 
         return value;
     }
@@ -300,16 +285,17 @@ namespace trylang
         }
         else
         {
-            _env = std::make_shared<Environment>(_env);
-
+            variable_map_t locals;
             for(auto i = 0 ; i < node->_arguments.size() ; i++)
             {
                 auto parameter = node->_function->_parameters[i];
                 auto value = this->EvaluateExpression(node->_arguments[i].get());
-                _env->Define(parameter._name, value);
+                locals[parameter._name] = value;
             }
 
-            std::cout << " Function name: " << node->_function->_name << "\n";
+
+            _locals.push(locals);
+            // std::cout << " Function name: " << node->_function->_name << "\n";
 
             auto it = _program->_functionsInfoAndBody.find(node->_function->_name);
             if(it == _program->_functionsInfoAndBody.end())
@@ -318,28 +304,7 @@ namespace trylang
             }
             auto result = this->EvaluateStatement(it->second.second.get());
 
-            // variable_map_t locals;
-            // for(auto i = 0 ; i < node->_arguments.size() ; i++)
-            // {
-            //     auto parameter = node->_function->_parameters[i];
-            //     auto value = this->EvaluateExpression(node->_arguments[i].get());
-            //     locals[parameter._name] = value;
-            // }
-
-
-            // _locals.push(locals);
-            // std::cout << " Function name: " << node->_function->_name << "\n";
-
-            // auto it = _program->_functionsInfoAndBody.find(node->_function->_name);
-            // if(it == _program->_functionsInfoAndBody.end())
-            // {
-            //     throw std::logic_error("Unexpected function " + node->_function->_name); /* Logically this throw may never occur */
-            // }
-            // auto result = this->EvaluateStatement(it->second.second.get());
-
-            // _locals.pop();
-
-            _env = _env->_parent;
+            _locals.pop();
 
             return result;
         }

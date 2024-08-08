@@ -1,15 +1,15 @@
 #pragma once
 
 #include <vector>
-#include <codeanalysis/BoundNodeKind.hpp>
-#include <codeanalysis/Types.hpp>
+#include <codeanalysis/binder/utils/BoundNodeKind.hpp>
+#include <codeanalysis/utils/Types.hpp>
 #include <memory>
 #include <optional>
 #include <string>
 #include <variant>
 #include <iostream>
 #include <typeinfo>
-#include <codeanalysis/Symbol.hpp>
+#include <codeanalysis/utils/Symbol.hpp>
 
 namespace trylang
 {

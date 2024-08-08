@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <codeanalysis/Types.hpp>
+#include <codeanalysis/utils/Types.hpp>
 
 namespace trylang
 {

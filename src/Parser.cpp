@@ -1,8 +1,8 @@
-#include <codeanalysis/SyntaxKind.hpp>
-#include <codeanalysis/Parser.hpp>
-#include <codeanalysis/ExpressionSyntax.hpp>
-#include <codeanalysis/Lexer.hpp>
-#include <codeanalysis/SyntaxTree.hpp>
+#include <codeanalysis/parser/utils/SyntaxKind.hpp>
+#include <codeanalysis/parser/Parser.hpp>
+#include <codeanalysis/parser/utils/ExpressionSyntax.hpp>
+#include <codeanalysis/lexer/Lexer.hpp>
+#include <codeanalysis/utils/SyntaxTree.hpp>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -232,7 +232,6 @@ namespace trylang
             case SyntaxKind::OpenBraceToken: return this->ParseBlockStatement(); break;
             case SyntaxKind::IfKeyword: return this->ParseIfStatement(); break;
             case SyntaxKind::WhileKeyword: return this->ParseWhileStatement(); break;
-            case SyntaxKind::ForKeyword: return this->ParseForStatement(); break;
             case SyntaxKind::BreakKeyword: return this->ParseBreakStatement(); break;
             case SyntaxKind::ContinueKeyword: return this->ParseContinueStatement(); break;
             case SyntaxKind::ReturnKeyword: return this->ParseReturnStatement(); break;
@@ -250,7 +249,7 @@ namespace trylang
         (void)this->Consume(SyntaxKind::OpenParenthesisToken, "Expected a '('.");
         auto condition = this->ParseExpression();
         (void)this->Consume(SyntaxKind::CloseParenthesisToken, "Expected a ')'.");
-        auto statement = this->ParseStatement(); /* {} */
+        auto statement = this->ParseStatement();
         auto elseClause = this->ParseElseClause();
 
         return std::make_unique<IfStatementSyntax>(std::move(keyword), std::move(condition), std::move(statement), std::move(elseClause));
@@ -564,22 +563,6 @@ namespace trylang
 
         return std::make_unique<WhileStatementSyntax>(std::move(keyword), std::move(condition), std::move(body));
 
-    }
-
-    std::unique_ptr<StatementSyntax> Parser::ParseForStatement()
-    {
-        auto keyword = this->Advance();
-        auto identifier = this->Consume(SyntaxKind::IdentifierToken, "Expected an variable name.");
-        auto equalsToken = this->Consume(SyntaxKind::EqualsToken, "Expected an '='.");
-
-        auto lowerBound = this->ParseExpression();
-
-        auto toKeyword = this->Consume(SyntaxKind::ToKeyword, "Expected a 'to' keyword.");
-
-        auto upperBound = this->ParseExpression();
-        auto body = this->ParseStatement();
-
-        return std::make_unique<ForStatementSyntax>(std::move(keyword), std::move(identifier), std::move(equalsToken), std::move(lowerBound), std::move(toKeyword),std::move(upperBound), std::move(body));
     }
 
     std::unique_ptr<StatementSyntax> Parser::ParseBreakStatement()

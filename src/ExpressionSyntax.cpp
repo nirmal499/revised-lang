@@ -1,4 +1,4 @@
-#include <codeanalysis/ExpressionSyntax.hpp>
+#include <codeanalysis/parser/utils/ExpressionSyntax.hpp>
 
 namespace trylang
 {
@@ -273,27 +273,6 @@ namespace trylang
     std::vector<SyntaxNode *> WhileStatementSyntax::GetChildren()
     {
         return {_whileKeyword.get(), _condition.get(), _body.get()};
-    }
-
-    ForStatementSyntax::ForStatementSyntax(std::unique_ptr<SyntaxToken> keyword,
-                                           std::unique_ptr<SyntaxToken> identifierToken,
-                                           std::unique_ptr<SyntaxToken> equalsToken,
-                                           std::unique_ptr<ExpressionSyntax> lowerBound,
-                                           std::unique_ptr<SyntaxToken> toKeyword,
-                                           std::unique_ptr<ExpressionSyntax> upperBound,
-                                           std::unique_ptr<StatementSyntax> body) : _keyword(std::move(keyword)), _identifier(std::move(identifierToken)), _equalsToken(std::move(equalsToken)), _lowerBound(std::move(lowerBound)), _toKeyword(std::move(toKeyword)) ,_upperBound(std::move(upperBound)), _body(std::move(body))
-    {
-
-    }
-
-    SyntaxKind ForStatementSyntax::Kind()
-    {
-        return SyntaxKind::ForStatement;
-    }
-
-    std::vector<SyntaxNode *> ForStatementSyntax::GetChildren()
-    {
-        return {_keyword.get(), _identifier.get(), _equalsToken.get(), _lowerBound.get(),_toKeyword.get(), _upperBound.get(), _body.get()};
     }
 
     SyntaxKind CallExpressionSyntax::Kind()

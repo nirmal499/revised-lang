@@ -1,5 +1,5 @@
-#include <codeanalysis/BoundExpressionNode.hpp>
-#include <codeanalysis/BoundNodeKind.hpp>
+#include <codeanalysis/binder/utils/BoundExpressionNode.hpp>
+#include <codeanalysis/binder/utils/BoundNodeKind.hpp>
 
 namespace trylang
 {

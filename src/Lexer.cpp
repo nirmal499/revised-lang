@@ -1,8 +1,8 @@
-#include "codeanalysis/SyntaxKind.hpp"
+#include <codeanalysis/parser/utils/SyntaxKind.hpp>
 #include <cctype>
-#include <codeanalysis/Lexer.hpp>
+#include <codeanalysis/lexer/Lexer.hpp>
 #include <boost/lexical_cast.hpp>
-#include <codeanalysis/ExpressionSyntax.hpp> /* SyntaxToken */
+#include <codeanalysis/parser/utils/ExpressionSyntax.hpp> /* SyntaxToken */
 #include <memory>
 #include <string>
 #include <vector>

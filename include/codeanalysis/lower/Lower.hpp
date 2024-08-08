@@ -1,34 +1,13 @@
 #pragma once
 
-#include "codeanalysis/Symbol.hpp"
+#include <codeanalysis/utils/Symbol.hpp>
 #include <memory>
 
 namespace trylang
 {   
-    struct IfStatementSyntax;
-    struct WhileStatementSyntax;
-    struct ForStatementSyntax;
-
     struct BoundStatementNode;
     struct BoundBlockStatement;
-    struct BoundBoundStatement;
-    struct BoundVariableDeclaration;
-    struct BoundLabelStatement;
-    struct BoundGotoStatement;
-    struct BoundConditionalGotoStatement;
-    struct BoundIfStatement;
-    struct BoundWhileStatement;
-    struct BoundForStatement;
-    struct BoundExpressionStatement;
-
     struct BoundExpressionNode;
-    struct BoundLiteralExpression;
-    struct BoundVariableExpression;
-    struct BoundAssignmentExpression;
-    struct BoundCallExpression;
-    struct BoundConversionExpression;
-    struct BoundUnaryExpression;
-    struct BoundBinaryExpression;
 
     struct Lower
     {

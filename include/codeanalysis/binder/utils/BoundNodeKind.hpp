@@ -1,14 +1,14 @@
 #pragma once
 #include <unordered_map>
 #include <string>
-#include <codeanalysis/SyntaxKind.hpp>
+#include <codeanalysis/parser/utils/SyntaxKind.hpp>
 #include <typeinfo>
 #include <memory>
 #include <cstring>
 #include <array>
-#include <codeanalysis/Types.hpp>
+#include <codeanalysis/utils/Types.hpp>
 #include <stdexcept>
-#include <codeanalysis/Symbol.hpp>
+#include <codeanalysis/utils/Symbol.hpp>
 
 namespace trylang
 {

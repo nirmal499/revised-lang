@@ -1,10 +1,10 @@
 #pragma once
 
-#include <codeanalysis/BoundExpressionNode.hpp>
+#include <codeanalysis/binder/utils/BoundExpressionNode.hpp>
 #include <memory>
-#include <codeanalysis/Types.hpp>
+#include <codeanalysis/utils/Types.hpp>
 #include <unordered_map>
-#include <codeanalysis/Symbol.hpp>
+#include <codeanalysis/utils/Symbol.hpp>
 #include <stack>
 
 namespace trylang

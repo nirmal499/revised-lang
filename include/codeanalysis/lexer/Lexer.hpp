@@ -3,8 +3,8 @@
 #include <string>
 #include <memory>
 #include <sstream>
-#include <codeanalysis/SyntaxKind.hpp>
-#include <codeanalysis/Types.hpp>
+#include <codeanalysis/parser/utils/SyntaxKind.hpp>
+#include <codeanalysis/utils/Types.hpp>
 #include <vector>
 
 namespace trylang
@@ -32,8 +32,6 @@ namespace trylang
             {"if", SyntaxKind::IfKeyword},
             {"else", SyntaxKind::ElseKeyword},
             {"while", SyntaxKind::WhileKeyword},
-            {"for", SyntaxKind::ForKeyword},
-            {"to", SyntaxKind::ToKeyword},
             {"function", SyntaxKind::FunctionKeyword},
             {"break", SyntaxKind::BreakKeyword},
             {"continue", SyntaxKind::ContinueKeyword},
