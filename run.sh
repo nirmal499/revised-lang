@@ -21,32 +21,22 @@ project_build() {
 project_run_exe() {
     if [ -z $2 ]; then
         echo "Error: No filename provided."
-        echo "Usage: $0 project-run-exe <name_of_your_file_with_no_extension> <ir_generation_flag>"
+        echo "Usage: $0 project-run-exe <file_name>"
         exit 1
     fi
 
-    if [ -z $3 ]; then
-        echo "Error: No IR generation flag provided."
-        echo "Usage: $0 project-run-exe <name_of_your_file_with_no_extension> <ir_generation_flag>"
-        exit 1
-    fi
-    ./build/executable $2.txt $3
+    ./build/executable -i $2
 }
 
 # Function to run the executable with gdb
 project_run_debugger() {
     if [ -z $2 ]; then
         echo "Error: No filename provided."
-        echo "Usage: $0 project-run-debugger <name_of_your_file_with_no_extension> <ir_generation_flag>"
+        echo "Usage: $0 project-run-debugger <file_name>"
         exit 1
     fi
-    
-    if [ -z $3 ]; then
-        echo "Error: No IR generation flag provided."
-        echo "Usage: $0 project-run-exe <name_of_your_file_with_no_extension> <ir_generation_flag>"
-        exit 1
-    fi
-    gdb --args ./build/executable $2.txt $3
+
+    gdb --args ./build/executable -i $2
 }
 
 # Main script logic to handle arguments
@@ -67,6 +57,6 @@ case "$1" in
         project_run_debugger $@
         ;;
     *)
-        echo "Usage: $0 {project-configure-fresh|project-configure|project-build|project-run-exe <name_of_your_file_with_no_extension> <ir_generation_flag>|project-run-debugger <name_of_your_file_with_no_extension> <ir_generation_flag>}"
+        echo "Usage: $0 {project-configure-fresh|project-configure|project-build|project-run-exe <file_name>|project-run-debugger <file_name>}"
         exit 1
 esac
